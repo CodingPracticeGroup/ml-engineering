@@ -537,7 +537,7 @@ sys     0m0.368s
 
 你可以看到，第一次没有缓存，耗时更长；我第二次运行时更快，因为一切都已被缓存。然后我又让系统清除内存和文件系统缓存，可以看到它又变慢了。
 
-了解这些秒数花在哪里是有帮助的。一次导入过程中会发生两类不同的 IO：对 `torch/lib` 中的共享对象文件（shared objects）做少量大型顺序读取，以及几千次微小的操作——每个模块一次 open，外加 Python 为每个模块探测候选路径时的那些失败查找。[`strace`](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/debug/pytorch.md#strace) 统计的是第二类：
+了解这些秒数花在哪里是有帮助的。一次导入过程中会发生两类不同的 IO：对 `torch/lib` 中的共享对象文件（shared objects）做少量大型顺序读取，以及几千次微小的操作——每个模块一次 open，外加 Python 为每个模块探测候选路径时的那些失败查找。[`strace`](../debug/pytorch.md#strace) 统计的是第二类：
 
 ```bash
 $ strace -cf -e trace=openat python -c "import torch"

@@ -1,6 +1,6 @@
 # 选择训练超参数与模型初始化 {#selecting-training-hyper-parameters-and-model-initializations}
 
-要找到一组合适的超参数和模型初始化的起始配置，最简单的办法是直接借鉴某次你已知取得成功的类似训练。这里有一个[公开的 LLM/VLM 训练日志合集](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/resources/README.md#publicly-available-training-llmvlm-logbooks)可以帮你起步。另一个常见来源是论文，前提是论文中披露了这些信息。如果论文没有发表这些细节，你也可以尝试联系作者，向他们询问。
+要找到一组合适的超参数和模型初始化的起始配置，最简单的办法是直接借鉴某次你已知取得成功的类似训练。这里有一个[公开的 LLM/VLM 训练日志合集](../resources/README.md#publicly-available-training-llmvlm-logbooks)可以帮你起步。另一个常见来源是论文，前提是论文中披露了这些信息。如果论文没有发表这些细节，你也可以尝试联系作者，向他们询问。
 
 ## 术语表 {#glossary}
 
@@ -24,4 +24,4 @@
 
 ### STD 初始化 {#std-init}
 
-这个超参数极其重要，必须借助数学推导才能确定正确的值。详情请见 [STD 初始化](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/instabilities/README.md#std-init)。
+这个超参数极其重要，必须借助数学推导才能确定正确的值。详情请见 [STD 初始化](instabilities/README.md#std-init)。

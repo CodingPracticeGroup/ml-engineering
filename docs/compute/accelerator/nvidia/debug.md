@@ -11,7 +11,7 @@
 
 ## 错误与诊断 {#errors-and-diagnostics}
 
-另见[诊断崩溃、挂起并跟踪执行](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/debug/pytorch.md#diagnosing-crashes-hangs-and-tracing-execution)，其中介绍了如何从软件一侧诊断崩溃。
+另见[诊断崩溃、挂起并跟踪执行](../../../debug/pytorch.md#diagnosing-crashes-hangs-and-tracing-execution)，其中介绍了如何从软件一侧诊断崩溃。
 
 ### Xid 错误 {#xid-errors}
 
@@ -37,7 +37,7 @@ Xid 错误的完整列表及其解读见[这里](https://docs.nvidia.com/deploy/
 
 许多 Xid 日志行包含的字段远比上面那条多，而且十分晦涩。[Xid 31 MMU Faults: What Causes Them and How to Fix Production GPU Crashes](https://www.abhik.ai/articles/gpu-xid31-mmu-faults) 就是一篇教你怎么解读其中一条的好例子：它把 `dmesg` 中一条 Xid 31 日志的每个字段都解码出来——出错的引擎与硬件单元、虚拟地址、`FAULT_PDE` 与 `FAULT_PTE` 的区别、以及访问类型——并顺着它们追到根因：PyTorch、CuPy 和 NVDEC 三个内存分配器之间的 use-after-free（释放后使用）。它也表明并非每个 Xid 都是硬件问题——这一条就是由软件引起的。
 
-NVIDIA 的 [Xid Catalog](https://docs.nvidia.com/deploy/xid-errors/analyzing-xid-catalog.html)（Xid 目录）针对 Ampere 及更新的 GPU 走得更远：它为每个 Xid 列出了哪些 GPU 会记录它、什么会触发它、以及该采取什么措施——既包括需要立即采取的行动（例如 `RESTART_APP` 或 `CONTACT_SUPPORT`），也包括后续行动（例如 `CHECK_APP/CUDA`）。它可以作为电子表格下载，当你想把日志中的 Xid 自动映射为处理动作时会很有用。对于 Xid 13 和 31，该目录称它们通常是应用中的 bug，其首条建议是使用 Compute Sanitizer 的 `memcheck`——如何在 PyTorch 程序上运行它，参见[使用 `compute-sanitizer` 调试 CUDA 内核内存错误](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/debug/pytorch.md#debugging-cuda-kernel-memory-errors-with-compute-sanitizer)。
+NVIDIA 的 [Xid Catalog](https://docs.nvidia.com/deploy/xid-errors/analyzing-xid-catalog.html)（Xid 目录）针对 Ampere 及更新的 GPU 走得更远：它为每个 Xid 列出了哪些 GPU 会记录它、什么会触发它、以及该采取什么措施——既包括需要立即采取的行动（例如 `RESTART_APP` 或 `CONTACT_SUPPORT`），也包括后续行动（例如 `CHECK_APP/CUDA`）。它可以作为电子表格下载，当你想把日志中的 Xid 自动映射为处理动作时会很有用。对于 Xid 13 和 31，该目录称它们通常是应用中的 bug，其首条建议是使用 Compute Sanitizer 的 `memcheck`——如何在 PyTorch 程序上运行它，参见[使用 `compute-sanitizer` 调试 CUDA 内核内存错误](../../../debug/pytorch.md#debugging-cuda-kernel-memory-errors-with-compute-sanitizer)。
 
 你可以运行 `nvidia-smi -q`，看看是否报告了任何错误计数。例如在 Xid 63 这种情况中，你会看到类似这样的内容：
 
@@ -295,9 +295,9 @@ $ sudo dmesg | grep -i 'limited by'
 [   13.301989] pci 0000:8b:00.0: 252.048 Gb/s available PCIe bandwidth, limited by 16.0 GT/s PCIe x16 link at 0000:87:00.0 (capable of 504.112 Gb/s with 32.0 GT/s PCIe x16 link)
 ```
 
-在这个示例中，由于 PCIe 5 规格是 504Gbps，你可以看到这台节点上只有一半的可能带宽可用，因为 PCIe 交换机是 gen4（第 4 代）。有关 PCIe 规格的说明见[这里](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#pcie)。
+在这个示例中，由于 PCIe 5 规格是 504Gbps，你可以看到这台节点上只有一半的可能带宽可用，因为 PCIe 交换机是 gen4（第 4 代）。有关 PCIe 规格的说明见[这里](../../../network/README.md#pcie)。
 
-由于你的 GPU 之间很可能由 [NVLink](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#nvlink) 互相连接，这对 GPU 之间的通信应该没有影响；但它会拖慢 GPU 与主机之间的任何数据搬运，因为数据传输速度受最慢链路的限制。
+由于你的 GPU 之间很可能由 [NVLink](../../../network/README.md#nvlink) 互相连接，这对 GPU 之间的通信应该没有影响；但它会拖慢 GPU 与主机之间的任何数据搬运，因为数据传输速度受最慢链路的限制。
 
 
 

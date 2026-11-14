@@ -33,7 +33,7 @@
 
 不过现代云产品通常都有 50-100 多个 CPU 核心，所以一般来说，核心是够分的。
 
-另见[异步 DataLoader](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md#asynchronous-dataloader)。
+另见[异步 DataLoader](../../training/performance/README.md#asynchronous-dataloader)。
 
 
 
@@ -48,7 +48,7 @@
 1. 隔离的代价落在系统调用（system call）上，而不是算术运算上。gVisor 不会给 CPU 指令增加任何开销，但它把每个系统调用都经由自己的用户态内核转发，所以在某些情况下，文件和进程密集的工作会慢上几倍——而跑一次测试或一次 `pip install` 恰恰就是这类工作（[gVisor 性能指南](https://gvisor.dev/docs/architecture_guide/performance/)）。micro-VM 避开了这笔开销，但取而代之的是每个沙箱都要付出一次启动代价，Firecracker 约 125ms。
 2. 它处在加速器的关键路径（critical path）上。一个同步的 RL 步骤，在整个批次全部完成之前无法推进，因此 CPU 供应不足、某个沙箱拖沓落后，或者校验器（verifier）因一个病态输出而挂起，都会让整个作业里的每一台 GPU 空转。
 
-给沙箱分配它们自己的核心，与训练进程及其 `DataLoader` worker 所使用的核心互不重叠。子进程会继承父进程允许的 CPU 核心，所以这个设置必须直接施加在沙箱本身，可通过 [`os.sched_setaffinity`](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md#ossched_setaffinity) 或容器运行时的 cpuset 来设置。同一节还说明了这种划分在训练进程那一侧是如何实现的。要对依赖安装、测试运行这类高开销阶段限制并发，并给一切操作设置超时——否则模型生成的一个无限循环会一直占住一个核心，直到有什么东西把它杀掉。在规模化之后，正是这一点把沙箱推向了专用的 CPU 节点。
+给沙箱分配它们自己的核心，与训练进程及其 `DataLoader` worker 所使用的核心互不重叠。子进程会继承父进程允许的 CPU 核心，所以这个设置必须直接施加在沙箱本身，可通过 [`os.sched_setaffinity`](../../training/performance/README.md#ossched_setaffinity) 或容器运行时的 cpuset 来设置。同一节还说明了这种划分在训练进程那一侧是如何实现的。要对依赖安装、测试运行这类高开销阶段限制并发，并给一切操作设置超时——否则模型生成的一个无限循环会一直占住一个核心，直到有什么东西把它杀掉。在规模化之后，正是这一点把沙箱推向了专用的 CPU 节点。
 
 脚注：一篇 [Nebius 的 agentic RL 实践记录](https://nebius.com/blog/posts/in-agentic-rl-faster-tokens-are-not-enough)（2026-09）在 Terminal-Bench 负载上对此做了实测，模型是 GLM-5.2，跑在 32 台 B300 上。在保持处理中（in-flight）轨迹数为 1,024 的前提下，给沙箱分配确定的、互不重叠的 CPU 集合，把批次收集时间从 332.1s 降到 303.0s，而模型和 GPU 配置没有任何改动。
 
@@ -62,7 +62,7 @@
 
 ## NUMA 亲和性 {#numa-affinity}
 
-另见 [NUMA 亲和性](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md#numa-affinity)。
+另见 [NUMA 亲和性](../../training/performance/README.md#numa-affinity)。
 
 
 
@@ -70,4 +70,4 @@
 
 [超线程（Hyper-Threads）](https://en.wikipedia.org/wiki/Hyper-threading) 把每个物理核心虚拟化为 2 个虚拟核心，使 CPU 核心数量翻倍，从而允许 2 个线程同时使用同一个 CPU 核心。视负载类型而定，这个特性可能提升整体性能，也可能不会。这项技术的发明者 Intel 给出的说法是，在某些情况下可能有 30% 的性能提升。
 
-另见[是否启用超线程](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/orchestration/slurm/performance.md#to-enable-hyper-threads-or-not)。
+另见[是否启用超线程](../../orchestration/slurm/performance.md#to-enable-hyper-threads-or-not)。

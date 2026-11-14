@@ -22,7 +22,7 @@
 
 1. **[如何选择云服务商](./insights/how-to-choose-cloud-provider.md)** - 这些问题将让你有能力获得一次成功的算力云服务体验。
 
-1. **[升级 GPU 何时才值得？](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/insights/when-to-upgrade-gpus/README.md)** - 一个判断 GPU 代际升级是否物有所值的实用框架，并结合真实的 H200 → B200 基准测试完整演算了一遍。
+1. **[升级 GPU 何时才值得？](./insights/when-to-upgrade-gpus/README.md)** - 一个判断 GPU 代际升级是否物有所值的实用框架，并结合真实的 H200 → B200 基准测试完整演算了一遍。
 
 **第 2 部分：硬件**
 
@@ -30,37 +30,37 @@
 
 1. **[存储](storage/README.md)** - 本地、分布式和共享文件系统。
 
-1. **[网络](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md)** - 节点内和节点间网络。
+1. **[网络](network/README.md)** - 节点内和节点间网络。
 
 
 **第 3 部分：编排**
 
-1. **[编排系统](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/orchestration/README.md)** - 管理容器与资源
-1. **[SLURM](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/orchestration/slurm/README.md)** - Simple Linux Utility for Resource Management（简单 Linux 资源管理工具）
+1. **[编排系统](orchestration/README.md)** - 管理容器与资源
+1. **[SLURM](orchestration/slurm/README.md)** - Simple Linux Utility for Resource Management（简单 Linux 资源管理工具）
 
 
 **第 4 部分：训练**
 
-1. **[训练](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/README.md)** - 与模型训练相关的指南
+1. **[训练](training/README.md)** - 与模型训练相关的指南
 
 
 **第 5 部分：推理**
 
-1. **[推理](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/inference/README.md)** - 关于模型推理的洞察
+1. **[推理](inference/README.md)** - 关于模型推理的洞察
 
 
 **第 6 部分：开发**
 
-1. **[调试与故障排查](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/debug/README.md)** - 如何调试简单和困难的问题
+1. **[调试与故障排查](debug/README.md)** - 如何调试简单和困难的问题
 
 1. **[更多调试内容](https://github.com/stas00/the-art-of-debugging)**
 
-1. **[测试](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/testing/README.md)** - 众多让编写测试变得愉快的技巧与工具
+1. **[测试](testing/README.md)** - 众多让编写测试变得愉快的技巧与工具
 
 
 **第 7 部分：杂项**
 
-1. **[资源](resources)** - LLM/VLM 编年史
+1. **[资源](resources/README.md)** - LLM/VLM 编年史
 
 
 ## 更新 {#updates}
@@ -74,7 +74,7 @@
 * [EPUB](https://huggingface.co/stas/ml-engineering-book/resolve/main/Stas%20Bekman%20-%20Machine%20Learning%20Engineering.epub?download=true)
 
 
-我会尽量每隔几周左右重新构建一次这些电子书，但如果你想获得最新的电子书版本，构建说明在[这里](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/build/README.md)。
+我会尽量每隔几周左右重新构建一次这些电子书，但如果你想获得最新的电子书版本，构建说明在[这里](build/README.md)。
 
 感谢 HuggingFace 允许我把本书的电子书格式托管在 [HF hub](https://huggingface.co/stas/ml-engineering-book) 上。
 
@@ -91,7 +91,7 @@
 
 ## 课程 {#courses}
 
-- **[训练 LLM 的经验教训](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/courses/lesson-learned/README.md)** - 提供了一种阅读我的开放书籍的截然不同的方式：逐条浏览言简意赅的经验洞察，并让你在需要时能够快速深入地探究。
+- **[训练 LLM 的经验教训](courses/lesson-learned/README.md)** - 提供了一种阅读我的开放书籍的截然不同的方式：逐条浏览言简意赅的经验洞察，并让你在需要时能够快速深入地探究。
 
 ## 讲座/演讲 {#lecturestalks}
 
@@ -111,8 +111,8 @@
 
 网络：
 
-- [节点间理论速度](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#inter-node-networking)
-- [节点内理论速度](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#intra-node-networking)
+- [节点间理论速度](network/README.md#inter-node-networking)
+- [节点内理论速度](network/README.md#intra-node-networking)
 
 ## 快捷入口 {#shortcuts}
 
@@ -126,10 +126,10 @@
 
 指南：
 
-- [调试 PyTorch 应用程序](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/debug/pytorch.md) - 让挂起或出错的 PyTorch 应用程序恢复正常的快速可复制粘贴方案
-- [面向用户的 Slurm](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/orchestration/slurm/users.md) - 一份 Slurm 速查表和技巧
-- [制作微型模型/数据集/分词器](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/debug/pytorch.md#faster-debug-and-development-with-tiny-models-tokenizers-and-datasets)
-- [LLM/VLM 编年史合集](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/resources/README.md#publicly-available-training-llmvlm-logbooks)
+- [调试 PyTorch 应用程序](debug/pytorch.md) - 让挂起或出错的 PyTorch 应用程序恢复正常的快速可复制粘贴方案
+- [面向用户的 Slurm](orchestration/slurm/users.md) - 一份 Slurm 速查表和技巧
+- [制作微型模型/数据集/分词器](debug/pytorch.md#faster-debug-and-development-with-tiny-models-tokenizers-and-datasets)
+- [LLM/VLM 编年史合集](resources/README.md#publicly-available-training-llmvlm-logbooks)
 
 
 ## 致谢 {#gratitude}
@@ -140,7 +140,7 @@
 
 最近，我在 [Contextual.AI](https://contextual.ai/) 一边训练模型、一边构建可扩展的训练/推理系统，继续拓展自己的知识与经验，我很感谢 Aman 和 Douwe 给了我这个机会。
 
-我还要感谢众多[贡献者](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/contributors.md)，是他们让这份文本始终保持出色、没有错误。
+我还要感谢众多[贡献者](contributors.md)，是他们让这份文本始终保持出色、没有错误。
 
 ## 参与贡献 {#contributing}
 

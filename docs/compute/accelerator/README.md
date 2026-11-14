@@ -107,7 +107,7 @@ TPU：
 1. 训练完成的速度，因为如果训练比计划多花 2-3 倍的时间，你的模型可能还没发布就已经无关紧要了——在当今竞争极其激烈的 ML 市场中，时间就是一切。
 2. 训练模型所花的钱（$$），因为如果训练比计划多花 2-3 倍的时间，最终你会多花 2-3 倍的钱。
 
-如果其余购买/租用的硬件没有经过精心挑选以匹配所需的工作负载，那么很可能出现的情况是：加速器大量空闲，时间和钱都会白白损失。其中最关键的部件是[网络](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md)，其次是[存储](../../storage/README.md)，最不重要的是 [CPU](../cpu/README.md) 和 [CPU 内存](../cpu-memory/README.md)（至少对于典型的训练负载而言如此，因为 CPU 方面的任何限制都可以通过多个 `DataLoader` 工作进程来弥补）。
+如果其余购买/租用的硬件没有经过精心挑选以匹配所需的工作负载，那么很可能出现的情况是：加速器大量空闲，时间和钱都会白白损失。其中最关键的部件是[网络](../../network/README.md)，其次是[存储](../../storage/README.md)，最不重要的是 [CPU](../cpu/README.md) 和 [CPU 内存](../cpu-memory/README.md)（至少对于典型的训练负载而言如此，因为 CPU 方面的任何限制都可以通过多个 `DataLoader` 工作进程来弥补）。
 
 如果算力是租来的，通常就没有多少选择自由——硬件要么是一成不变的，要么某些部件虽然可以更换，但选择也不多。因此有时会遇到所选云服务商提供的硬件与需求匹配得不够好，这种情况下最好另寻一家服务商。
 
@@ -115,7 +115,7 @@ TPU：
 
 当然，除了硬件，你还需要能够高效利用这些硬件的软件。
 
-我们将在本书的多个章节中分别讨论硬件和软件两方面。你可以从[这里](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md)和[这里](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/model-parallelism/README.md)开始阅读。
+我们将在本书的多个章节中分别讨论硬件和软件两方面。你可以从[这里](../../training/performance/README.md)和[这里](../../training/model-parallelism/README.md)开始阅读。
 
 
 
@@ -156,7 +156,7 @@ ML 训练和推理所做的大部分工作都是矩阵乘法。如果你还记�
 
 [来源](https://developer.nvidia.com/blog/cuda-11-features-revealed/)
 
-正如你所看到的，由于[分块（tile）与波（wave）量化效应](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md#tile-and-wave-quantization)，性能差异是非线性的。请注意，图中的蓝线对应的是 FP32 Tensor Core。
+正如你所看到的，由于[分块（tile）与波（wave）量化效应](../../training/performance/README.md#tile-and-wave-quantization)，性能差异是非线性的。请注意，图中的蓝线对应的是 FP32 Tensor Core。
 
 #### 如何计算理论 TFLOPS {#how-to-calculate-theoretical-tflops}
 
@@ -200,7 +200,7 @@ ML 训练和推理所做的大部分工作都是矩阵乘法。如果你还记�
 
 两个计算结果都与公布的规格吻合——H100 SXM 为 989，A100 SXM 为 312。
 
-请注意，这个峰值是整个加速器加总的结果——`528` 个 Tensor Core 就是 `4 x 132` 个 SM——所以单次 matmul 达不到这个水平，除非这次矩阵乘法足够大，能占满每一个 SM。至于为什么 SM 更多的芯片并不自动就提供更多 TFLOPS，参见[更多 SM 是否意味着更多 TFLOPS？](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md#do-more-sms-give-more-tflops)。
+请注意，这个峰值是整个加速器加总的结果——`528` 个 Tensor Core 就是 `4 x 132` 个 SM——所以单次 matmul 达不到这个水平，除非这次矩阵乘法足够大，能占满每一个 SM。至于为什么 SM 更多的芯片并不自动就提供更多 TFLOPS，参见[更多 SM 是否意味着更多 TFLOPS？](../../training/performance/README.md#do-more-sms-give-more-tflops)。
 
 上面的 H100 SXM 时钟频率是 1830MHz，这是 NVIDIA 现在官方给出的数字。早先广泛公布的数字是 1980MHz，但它对不上：`1980*10**6 * 512 * 2 * 528 / 10**12 = 1070.530` TFLOPS，比规格值高出约 80。在 1830MHz 成为官方数字之前，其实就可以把同一个公式反过来、代入规格中的 TFLOPS 来反推出它：`989 / (512 * 2 * 528 / 10**12) / 10**6 = 1829.20`。这总体上是个有用的技巧——如果厂商公布了 TFLOPS 却没有公布时钟频率，或者公布的时钟频率算不出他们自己给出的 TFLOPS，这个公式能告诉你他们实际用的是哪个数字。
 
@@ -245,7 +245,7 @@ Intel Gaudi 使用 MME 来执行 BF16 `matmul`
 要查看加速器在负载下的实际时钟频率，请参见[时钟频率](#clock-speed)一节。
 #### TFLOPS 对比表 {#tflops-comparison-table}
 
-下面来看看各高端加速器支持的[数据类型](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/dtype.md)以及对应的理论峰值 TFLOPS 规格（不含稀疏性）。两张表都按 bf16 列排序，并共用同一组注释，注释列在两张表之后。两个 FP4 列对应两种分块缩放（block-scaled）的 FP4 格式：`mxfp4` 是 OCP 的微缩放（microscaling）格式，每 32 个元素共用一个 2 的幂次的 E8M0 缩放因子；`nvfp4` 是 NVIDIA 的格式，每 16 个元素一个 E4M3 缩放因子，外加一个张量级的 FP32 缩放因子——该选用哪一种，参见 [fp4 格式](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/dtype.md#fp4-formats)。
+下面来看看各高端加速器支持的[数据类型](../../training/dtype.md)以及对应的理论峰值 TFLOPS 规格（不含稀疏性）。两张表都按 bf16 列排序，并共用同一组注释，注释列在两张表之后。两个 FP4 列对应两种分块缩放（block-scaled）的 FP4 格式：`mxfp4` 是 OCP 的微缩放（microscaling）格式，每 32 个元素共用一个 2 的幂次的 E8M0 缩放因子；`nvfp4` 是 NVIDIA 的格式，每 16 个元素一个 E4M3 缩放因子，外加一个张量级的 FP32 缩放因子——该选用哪一种，参见 [fp4 格式](../../training/dtype.md#fp4-formats)。
 
 **已正式发售：**
 
@@ -327,7 +327,7 @@ Intel Gaudi 使用 MME 来执行 BF16 `matmul`
 
 * 看规格时要非常小心你所读到的数字——许多厂商经常公布带稀疏性的 TFLOPS，因为它们大约大 2 倍，而且即便它们提到了这一点，也常常用小字注明。我曾不得不要求 NVIDIA 在其 H100 规格上加注说明那些数字是带稀疏性的，因为他们最初完全没有提及这一重要的技术事实。而截至 2026-08，99% 的情况下你都不会使用稀疏性，因此大多数时候你真正关心的实际理论 TFLOPS 是不带稀疏性的（也就是上面这张表）。
 
-* 还要注意，如果加速器 A 公布的 TFLOPS 高于加速器 B，并不意味着 A 更快。这些是理论数字，不仅在实践中永远无法达到——实际的 TFLOPS 效率，即[硬件 FLOPS 利用率](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md#mfu-vs-hfu)（HFU），在不同厂商之间，甚至同一厂商的不同加速器架构之间，都可能差异很大。
+* 还要注意，如果加速器 A 公布的 TFLOPS 高于加速器 B，并不意味着 A 更快。这些是理论数字，不仅在实践中永远无法达到——实际的 TFLOPS 效率，即[硬件 FLOPS 利用率](../../training/performance/README.md#mfu-vs-hfu)（HFU），在不同厂商之间，甚至同一厂商的不同加速器架构之间，都可能差异很大。
 
 
 
@@ -480,7 +480,7 @@ wait
 
 如果你做多节点训练，那自然要把所有节点都测一遍。
 
-所以，如果你打算计算你实际可达的 [MFU](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md#mfu-vs-hfu)（而不是理论 MFU），就应当在所有参与的加速器上测量各自可达的 FLOPS，并取最慢那块加速器的数值。（如果它确实是一个离群值，你也可以考虑把它更换掉。）
+所以，如果你打算计算你实际可达的 [MFU](../../training/performance/README.md#mfu-vs-hfu)（而不是理论 MFU），就应当在所有参与的加速器上测量各自可达的 FLOPS，并取最慢那块加速器的数值。（如果它确实是一个离群值，你也可以考虑把它更换掉。）
 
 ##### 一个实测示例 {#a-measured-example}
 
@@ -592,7 +592,7 @@ bw = p.memory_clock_rate * 1e3 * (p.memory_bus_width / 8) * 2 / 1e12
 print(f"{p.name}: {p.memory_clock_rate/1e6:.3f}GHz x {p.memory_bus_width}-bit bus -> {bw:.2f}TBps")
 ```
 
-有两点要注意。第一，要取**峰值**显存时钟，而不是当前时钟——空闲的加速器会把显存降频，所以 `nvidia-smi` 的 `Clocks` 一节会显示很低的数值，而 `Max Clocks` 显示的才是这套算术需要的数值；PyTorch 的 `memory_clock_rate` 本身就已经是峰值。第二，这样得到的是*理论*上限；真实工作负载能达到的高度要更低，这两者的关系就如同[最大可达 Matmul FLOPS](#maximum-achievable-and-sustainable-matmul-flops-comparison-table)之于 TFLOPS——关于聚合峰值与实际吞吐量为何会偏离，一般性的原因见[更多的 SM 能带来更多 TFLOPS 吗？](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md#do-more-sms-give-more-tflops)。
+有两点要注意。第一，要取**峰值**显存时钟，而不是当前时钟——空闲的加速器会把显存降频，所以 `nvidia-smi` 的 `Clocks` 一节会显示很低的数值，而 `Max Clocks` 显示的才是这套算术需要的数值；PyTorch 的 `memory_clock_rate` 本身就已经是峰值。第二，这样得到的是*理论*上限；真实工作负载能达到的高度要更低，这两者的关系就如同[最大可达 Matmul FLOPS](#maximum-achievable-and-sustainable-matmul-flops-comparison-table)之于 TFLOPS——关于聚合峰值与实际吞吐量为何会偏离，一般性的原因见[更多的 SM 能带来更多 TFLOPS 吗？](../../training/performance/README.md#do-more-sms-give-more-tflops)。
 
 显存速度（带宽）当然非常重要，因为它如果不够快，计算部分就会空闲下来，等待数据被搬进、搬出内存。
 
@@ -966,7 +966,7 @@ Cerebras：
 
 此外，Lantern Works 会跟踪多家供应商的[按需 GPU 云租用价格](https://thelanternworks.com/gpu/price-comparison/)。
 
-选购方案时请记住，只租最强大的加速器是不够的。你还需要快速的[节点内](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#intra-node-networking)和[节点间](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#inter-node-networking)互联，以及足够快的[存储](../../storage/README.md)——没有这些，昂贵的加速器只能闲置等待数据到达，你会浪费大量资金、损失时间。
+选购方案时请记住，只租最强大的加速器是不够的。你还需要快速的[节点内](../../network/README.md#intra-node-networking)和[节点间](../../network/README.md#inter-node-networking)互联，以及足够快的[存储](../../storage/README.md)——没有这些，昂贵的加速器只能闲置等待数据到达，你会浪费大量资金、损失时间。
 
 
 
@@ -1043,7 +1043,7 @@ AWS 特有的词汇：
 
 一台 `trn2.48xlarge` 实例容纳 16 颗 Trainium2 芯片，而 UltraServer 把 NeuronLink 扩展到「横跨四台 Trn2 实例的 64 颗 Trainium2 芯片」。内存池化覆盖「最多 64 颗芯片」，上一代是 16 颗。
 
-你要通过 Neuron SDK 和 PyTorch XLA 而不是 CUDA 来编程，这是最主要的移植成本。AWS 只公布了 1.28TBps 的聚合带宽，没有公布单链路速率或链路数量，因此无法推算点对点带宽——参见[节点内带宽表格](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#all-to-all-bandwidth)。
+你要通过 Neuron SDK 和 PyTorch XLA 而不是 CUDA 来编程，这是最主要的移植成本。AWS 只公布了 1.28TBps 的聚合带宽，没有公布单链路速率或链路数量，因此无法推算点对点带宽——参见[节点内带宽表格](../../network/README.md#all-to-all-bandwidth)。
 
 规格：[Trainium2](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/about-neuron/arch/neuron-hardware/trainium2.html)、[Trn2 实例](https://aws.amazon.com/ec2/instance-types/trn2/)。
 
@@ -1066,13 +1066,13 @@ TPU7x（Ironwood）每颗芯片：192GB HBM，带宽「约 7.37 TB/s」，2307TF
 
 华为特有的词汇：
 - Ascend——加速器产品线；Atlas——基于它们构建的服务器和机柜级 SuperPoD
-- UB Link（UnifiedBus）——纵向扩展互联，华为对 [NVLink](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#nvlink) 和 [UALink](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#ultra-accelerator-link-ualink) 的回应
+- UB Link（UnifiedBus）——纵向扩展互联，华为对 [NVLink](../../network/README.md#nvlink) 和 [UALink](../../network/README.md#ultra-accelerator-link-ualink) 的回应
 - HiF8——华为自有的 8-bit 浮点格式，与 OCP 的 `mxFP8` 标准并列引用，而不是替代它
 - CANN——计算架构与工具链，第一方框架是 MindSpore，同时提供 PyTorch/TensorFlow 适配层
 
 截至 2026-08，华为的中文页面载有完整的规格表，英文页面几乎什么都没有，所以请使用中文页面。对于 Atlas 950 SuperPoD，中文页面给出最多 1024 颗 Ascend 950DT 加速器，片上内存最多 1024 x 96GB、带宽最高 4.0TBps，AI 算力最高 1EFLOPS mxFP8/FP8/HiF8 和 2EFLOPS mxFP4，每机柜互联总带宽最高 64 x 1.68TBps 双向。
 
-按 1024 颗加速器摊分，约合每颗 Ascend 950DT 977TFLOPS mxFP8 和 1953TFLOPS mxFP4，配 96GB @ 4.0TBps 显存，以及每颗 840GBps 单向的 [UB Link](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#ub-link-unifiedbus) 纵向扩展带宽——这将略低于 NVLink 5。与英文页面不同，这种摊分是安全的而非推断：加速器数量是明确给出的，而且能两处交叉验证——1024 颗加速器分摊到标称的 16 个计算柜，正好是每柜 64 颗，与带宽行的说法一致；1024 x 1.68TBps 也等于同一页面声称的 1.72PBps 总带宽。
+按 1024 颗加速器摊分，约合每颗 Ascend 950DT 977TFLOPS mxFP8 和 1953TFLOPS mxFP4，配 96GB @ 4.0TBps 显存，以及每颗 840GBps 单向的 [UB Link](../../network/README.md#ub-link-unifiedbus) 纵向扩展带宽——这将略低于 NVLink 5。与英文页面不同，这种摊分是安全的而非推断：加速器数量是明确给出的，而且能两处交叉验证——1024 颗加速器分摊到标称的 16 个计算柜，正好是每柜 64 颗，与带宽行的说法一致；1024 x 1.68TBps 也等于同一页面声称的 1.72PBps 总带宽。
 
 有两点需要注意。表中 Ascend 950DT 的 TFLOPS 和显存对比行用的是英文 Ascend Community 页上 **64 卡** Atlas 950 SuperPoD 的产品规格表（`114.1 / 58.8 / 31.1` PFLOPS @ mxFP4 / mxFP8-HiF8 / FP16-BF16，以及 `64 × 96GB` 片上内存、4.0TBps）——再按加速器数量摊分——而不是中文页面上 1024 卡 SuperPoD 的总量（约 1953 / 977 mxFP4/mxFP8，无 bf16）。这两种配置不是同一部件的简单放大；不要在两者之间混用数字。显存类型在表里标为 `?`，因为华为只公布「On-chip Memory」/片上内存，不给出 HBM 代次。而 `HiF8` 与 `mxFP8` 并列引用为同一个公布速率，所以 `fp8` 列承载的是这一对——HiF8 本身是变精度（tapered-precision，[arxiv:2409.16626](https://arxiv.org/abs/2409.16626)），不是 OCP 的 `E4M3`/`E5M2`，本章的数据类型解读说明对它不适用。
 

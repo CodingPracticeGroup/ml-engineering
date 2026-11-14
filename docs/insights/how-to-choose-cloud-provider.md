@@ -8,7 +8,7 @@
 
 在这篇文章里，我不打算说哪些云应该避开，而是想帮助你具备避免糟糕体验的能力，至少获得一次还过得去的体验，让你的公司有机会走向成功。
 
-这些笔记假定你已经清楚，针对自己的具体工作负载想要什么样的算力。如果你还不清楚，请快速浏览[加速卡](../compute/accelerator/README.md)、[存储](../storage/README.md)和[网络](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md)几章，了解市面上都有什么可用。大多数时候，你会想要各家云服务商所能提供的最新产品。
+这些笔记假定你已经清楚，针对自己的具体工作负载想要什么样的算力。如果你还不清楚，请快速浏览[加速卡](../compute/accelerator/README.md)、[存储](../storage/README.md)和[网络](../network/README.md)几章，了解市面上都有什么可用。大多数时候，你会想要各家云服务商所能提供的最新产品。
 
 
 
@@ -255,7 +255,7 @@
 
 这一部分主要与打算做训练和微调的人相关。如果你租加速卡只是为了通过大规模微服务部署来做推理，或者只是为了小型的、按需的交互式工作（如 notebook），你可以放心地忽略这些信息。唯一的例外是：你打算推理非常大的模型，其单个副本就需要不止一个节点。
 
-总的来说，你要确保所提供的[节点内](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#intra-node-networking)和[节点间](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#inter-node-networking)网速与承诺以及你的预期相符。测量时，要问清这个平台需要哪些 NCCL 环境变量；一个安全的默认值是 `NCCL_NVLS_ENABLE=2`（在可用时使用 NVLink SHARP）。
+总的来说，你要确保所提供的[节点内](../network/README.md#intra-node-networking)和[节点间](../network/README.md#inter-node-networking)网速与承诺以及你的预期相符。测量时，要问清这个平台需要哪些 NCCL 环境变量；一个安全的默认值是 `NCCL_NVLS_ENABLE=2`（在可用时使用 NVLink SHARP）。
 
 ### 索要实际的性能数据 {#ask-for-the-actual-performance-numbers}
 
@@ -263,7 +263,7 @@
 
 最容易开的口，是索要一张覆盖 4-8-16-32-64 个节点（如果你的集群超过 64 个节点，那就更多）的 `all-reduce` 基准测试曲线图。你会预期带宽随着参与节点的增多而逐渐变差，但不会剧烈恶化。有些网络在节点数较多时会变得非常低效。
 
-更多细节请参阅[真实网络吞吐量](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#real-network-throughput)。
+更多细节请参阅[真实网络吞吐量](../network/README.md#real-network-throughput)。
 
 理想情况下，你至少想对几种载荷（即集合通信传输的消息大小）跑基准测试——挑那些你特别关心的，因为你清楚自己的工作负载将会使用多大的集合通信载荷。我通常一开始先要一张大约 4-16 GiB 大载荷的曲线图（在最新、最快的节点间网络上，16 GiB 的载荷能拿到最佳带宽），它立刻就能告诉我这个网络好不好。但你很可能也会想知道 256-512 MiB 载荷的情况，所以干脆把更宽的范围一起要过来。
 
@@ -298,7 +298,7 @@
 
 ### A. 网络 {#a-network}
 
-节点内：[`torch-dist-bench.py`](../network/benchmarks/torch-dist-bench.py)，以 `torchrun --nproc_per_node=8` 的方式运行（或按该节点实际的 GPU 数量设置）。节点间：在**至少 4 台节点**上运行同一个脚本。脚本开头给出的 `pdsh` 方案要求这些节点之间配置了免密 SSH；SLURM 的 `srun` 是另一种受支持的启动方式。参见[网络基准测试](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/benchmarks/README.md)和[真实网络吞吐量](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#real-network-throughput)。
+节点内：[`torch-dist-bench.py`](../network/benchmarks/torch-dist-bench.py)，以 `torchrun --nproc_per_node=8` 的方式运行（或按该节点实际的 GPU 数量设置）。节点间：在**至少 4 台节点**上运行同一个脚本。脚本开头给出的 `pdsh` 方案要求这些节点之间配置了免密 SSH；SLURM 的 `srun` 是另一种受支持的启动方式。参见[网络基准测试](../network/benchmarks/README.md)和[真实网络吞吐量](../network/README.md#real-network-throughput)。
 
 要报告的数值是 **`busbw`**（单向带宽）。节点内：与标称的 NVLink 带宽（不是双工带宽）做比较；NVLS/SHARP 能让按环（ring）公式算出的数字超过该标称值的 100%，而且它只对 **all-reduce** 有帮助。节点间：报告 `busbw` 以及 NCCL 实际经过的路径；**不要**拿它去除以标称的 IB/RoCE/EFA GBps——那次集合通信从来都不是只经过网卡的测量。如果你只有一台节点，就跳过节点间测试，并把这一点记录在案；单节点的 NVLink 数字并不能告诉你，到 4 台节点时整个网络结构（fabric）表现如何。
 
@@ -339,7 +339,7 @@
 
 顺畅的节点编排，对成功使用多节点集群至关重要。
 
-一定要弄清楚你需要哪一种——通常是 [SLURM](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/orchestration/slurm/README.md)、Kubernetes，或两者结合——并确认它得到了良好的支持。有些云只支持其中一种，或者对另一种只提供非常有限的支持。如今 SLURM 主要用于训练/微调，Kubernetes 用于推理。此外还有其他[正在兴起的编排平台](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/orchestration/README.md)。
+一定要弄清楚你需要哪一种——通常是 [SLURM](../orchestration/slurm/README.md)、Kubernetes，或两者结合——并确认它得到了良好的支持。有些云只支持其中一种，或者对另一种只提供非常有限的支持。如今 SLURM 主要用于训练/微调，Kubernetes 用于推理。此外还有其他[正在兴起的编排平台](../orchestration/README.md)。
 
 和硬件一样，取决于你是否打算自己管理集群，你需要知道出了问题由谁来处理。这是你的技术栈中非常关键的一环，因为编排一旦坏掉，没有人能用这个集群，你会损失时间和金钱。
 

@@ -23,7 +23,7 @@
 2. **使用符合现实的分布**，而不是全零或其他病态模式。全零会让功率的读数偏低、吞吐量的读数偏高——这正是 Horace 那篇文章所谈的基准测试陷阱。均匀随机的词元 ID（或你的真实工作负载实际喂入的任何数据）能让测得的功率/时钟状态接近生产环境。
 3. **当分布固定时，应预期仍会有很小的影响，而不是零。**设种子只消除了一个噪声来源；它不会让两个数值不同、形状相同的张量在完全相同的时钟下运行。
 
-这与[数值可复现性](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/reproducibility/README.md)是两回事，后者通过确定性算法强制得到*相同的结果*。这里的目标是*相同的计时条件*——同样的数据、同样的功耗、同样的时钟。
+这与[数值可复现性](../../../training/reproducibility/README.md)是两回事，后者通过确定性算法强制得到*相同的结果*。这里的目标是*相同的计时条件*——同样的数据、同样的功耗、同样的时钟。
 
 
 <a id="maximum-achievable-matmul-flops-finder"></a>
@@ -208,7 +208,7 @@ MSMF 那一行的数字来自 4s 锁定窗口，发布的摘要数字用的就�
 3. **波量化（wave quantization）** —— 线程块总数约恰好是 SM 数的整数倍，因而不留下残缺的尾部波（tail wave）。胜出的形状通常 `wave_eff ≥ ~0.99`。
 4. **K 只决定算术强度（AI）** —— 它不参与分块/波的计算。K 越大，越偏向计算受限。实测中存在*两类*高 TFLOPS 盆地：高算术强度（大 K）和多波（最小 K、巨大 M×N）——这正是 `auto` 要同时覆盖这两类的原因。
 
-如果你做的是模型设计工作（挑选模型各层将要生成的形状），另见[向量与矩阵尺寸的可整除性](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md#vector-and-matrix-size-divisibility)。
+如果你做的是模型设计工作（挑选模型各层将要生成的形状），另见[向量与矩阵尺寸的可整除性](../../../training/performance/README.md#vector-and-matrix-size-divisibility)。
 
 #### 2. Grid search——在*你*的范围内的最佳形状（实践中常见的情形） {#2-grid-search-best-shape-in-your-range-the-practical-case}
 
@@ -230,14 +230,14 @@ Grid 报告的**摘要数字与 auto 完全相同，仍是 MAMF + MSMF 两个**�
 
 **请给范围留出足够的余地，让它能达到饱和。**MSMF 至少需要一个能在其窗口内维持稳定速率的形状。范围窄/小的网格可能让所有候选都不平稳；这种情况下 `mamf-finder.py` 会发出警告，并发布最快的那个不平稳形状。请扩大 M/N/K（尤其是 `min(M,N,K)`），让能撞上功率上限的形状进入集合。Grid 不会运行 K walk，所以只有当你的 K 范围包含最佳可持续 K 时，它才会被找到。
 
-你可以用 Ctrl-C 中断一次长时间的 grid 运行，仍然会得到目前为止的最佳结果。更细的步长（用 512 / 256 而不是 1024）会让墙上时间（wall time）变成 8× / 64×。想知道某款加速器上哪些形状容易达到峰值，见[向量与矩阵尺寸的可整除性](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md#vector-and-matrix-size-divisibility)。
+你可以用 Ctrl-C 中断一次长时间的 grid 运行，仍然会得到目前为止的最佳结果。更细的步长（用 512 / 256 而不是 1024）会让墙上时间（wall time）变成 8× / 64×。想知道某款加速器上哪些形状容易达到峰值，见[向量与矩阵尺寸的可整除性](../../../training/performance/README.md#vector-and-matrix-size-divisibility)。
 
 针对特定架构的设置（MI300X 的 `numa_balancing` / TunableOp、Intel dGPU 的安装）见前文[针对特定架构的说明](#architecture-specific-notes)。
 
 
 ### 结果 {#results}
 
-我已收集到的测量结果，见[最大可达与可持续矩阵乘 FLOPS 对照表](../README.md#maximum-achievable-and-sustainable-matmul-flops-comparison-table)。凡是我能用上某款加速器的场合，基准测试是我自己跑的；用不上的场合，则是好心的贡献者们投入自己的时间拿到了这些数字。对此我非常感谢[他们](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/contributors.md)。
+我已收集到的测量结果，见[最大可达与可持续矩阵乘 FLOPS 对照表](../README.md#maximum-achievable-and-sustainable-matmul-flops-comparison-table)。凡是我能用上某款加速器的场合，基准测试是我自己跑的；用不上的场合，则是好心的贡献者们投入自己的时间拿到了这些数字。对此我非常感谢[他们](../../../contributors.md)。
 
 ### 如何提交 MAMF/MSMF 条目 {#how-to-report-mamfmsmf-entries}
 

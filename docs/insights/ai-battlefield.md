@@ -125,7 +125,7 @@
 市面上的 HPC 并不多，所以可获得的资源是有限的。
 
 优点：
-- 一切都替你管理好了——你只需要自己的软件来做训练，再懂一点 [SLURM](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/orchestration/slurm/README.md) 的用法来启动作业
+- 一切都替你管理好了——你只需要自己的软件来做训练，再懂一点 [SLURM](../orchestration/slurm/README.md) 的用法来启动作业
 - 通常由当地政府/大学资助——也许能花更少的钱、甚至免费把事办成（例如：我们曾在 [JeanZay HPC](http://www.idris.fr/en/) 上免费训练了 [BLOOM-176B](https://huggingface.co/bigscience/bloom)！）
 
 缺点：
@@ -177,7 +177,7 @@
 
 ### TFLOPS {#tflops}
 
-- 一旦你选定了模型的架构、规模，以及打算让模型训练多少个词元，你就立刻知道达成这个目标需要多少算力。具体来说，你现在可以计算[需要执行多少次浮点运算](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md#tflops-as-a-performance-metric)。
+- 一旦你选定了模型的架构、规模，以及打算让模型训练多少个词元，你就立刻知道达成这个目标需要多少算力。具体来说，你现在可以计算[需要执行多少次浮点运算](../training/performance/README.md#tflops-as-a-performance-metric)。
 
 - 现在只差把各算力供应商做对比：他们的硬件每秒能执行多少浮点运算（TFLOPS）、单位价格如何，这样你就能得出这次训练的大致总成本。
 
@@ -220,9 +220,9 @@
 
 - 对于加速器内存本身没什么可做的，它的带宽就是这样——只能写更高效的软件，让数据更快地进出加速器——提示：融合的和自写的内核（比如 [torch.compile](https://docs.pytorch.org/docs/stable/generated/torch.compile.html) 和 [flash attention](https://github.com/Dao-AILab/flash-attention)）
 
-- 如果你只有一块 GPU，而且模型放得进它的显存，你就不用担心网络——加速器内存是唯一的瓶颈。但如果你[必须把模型分片到多块 GPU 上](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/model-parallelism/README.md)，网络就会成为瓶颈。
+- 如果你只有一块 GPU，而且模型放得进它的显存，你就不用担心网络——加速器内存是唯一的瓶颈。但如果你[必须把模型分片到多块 GPU 上](../training/model-parallelism/README.md)，网络就会成为瓶颈。
 
-- 节点内网络——非常快，但对大模型来说很难利用起来——[张量并行](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/model-parallelism/README.md#tensor-parallelism)和[序列并行](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/model-parallelism/README.md#sequence-parallelism)解决了这个问题的一部分。（[更多](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#intra-node-networking)）。
+- 节点内网络——非常快，但对大模型来说很难利用起来——[张量并行](../training/model-parallelism/README.md#tensor-parallelism)和[序列并行](../training/model-parallelism/README.md#sequence-parallelism)解决了这个问题的一部分。（[更多](../network/README.md#intra-node-networking)）。
 
 - 节点间网络——在大多数服务器配置上它通常太慢——因此这是最需要研究的部件！高效的框架能通过让计算和通信重叠，部分地隐藏通信开销。但如果通信比计算耗时更长，通信依然是瓶颈。[更多](#inter-node-network)。
 
@@ -310,7 +310,7 @@
 
 - 如果你需要在多个节点之间归约比特（例如梯度），那么决定整体吞吐量的是最慢的那一段链路（节点间链路），尽管分层算法有时能利用更快的节点内带宽来加速。
 
-- [张量并行](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/model-parallelism/README.md#tensor-parallelism)和[序列并行](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/model-parallelism/README.md#sequence-parallelism)为了高效就必须留在节点内——只有节点内速度足够快时才有意义
+- [张量并行](../training/model-parallelism/README.md#tensor-parallelism)和[序列并行](../training/model-parallelism/README.md#sequence-parallelism)为了高效就必须留在节点内——只有节点内速度足够快时才有意义
 
 NVIDIA：
 
@@ -322,19 +322,19 @@ Intel Gaudi2：
 
 - 卡到卡 300Gbps（100GbE RoCE v2 RDMA；同样的网卡也用于节点间通信）
 
-[更多细节](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#intra-node-networking)
+[更多细节](../network/README.md#intra-node-networking)
 
 #### 节点间网络 {#inter-node-network}
 
 - 你会看到从 200Gbps 到 6400Gbps 各种各样的速度
 
-- 节点间链路仍然比节点内链路慢大约一个数量级（例如 P6-B200 实例上每块加速器的 EFA v4 是 50GBps，而 NVLink 5 是 900GBps），但实际差距远没有那么大，因为节点间集合通信的大部分数据搬运也是经由节点内链路完成的——一次跨 4 个节点的 4GiB `all-reduce` 只比在单个节点上慢约 2 倍，而不是 18 倍。参见[节点间速度取决于节点内速度](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#inter-node-speed-depends-on-intra-node-speed)
+- 节点间链路仍然比节点内链路慢大约一个数量级（例如 P6-B200 实例上每块加速器的 EFA v4 是 50GBps，而 NVLink 5 是 900GBps），但实际差距远没有那么大，因为节点间集合通信的大部分数据搬运也是经由节点内链路完成的——一次跨 4 个节点的 4GiB `all-reduce` 只比在单个节点上慢约 2 倍，而不是 18 倍。参见[节点间速度取决于节点内速度](../network/README.md#inter-node-speed-depends-on-intra-node-speed)
 
 - 你需要比计算更快地归约梯度及其他张量（例如 MoE 的），以避免加速器空转
 
 - 你通常最多只能达到标称速度的 80%。例如，如果对方告诉你可获得 800Gbps，那么预期只有 640Gbps 左右
 
-[更多细节](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/README.md#inter-node-networking)。
+[更多细节](../network/README.md#inter-node-networking)。
 
 ### 存储 {#storage}
 
@@ -399,7 +399,7 @@ ML 负载中有三种不同的存储 IO 需求：
 - 训练：至少 23 块 GPU `80*18*1.25/80`
 - 推理：至少 3 块 GPU `80*2*1.25/80`
 
-[更多细节](https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md#anatomy-of-models-memory-usage)。
+[更多细节](../training/performance/README.md#anatomy-of-models-memory-usage)。
 
 ## 需要注意的陷阱 {#traps-to-be-aware-of}
 
