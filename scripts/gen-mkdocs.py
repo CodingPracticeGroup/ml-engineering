@@ -33,6 +33,9 @@ plugins:
   - search:
       lang: zh
 
+extra_css:
+  - extra.css
+
 markdown_extensions:
   - toc:
       permalink: true
