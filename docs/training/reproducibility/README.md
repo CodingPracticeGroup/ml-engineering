@@ -47,6 +47,7 @@ def enforce_reproducibility(use_seed=None):
     由于被静默忽略的环境变量很容易被漏掉，上面的代码用 [`torch.cuda.is_initialized()`](https://docs.pytorch.org/docs/stable/generated/torch.cuda.is_initialized.html) 来做检查：如果到 `enforce_reproducibility()` 运行时，`CUBLAS_WORKSPACE_CONFIG` 尚未设置，而 CUDA 已经被之前的某次调用惰性初始化了（例如某个 `.cuda()` 张量、`torch.cuda.set_device()`，或另一个库先接触了 CUDA），就改为 `raise` 抛出异常。注意，这只能捕获经由 PyTorch 自身的惰性初始化路径完成的初始化——如果某个非 PyTorch 的库先创建了原始 CUDA 上下文，`is_initialized()` 是察觉不到的。因此，尽量在程序中尽可能早地运行 `enforce_reproducibility()`。
 
     NVIDIA 的 cuBLAS 文档只认可两个可保证确定性的取值，而两者都涉及内存与性能之间的权衡——较小的工作区留给 cuBLAS 的算法选择更少，可能限制性能；较大的工作区则让它有更多余地挑选更快的算法，代价是额外的 GPU 显存：
+
     - `:16:8` - 确定性的，额外内存最少，但较小的工作区可能限制性能
     - `:4096:8` - 确定性的，代价是约 24MiB 的额外 GPU 显存，但保留更多性能余量（两者中更常用的那个，也是上面使用的取值）
 

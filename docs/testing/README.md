@@ -332,7 +332,7 @@ CUDA_VISIBLE_DEVICES="1" pytest tests/utils/test_logging.py
 
 例如，下面这个测试只有在有 2 个或更多可用 GPU 并且安装了 PyTorch 时才能运行：
 
-```python no-style
+```python
 from testing_utils import require_torch_multi_gpu
 
 @require_torch_multi_gpu
@@ -341,7 +341,7 @@ def test_example_with_multi_gpu():
 
 这些装饰器可以叠加使用：
 
-```python no-style
+```python
 from testing_utils import require_torch_gpu
 
 @require_torch_gpu
@@ -351,7 +351,7 @@ def test_example_slow_on_gpu():
 
 一些像 `@parametrized` 这样的装饰器会重写测试名称，因此必须把 `@require_*` 这类跳过装饰器列在最后，才能让它们正确工作。下面是一个正确用法的例子：
 
-```python no-style
+```python
 from testing_utils import require_torch_multi_gpu
 from parameterized import parameterized
 
@@ -671,20 +671,20 @@ with ExtendSysPath(f"{bindir}/.."):
 
 - 下面是无条件跳过整个测试的方法：
 
-```python no-style
+```python
 @unittest.skip("this bug needs to be fixed")
 def test_feature_x():
 ```
 
 或者通过 pytest：
 
-```python no-style
+```python
 @pytest.mark.skip(reason="this bug needs to be fixed")
 ```
 
 或者以 `xfail` 的方式：
 
-```python no-style
+```python
 @pytest.mark.xfail
 def test_feature_x():
 ```
@@ -723,21 +723,21 @@ docutils = pytest.importorskip("docutils", minversion="0.3")
 
 -  根据某个条件跳过测试：
 
-```python no-style
+```python
 @pytest.mark.skipif(sys.version_info < (3,6), reason="requires python3.6 or higher")
 def test_feature_x():
 ```
 
 或者：
 
-```python no-style
+```python
 @unittest.skipIf(torch_device == "cpu", "Can't do half precision")
 def test_feature_x():
 ```
 
 或者跳过整个模块：
 
-```python no-style
+```python
 @pytest.mark.skipif(sys.platform == 'win32', reason="does not run on windows")
 class TestClass():
     def test_feature_x(self):

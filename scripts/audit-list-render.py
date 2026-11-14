@@ -13,8 +13,10 @@ from markdown_it import MarkdownIt
 import markdown as pymd
 
 DOCS = os.path.join(co.ROOT, "docs")
+SITE = os.path.join(co.ROOT, "site")
 CM = MarkdownIt("gfm-like").disable("linkify")
 PYMD_EXT = ["toc", "attr_list", "admonition", "footnotes", "md_in_html",
+            "tables", "sane_lists",
             "pymdownx.highlight", "pymdownx.inlinehilite", "pymdownx.superfences",
             "pymdownx.details", "pymdownx.tabbed"]
 
@@ -58,29 +60,58 @@ def clean_src(src):
     # drop custom heading anchors so both renderers see identical anchors
     return re.sub(r" ?\{#[^}]+\}", "", src)
 
+ART = re.compile(r'<article[^>]*md-content__inner[^>]*>(.*?)</article>', re.S)
+
+def body_of(relmd):
+    """site/ built HTML for a docs page (use_directory_urls: false)."""
+    if relmd.endswith("README.md"):
+        h = os.path.join(SITE, os.path.dirname(relmd), "index.html")
+    else:
+        h = os.path.join(SITE, os.path.splitext(relmd)[0] + ".html")
+    if not os.path.exists(h):
+        return None
+    m = ART.search(open(h, encoding="utf-8").read())
+    if not m:
+        return None
+    html = m.group(1)
+    # footnotes are standard-rendered and out of scope; drop from end
+    k = re.search(r'<(?:div|section)[^>]*class="footnotes?"', html)
+    return html[:k.start()] if k else html
+
+def cm_body(src):
+    html = CM.render(src)
+    k = html.find('<section class="footnotes"')
+    if k < 0:
+        k = html.find('<ol class="footnotes"')
+    return html[:k] if k >= 0 else html
+
 bad = []
 checked = 0
+missing = []
 for dirpath, _, files in os.walk(DOCS):
     for fn in sorted(files):
         if not fn.endswith(".md"):
             continue
         p = os.path.join(dirpath, fn)
         rel = os.path.relpath(p, DOCS)
+        built = body_of(rel)
+        if built is None:
+            missing.append(rel); continue
         src = clean_src(open(p, encoding="utf-8").read())
         try:
-            cm = skeleton(CM.render(src))
-            pm = skeleton(pymd.markdown(src, extensions=PYMD_EXT,
-                                        extension_configs={"toc": {"permalink": True}}))
+            cm = skeleton(cm_body(src))
+            pm = skeleton(built)
         except Exception as e:
             bad.append((rel, "render error: " + str(e)[:80])); continue
         checked += 1
         if cm != pm:
-            # locate first divergence for reporting
             k = next(i for i in range(max(len(cm), len(pm)))
                      if (cm[i] if i < len(cm) else None) != (pm[i] if i < len(pm) else None))
             bad.append((rel, f"first diff at token {k}: commonmark={cm[max(0,k-1):k+3]} site={pm[max(0,k-1):k+3]}"))
 
 print(f"pages compared: {checked}, list-skeleton mismatches: {len(bad)}")
+if missing:
+    print("no built page (skip):", ", ".join(missing[:5]), ("..." if len(missing) > 5 else ""))
 for rel, why in bad:
     print(" -", rel)
     print("    ", why[:220])

@@ -27,6 +27,8 @@ def fix_text(text):
     lines = text.splitlines(keepends=True)
     out, fence = [], None
     prev_kind = None
+    after_fence = False
+    after_indented_para = False
     stack = []  # (indent, is_list_line) parent chain of list items
     prev_nonblank = ""
     for ln in lines:
@@ -36,13 +38,28 @@ def fix_text(text):
                 fence = FENCE.match(body).group(1)
             elif body.lstrip().startswith(fence):
                 fence = None
+                after_fence = True   # R5: a list right after a closed fence
+                                     # renders as list in CommonMark but gets
+                                     # absorbed into the code block by
+                                     # Python-Markdown unless a blank line
+                                     # separates them.
             stack = []
             prev_kind = None
+            after_indented_para = False
             out.append(ln); prev_nonblank = body; continue
         if fence is not None:
             out.append(ln); prev_nonblank = body; continue
         m = ITEM.match(body)
         if m and body.lstrip()[0] not in ">":
+            if after_fence:
+                out.append("\n")
+            after_fence = False
+            # R6: a child list directly after the parent item's indented
+            # paragraph is flattened by Python-Markdown; a blank line keeps it
+            # nested in BOTH renderers.
+            if after_indented_para and len(m.group(1)) > 0:
+                out.append("\n")
+            after_indented_para = False
             indent = len(m.group(1))
             # Determine the real nesting parent by indentation, BEFORE any rule.
             # Pop parents that are not less-indented than this item.
@@ -80,6 +97,8 @@ def fix_text(text):
             stack.append((indent, True))
             out.append(body + "\n"); prev_nonblank = body; continue
         if body.strip() == "":
+            after_fence = False
+            after_indented_para = False
             out.append(ln); continue
         # R2 continuation paragraph under a list item
         if stack:
@@ -87,7 +106,11 @@ def fix_text(text):
             want = stack[-1][0] + 4
             if 0 < indent < want and not re.match(r"^ *[>|]", body):
                 body = " " * want + body.lstrip()
+                after_indented_para = True
                 out.append(body + "\n"); prev_nonblank = body; continue
+            if indent >= want and want and stack and not re.match(r"^ *[>|]", body):
+                after_indented_para = True
+        after_fence = False
         if not body.startswith(" "):
             stack = []
             # a plain paragraph does NOT reset prev_kind: Python-Markdown
@@ -114,8 +137,11 @@ def merge_split_ordered(text):
     out, fence, gap, last_num = [], None, [], None
     def flush(indent_gap=False):
         for g in gap:
+            # normalize folded lines to exactly 4 spaces (adding 4 on top of a
+            # partial indent makes 5-7, which CommonMark reads as a lazy
+            # paragraph continuation instead of a child list)
             if indent_gap and g.strip() and (len(g) - len(g.lstrip())) < 4:
-                out.append("    " + g)
+                out.append("    " + g.lstrip())
             else:
                 out.append(g)
         gap.clear()
@@ -165,7 +191,7 @@ for dirpath, _, files in os.walk(DOCS):
             continue
         p = os.path.join(dirpath, fn)
         src = open(p, encoding="utf-8").read()
-        dst = merge_split_ordered(fix_text(src))
+        dst = fix_text(merge_split_ordered(src))  # R4 first: reconnect, then normalize
         if dst != src:
             open(p, "w", encoding="utf-8").write(dst)
             changed += 1

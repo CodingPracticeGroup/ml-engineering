@@ -2562,6 +2562,7 @@ core 文件是程序在低层崩溃时生成的——例如在使用某个 Pytho
 conda activate my-env
 gdb python core-python-3097667-6
 ```
+
 - 把 `my-env` 换成你实际使用的环境名，或者不用 conda，改用你激活 Python 环境的任何方式——也许你用的是系统自带的 python，那就不需要激活任何东西。
 - 把 core 文件名换成你实际拿到的那个文件——有可能存在很多个——那就挑最新的那个。
 
@@ -3111,6 +3112,7 @@ export TORCH_FR_BUFFER_SIZE=2000
 export TORCH_NCCL_DUMP_ON_TIMEOUT=1
 export TORCH_FR_DUMP_TEMP_FILE=/tmp/fr
 ```
+
 - `TORCH_NCCL_DUMP_ON_TIMEOUT=1`——看门狗触发时自动把缓冲区转储到磁盘；没有它，记录器仍在运行，但什么都不会写出来。
 - `TORCH_FR_DUMP_TEMP_FILE=/tmp/fr`——转储文件的路径前缀；每个 rank 会追加自己的 rank 编号，于是你会得到 `/tmp/fr0`、`/tmp/fr1`，依此类推。
 - `TORCH_FR_BUFFER_SIZE` 已在上一节说明。
@@ -3326,16 +3328,19 @@ python NicerTrace.py
 ```bash
 grep -n "backward" trace*
 ```
+
 - 显示所有跟踪文件 `tail -1` 的结果，并在前面附上每个文件的名称：
 
 ```bash
 find . -name "trace*" -exec sh -c 'echo "$1: $(tail -3 "$1")"' _ {} \;
 ```
+
 - 或者与上面类似，但打印最后 5 行，带上前置的文件名，并留一些空行以便阅读：
 
 ```bash
 find . -name "trace*" -exec sh -c 'echo; echo $1; echo "$(tail -5 "$1")"' _ {} \;
 ```
+
 - 统计 grep 在每个文件中匹配某个给定模式的次数，并打印匹配到的文件（这个示例中匹配的模式是 `backward`）：
 
 ```bash
