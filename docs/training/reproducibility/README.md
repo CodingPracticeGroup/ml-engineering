@@ -134,13 +134,13 @@ perl -nle 'm|"file://(.*?/([^/]+))"| && qx[cd $1; if [ ! -z "\$(git diff)" ]; th
 
 1. 我们保存加载了哪些 `modules`，例如在云集群/HPC 设置中，你很可能就是用这种方式加载 CUDA 和 cuDNN 库的。
 
-   如果你不使用 `modules`，那就删掉那一项
+    如果你不使用 `modules`，那就删掉那一项
 
 2. 我们转储 shell 环境变量。这可能至关重要，因为在某些环境中，仅仅一个 `LD_PRELOAD` 或 `LD_LIBRARY_PATH` 环境变量就可能对性能产生巨大影响
 
 3. 然后我们转储 python 环境中的软件包及其版本——这对 `conda`、`venv` 等任何 python 虚拟环境都应该有效，甚至不使用虚拟环境也可以。
 
-   如果你用的是 `uv` 而不是 `pip`，改用 `uv pip freeze`，它会快得多。
+    如果你用的是 `uv` 而不是 `pip`，改用 `uv pip freeze`，它会快得多。
 
 4. 如果你用 `pip install -e .` 做开发模式安装（devel install），除了安装来源那个 git 克隆仓库的 git SHA 之外，它对该仓库一无所知。但问题在于，你很可能在本地修改过文件，而这时 `pip freeze` 会漏掉那些改动。所以这一步会遍历所有未安装到 conda 环境中的软件包（我们通过查看 `site-packages/*.dist-info/direct_url.json` 来找到它们），并对其中每个存在未提交改动的软件包，把它的 `git diff` 保存到 `$REPRO_DIR/<package>.diff`。
 
