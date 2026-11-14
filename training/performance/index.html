@@ -1,0 +1,4733 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="《Machine Learning Engineering》(Stas Bekman) 简体中文翻译，面向计算机专业本科低年级读者">
+      
+      
+      
+        <link rel="canonical" href="https://codingpracticegroup.github.io/ml-engineering/training/performance/index.html">
+      
+      
+        <link rel="prev" href="../model-parallelism/index.html">
+      
+      
+        <link rel="next" href="../fault-tolerance/index.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>软件调优以获得最佳性能 - 机器学习工程（ML Engineering）· 简体中文版</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#software-tune-up-for-the-best-performance" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../index.html" title="机器学习工程（ML Engineering）· 简体中文版" class="md-header__button md-logo" aria-label="机器学习工程（ML Engineering）· 简体中文版" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器学习工程（ML Engineering）· 简体中文版
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              软件调优以获得最佳性能
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="切换浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CodingPracticeGroup/ml-engineering" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../index.html" title="机器学习工程（ML Engineering）· 简体中文版" class="md-nav__button md-logo" aria-label="机器学习工程（ML Engineering）· 简体中文版" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器学习工程（ML Engineering）· 简体中文版
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CodingPracticeGroup/ml-engineering" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Machine Learning Engineering 开放书籍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    洞见：算力与云服务
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    洞见：算力与云服务
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../insights/ai-battlefield.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 战场上的工程实践——你需要了解的事
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../insights/how-to-choose-cloud-provider.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何挑选云服务商
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../insights/when-to-upgrade-gpus/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    升级 GPU 什么时候才值得？
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    计算硬件
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    计算硬件
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    计算
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    加速器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/benchmarks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    加速器基准测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/nvidia/debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排查 NVIDIA GPU 问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/amd/debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排查 AMD GPU 问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/amd/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AMD GPU 性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/cpu/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CPU
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/cpu-memory/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CPU 内存
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    存储
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    存储
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../storage/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    存储：文件系统与 IO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    网络
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    节点间与节点内网络硬件
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/comms.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通信模式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/debug/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络调试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/benchmarks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络基准测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编排与调度
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    编排与调度
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编排
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    在 SLURM 环境中工作
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/admin.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLURM 管理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/users.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面向用户的 SLURM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLURM 性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/launchers/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用 SLURM 的单节点与多节点启动器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/kubernetes/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kubernetes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    训练
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../model-parallelism/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型并行
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model-parallelism/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型并行
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    软件调优以获得最佳性能
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="index.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    软件调优以获得最佳性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#glossary-and-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        术语表与概念
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="术语表与概念">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#macs-vs-flop-vs-flops-vs-flops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MACs、FLOP、FLOPS 与 FLOP/s 辨析
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tflops-as-a-performance-metric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        将 TFLOPS 用作性能指标
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="将 TFLOPS 用作性能指标">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automating-flop-calculation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自动计算 FLOP
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mfu-vs-hfu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MFU 与 HFU
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MFU 与 HFU">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mfu-is-a-very-rough-approximation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MFU 只是一个非常粗略的近似
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-improve-speed-and-save-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何提高速度并节省内存
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="如何提高速度并节省内存">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#anatomy-of-models-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模型运算剖析
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#anatomy-of-models-memory-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模型内存使用剖析
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-gpu-memory-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        额外的 GPU 内存占用
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="额外的 GPU 内存占用">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#preloaded-cuda-kernels-memory-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        预加载 CUDA 内核的内存占用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#torchdistributed-memory-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        torch.distributed 的内存占用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choosing-between-nccl-nccl2-and-nccl-lazy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        在 nccl、nccl2 与 nccl-lazy 之间做选择
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-fragmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        显存碎片化
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-sizes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        批次大小
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gradient-accumulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        梯度累积
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gradient-checkpointing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        梯度检查点
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="梯度检查点">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#offloading-the-activation-checkpoints-to-cpu-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        将激活检查点卸载（offload）到 CPU 内存
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-efficient-optimizers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        节省显存的优化器
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-execution-speed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模型执行速度
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="模型执行速度">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#forward-vs-backward-execution-speed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        forward 与 backward 的执行速度
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#input-data-affects-measured-speed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        输入数据会影响测量到的速度
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vector-and-matrix-size-divisibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        向量与矩阵大小的整除性
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="向量与矩阵大小的整除性">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tile-and-wave-quantization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        分块量化与波次量化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-more-sms-give-more-tflops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        更多的 SM 会带来更多的 TFLOPS 吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#number-and-size-of-attention-heads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        注意力头的数量与大小
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flash-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flash attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#swiglu-based-mlp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        基于 SwiGLU 的 MLP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#final-recommendations-for-model-sizing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模型尺寸的最终建议
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸阅读
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#numa-affinity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NUMA 亲和性
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="NUMA 亲和性">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#numa-process-binding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NUMA 进程绑定
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="NUMA 进程绑定">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#numactl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        numactl
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ossched_setaffinity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        os.sched_setaffinity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pynvml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pynvml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#srun" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        srun
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specific-launchers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        特定启动器
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dataloader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DataLoader
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DataLoader">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#asynchronous-dataloader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        异步 DataLoader
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pinned-memory-and-non-blocking-device-copy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        锁页内存与非阻塞设备拷贝
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#torchcompile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        torch.compile
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="torch.compile">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-it-pays-off" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        收益出现在哪里
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-makes-it-hard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        难在哪里
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automatic-garbage-collection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自动垃圾回收
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-profiler-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        内存剖析工具
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fault-tolerance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    故障容错
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reproducibility/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    可复现性
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../instabilities/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    不稳定的避免、恢复与理解
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../instabilities/training-loss-patterns.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    理解训练损失模式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkpoints/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    检查点
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hparams.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    选择训练超参数与模型初始化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dtype.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    张量精度 / 数据类型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../emulate-multi-node.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    只用单个节点模拟多节点环境
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../re-train-hub-models.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用微调示例从头重新训练 HF Hub 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../datasets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    处理数据集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../inference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试与排障
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    调试与排障
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试与故障排查
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/pytorch.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试 PyTorch 程序
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/tools.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试工具
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/nccl-performance-debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NCCL：调试与性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/torch-distributed-hanging-solutions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    诊断多节点多 GPU Python 程序中的挂起与死锁
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/underflow_overflow.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    下溢与上溢检测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/make-tiny-models-tokenizers-datasets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用小型模型、分词器与数据集加快调试和开发速度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/tiny-scripts/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    脚本备份
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    测试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    测试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编写与运行测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    资源汇总
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    资源汇总
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resources/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    资源
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献者
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    贡献者
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributors.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献者
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程：设计并运行一次大模型训练
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程：设计并运行一次大模型训练
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../courses/lesson-learned/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练大语言模型的经验教训（一门课程）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录：本书的构建方式
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    附录：本书的构建方式
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../build/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图书构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#glossary-and-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        术语表与概念
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="术语表与概念">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#macs-vs-flop-vs-flops-vs-flops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MACs、FLOP、FLOPS 与 FLOP/s 辨析
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tflops-as-a-performance-metric" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        将 TFLOPS 用作性能指标
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="将 TFLOPS 用作性能指标">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automating-flop-calculation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自动计算 FLOP
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mfu-vs-hfu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MFU 与 HFU
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MFU 与 HFU">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mfu-is-a-very-rough-approximation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MFU 只是一个非常粗略的近似
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-improve-speed-and-save-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何提高速度并节省内存
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="如何提高速度并节省内存">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#anatomy-of-models-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模型运算剖析
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#anatomy-of-models-memory-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模型内存使用剖析
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-gpu-memory-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        额外的 GPU 内存占用
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="额外的 GPU 内存占用">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#preloaded-cuda-kernels-memory-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        预加载 CUDA 内核的内存占用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#torchdistributed-memory-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        torch.distributed 的内存占用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choosing-between-nccl-nccl2-and-nccl-lazy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        在 nccl、nccl2 与 nccl-lazy 之间做选择
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-fragmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        显存碎片化
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-sizes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        批次大小
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gradient-accumulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        梯度累积
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gradient-checkpointing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        梯度检查点
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="梯度检查点">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#offloading-the-activation-checkpoints-to-cpu-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        将激活检查点卸载（offload）到 CPU 内存
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory-efficient-optimizers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        节省显存的优化器
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-execution-speed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模型执行速度
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="模型执行速度">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#forward-vs-backward-execution-speed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        forward 与 backward 的执行速度
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#input-data-affects-measured-speed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        输入数据会影响测量到的速度
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vector-and-matrix-size-divisibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        向量与矩阵大小的整除性
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="向量与矩阵大小的整除性">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tile-and-wave-quantization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        分块量化与波次量化
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-more-sms-give-more-tflops" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        更多的 SM 会带来更多的 TFLOPS 吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#number-and-size-of-attention-heads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        注意力头的数量与大小
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flash-attention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flash attention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#swiglu-based-mlp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        基于 SwiGLU 的 MLP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#final-recommendations-for-model-sizing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模型尺寸的最终建议
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸阅读
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#numa-affinity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NUMA 亲和性
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="NUMA 亲和性">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#numa-process-binding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NUMA 进程绑定
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="NUMA 进程绑定">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#numactl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        numactl
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ossched_setaffinity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        os.sched_setaffinity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pynvml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pynvml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#srun" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        srun
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specific-launchers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        特定启动器
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dataloader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DataLoader
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DataLoader">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#asynchronous-dataloader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        异步 DataLoader
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pinned-memory-and-non-blocking-device-copy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        锁页内存与非阻塞设备拷贝
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#torchcompile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        torch.compile
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="torch.compile">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-it-pays-off" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        收益出现在哪里
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-makes-it-hard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        难在哪里
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automatic-garbage-collection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自动垃圾回收
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-profiler-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        内存剖析工具
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<p class="en-origin-link">📄 <a href="https://github.com/CodingPracticeGroup/ml-engineering/blob/master/training/performance/README.md" target="_blank" rel="noopener">本页英文原文（GitHub master）</a></p><h1 id="software-tune-up-for-the-best-performance">软件调优以获得最佳性能<a class="headerlink" href="#software-tune-up-for-the-best-performance" title="Permanent link">&para;</a></h1>
+<p>你让模型训练得越快，模型就能越早完成训练，这不仅对抢先发表成果很重要，还可能省下大量资金。</p>
+<p>一般来说，最大化吞吐量就在于运行大量实验、度量结果，并选择其中更优的那个。</p>
+<p>在某些情况下，你的建模团队可能会请你选择一些会损害吞吐量、但从整体上有利于模型取得成功的超参数。</p>
+<h2 id="glossary-and-concepts">术语表与概念<a class="headerlink" href="#glossary-and-concepts" title="Permanent link">&para;</a></h2>
+<ul>
+<li>HFU：硬件 FLOPS 利用率（Hardware FLOPS Utilization）</li>
+<li>MFU：模型 FLOPS 利用率（Model FLOPS Utilization）</li>
+</ul>
+<h3 id="macs-vs-flop-vs-flops-vs-flops">MACs、FLOP、FLOPS 与 FLOP/s 辨析<a class="headerlink" href="#macs-vs-flop-vs-flops-vs-flops" title="Permanent link">&para;</a></h3>
+<p>本节试图厘清常见性能指标的定义及其相互关系。</p>
+<p><strong>MAC 与 FLOP</strong>：</p>
+<ul>
+<li>
+<p>1 FLOP（FLoating point OPeration，浮点运算）可以是加法、减法、乘法或除法运算中的一种。</p>
+</li>
+<li>
+<p>1 MAC（Multiply-ACCumulate，乘加）运算是先做一次乘法再做一次加法，即：<code>a * b + c</code></p>
+</li>
+</ul>
+<p>因此 1 MAC = 2 FLOPs。现代硬件通常也能在单个时钟周期内完成 1 次 MAC 运算。</p>
+<p>请注意，要从 FLOPs 反过来计算 MACs 的数量，逻辑要反过来，即 MACs = 0.5 FLOPs——这有点令人困惑，因为我们刚说过 1 MAC = 2 FLOPs，但它确实成立——请看：100 FLOPs = 50 MACs——因为每个 MAC 中含有 2 次 FLOPs。</p>
+<p>而且，虽然 1 MAC = 2 FLOPs，反过来却不一定成立，即 2 FLOPs 不一定等于 1 MAC。例如，如果你做 100 次 <code>.5*.6</code>，那就是 100 FLOPs，而在这里它相当于 100 MACs，因为这里只执行了 MAC 中乘法的那部分。</p>
+<p><strong>FLOP 与 FLOPS 与 FLOP/s</strong></p>
+<ul>
+<li>
+<p>1 FLOP（FLoating point OPeration，浮点运算）指任何浮点加法、减法、乘法或除法运算。</p>
+</li>
+<li>
+<p>1 FLOPS（FLoating point OPeration per Second，每秒浮点运算次数）指 1 秒内完成了多少次浮点运算——参见 <a href="https://en.wikipedia.org/wiki/FLOPS">FLOPS</a></p>
+</li>
+</ul>
+<p>后文你还会看到以下缩写：GFLOPS = Giga FLOPS，TFLOPS = Tera FLOPS，等等，因为迅速看懂 150TFLOPS 比看懂 150000000000000FLOPS 要容易得多。</p>
+<p>书面使用 FLOPS 时存在歧义——有时人们用它表示运算的总数量，有时它指的是每秒运算次数。后者是最常见的用法，也是本书采用的定义。</p>
+<p>在学术写作中常用 FLOP/s 来向读者明确表示这是每秒运算次数。不过这种写法很难转成变量名，因为去掉非法字符后它仍然会变成 <code>flops</code>。</p>
+<p>在一些地方你可能还会看到 FLOPs，它同样可能指代上述两者之一，因为大小写 <code>s</code> 实在太容易写反了。</p>
+<p>如果定义有歧义，试着寻找上下文，这应当能帮助你推断其含义：</p>
+<ul>
+<li>如果它出现在数学公式中，并且除以了时间，那它就是每秒运算次数。</li>
+<li>如果讨论的是速度或性能，它通常指每秒运算次数。</li>
+<li>如果谈论的是做某件事所需的计算量，它指的是运算的总数量。</li>
+</ul>
+<h3 id="tflops-as-a-performance-metric">将 TFLOPS 用作性能指标<a class="headerlink" href="#tflops-as-a-performance-metric" title="Permanent link">&para;</a></h3>
+<p>在你开始优化训练配置的性能之前，需要一个指标来判断吞吐量是否在提升。你可以测量每次迭代的秒数、每秒迭代次数，或其他类似的时间指标，但有一个更有用的指标，那就是测量 TFLOPS。</p>
+<p>测量 TFLOPS 更优越，因为缺少它，你就不知道自己是否已经接近可达到的最佳性能。这个测量能让你了解自己距离硬件厂商标称的峰值性能有多远。</p>
+<p>本节我将以 BLOOM 的训练为例来说明。我们使用的是 80GB 的 NVIDIA A100 GPU，并以 bf16 混合精度模式训练。那么让我们看看 <a href="https://www.nvidia.com/en-us/data-center/a100/">A100 规格</a>，上面写着：</p>
+<div class="highlight"><pre><span></span><code>BFLOAT16 Tensor Core    312 TFLOPS
+</code></pre></div>
+<p>因此我们现在知道，如果只在尺寸非常特定的超大 bf16 矩阵上运行 <code>matmul</code>，并且不进行与设备之间的数据拷贝，我们最多应能得到约 312TFLOPS。</p>
+<p>但实际上，由于磁盘 IO、通信，以及把数据从 GPU 内存拷贝到其计算单元的开销，再加上我们无法一切都用 bf16 完成、有时必须用 fp32（或 tf32）做运算，实际能期望的吞吐量要远低于此。真实数值因加速器而异，但对 2022 年的 A100 来说，在一个复杂的 384 GPU 训练配置中持续达到 50% 以上（155TFLOPS）已经是惊人的可持续吞吐量了。</p>
+<p>脚注：2023 年，flash attention 及其他技术的发明把这一标准提高到了 50% 以上。</p>
+<p>我们刚开始调优时还不到 100TFLOPS，几周后正式启动训练时，我们设法达到了 150TFLOPS。</p>
+<p>这里要注意的关键点是：我们知道很难再往上推多少了，也知道再试图进一步优化已没有意义。</p>
+<p>所以，在为大规模模型训练做准备时，有一条通用的经验法则——多方打听一下，在指定的精度下，给定加速器在多节点配置中最多能期望达到多少 TFLOPS——然后持续优化，直到接近那个数值。一旦做到，就停止优化，开始训练。</p>
+<p>脚注：对于 80GB A100，2022 年这个数值是 155，2023 年已被推高到约 180TFLOPS。</p>
+<p>脚注：计算 TFLOPS 时要记住一点很重要：如果启用了<a href="#gradient-checkpointing">梯度检查点</a>，算法就不一样了，因为它被激活时会使用更多计算量，必须把这部分考虑在内。通常代价是多走一次前向，但最近已经发现了能省掉其中部分重计算开销的更好方法。</p>
+<p>对于解码器（decoder）transformer 模型，下面是一个估算公式，它会略微低估真实的 TFLOPS：</p>
+<p>TFLOPS：<code>model_size_in_B * 4 * 2 * seqlen * global_batch_size / (time_in_sec_per_iteration * total_gpus * 1e3)</code></p>
+<p>使用激活/梯度检查点时采用系数 4，否则它是 3。对于 100B 以上的模型，激活检查点几乎总是要开启的。</p>
+<p>因此 <code>3*2</code> 通常被称为“模型 FLOPs”，<code>4*2</code> 被称为“硬件 FLOPs”，分别对应 MFU 和 HFU（即模型和硬件的每秒 FLOPS 除以加速器的理论峰值 FLOPS）</p>
+<p><div class="highlight"><pre><span></span><code>perl<span class="w"> </span>-le<span class="w"> </span><span class="s1">'$ng=64; $ms=52; $gbs=1024; $sp=127; $seqlen=2048; print $ms*4*2*$seqlen*$gbs / ( $sp * $ng * 1e3)'</span>
+</code></pre></div>
+（ng = GPU 总数，ms = 以 B 计的模型大小，gbs = 全局批次大小，sp = 每次迭代的秒数）</p>
+<p>下面是同一个公式，改用 <code>bash</code> 环境变量书写，并把 GBS 分解为 <code>MBS*DP*GAS</code>（这里的 GAS 当时对应的是 <code>pp_chunks</code>，即流水线中的分块数量，但通常 GAS 只是梯度累积步数（Gradient Accumulation Steps）的缩写）：
+<div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">"(</span><span class="nv">$MSIZE</span><span class="s2">*4*2*SEQLEN*</span><span class="nv">$MICRO_BATCH_SIZE</span><span class="s2">*</span><span class="nv">$DP_SIZE</span><span class="s2">*</span><span class="nv">$GAS</span><span class="s2">)/(</span><span class="nv">$THROUGHPUT</span><span class="s2">*</span><span class="nv">$NNODES</span><span class="s2">*</span><span class="nv">$GPUS_PER_NODE</span><span class="s2">*1000)"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>bc<span class="w"> </span>-l
+</code></pre></div>
+（<code>$GPUS_PER_NODE</code> = 每个节点的加速器数，因此 <code>$NNODES*$GPUS_PER_NODE</code> 就是 GPU 总数——与上面 Perl 单行命令中的 <code>$ng</code> 作用相同）</p>
+<p>精确的公式见论文 <a href="https://arxiv.org/abs/2104.04473">Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM</a> 第 5.1 节的公式 3。你可以在<a href="https://github.com/bigscience-workshop/Megatron-DeepSpeed/pull/251">这里</a>看到相应代码。</p>
+<p>脚注：如果只做推理（Inference），则是每层 <code>24Bsh^2 + 4Bs^2h</code> 次浮点运算。</p>
+<h4 id="automating-flop-calculation">自动计算 FLOP<a class="headerlink" href="#automating-flop-calculation" title="Permanent link">&para;</a></h4>
+<p>如上一节所述，手工计算 FLOP 很难算对——那些公式中有不少存在错误，而且许多模型的行为会随各种配置设置而不同。所以，要正确得到 FLOP 计数（还要覆盖许多不同的模型架构）可能很棘手。PyTorch 团队开发出一种自动测量 FLOPs 的方法。</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.flop_counter</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlopCounterMode</span>
+
+<span class="n">flop_counter</span> <span class="o">=</span> <span class="n">FlopCounterMode</span><span class="p">(</span><span class="n">mods</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">display</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">flop_counter</span><span class="p">:</span>
+    <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="nb">input</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+<span class="n">total_flops</span> <span class="o">=</span>  <span class="n">flop_counter</span><span class="o">.</span><span class="n">get_total_flops</span><span class="p">()</span>
+</code></pre></div>
+瞧，FLOPs 就替你算好了！至少理论上如此。实际上，<code>FlopCounterMode</code> 已被证明存在多个影响性能和内存使用的问题，截至 2026-08，还不能指望它取代手工计算——所以请预期仍然需要上一节的公式，并把计数器当作交叉验证的手段，而不是当作最终答案。</p>
+<p>在我的代码里，我只在第 2 次迭代上运行它（因为第一次迭代很可能包含一些只运行一次的额外计算）。你不需要再重复运行它，可以直接缓存它的值（当然，除非你的情况是各次迭代由于某种原因并不相同）。</p>
+<p>那么剩下的就是测量每次具体迭代所花费的时间，把 FLOPs 除以以秒为单位的时间和 <code>1e12</code>，从而得到性能 TFLOPS。</p>
+<div class="highlight"><pre><span></span><code>tflops = total_flops / time / 1e12
+</code></pre></div>
+<p>这样每次迭代得到的数值都会略有不同。</p>
+<h3 id="mfu-vs-hfu">MFU 与 HFU<a class="headerlink" href="#mfu-vs-hfu" title="Permanent link">&para;</a></h3>
+<p>模型 FLOPS 利用率（Model FLOPS Utilization，MFU）和硬件 FLOPS 利用率（Hardware FLOPS Utilization，HFU）估算的是模型 <code>forward</code> 和 <code>backward</code> 过程中硬件被利用的程度（包括任何同步造成的网络开销，以及可能的 DataLoader IO）。</p>
+<div class="highlight"><pre><span></span><code>MFU = Estimated_Achieved_FLOPS / Theoretical_FLOPS
+HFU = Actual_Achieved_FLOPS / Theoretical_FLOPS
+</code></pre></div>
+<p>HFU 测量的是实际 FLOPS。例如，<a href="#gradient-checkpointing">梯度检查点/激活重计算</a>技术会把 <code>forward</code> 的全部或部分再重复执行一遍，因此实际使用了更多的 FLOS（FLoating point OperationS，浮点运算次数）。而 MFU 忽略实现细节，只计算理论上的计算需求，因此准确度较低。</p>
+<p><a href="https://arxiv.org/abs/2205.05198">Reducing Activation Recomputation in Large Transformer Models</a> 是一篇了解这些概念的好论文。</p>
+<p><code>Theoretical_FLOPS</code> 就是你在官方加速器规格上看到的数值。你可以在<a href="../../compute/accelerator/index.html#tflops-comparison-table">这里</a>找到高端加速器这些数值的对照表。我们以 H100 为例，它的 BF16 理论值是 989TFLOPS。</p>
+<p>现在，假设你测量了实际训练循环的性能，实际达到的 FLOPS 是 400TFLOPS，那么你的 HFU 就是：
+<div class="highlight"><pre><span></span><code>HFU = 400/989 = 40%
+</code></pre></div></p>
+<p>如果你没有使用激活重计算功能（即不重复执行 <code>forward</code>），你的 HFU 和 MFU 会是相同的。如果你使用了它，MFU 会低于 HFU，因为 MFU 只计算理论上的 <code>forward</code>/<code>backward</code> FLOPs，而 HFU 还会计算额外重计算产生的 FLOPs。</p>
+<p>例如，<a href="https://github.com/NVIDIA/Megatron-LM">Megatron-LM</a> 公布了以下针对 A100-80GB 的统计数据：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">模型大小</th>
+<th style="text-align: center;">模型 FLOPS 利用率</th>
+<th style="text-align: center;">硬件 FLOPS 利用率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">22B</td>
+<td style="text-align: center;">41.5%</td>
+<td style="text-align: center;">43.7%</td>
+</tr>
+<tr>
+<td style="text-align: center;">175B</td>
+<td style="text-align: center;">51.4%</td>
+<td style="text-align: center;">52.8%</td>
+</tr>
+<tr>
+<td style="text-align: center;">530B</td>
+<td style="text-align: center;">56.0%</td>
+<td style="text-align: center;">57.0%</td>
+</tr>
+<tr>
+<td style="text-align: center;">1T</td>
+<td style="text-align: center;">56.3%</td>
+<td style="text-align: center;">57.0%</td>
+</tr>
+</tbody>
+</table>
+<p>你可以看到，由于 Megatron-LM 在这些训练中使用了激活重计算，所以 MFU &lt; HFU。</p>
+<p>更新的 H100+A100 MFU/HFU 数字已发布在<a href="https://github.com/mosaicml/llm-foundry/tree/main/scripts/train/benchmarking#mfu-and-hfu">这里</a>。</p>
+<p>因此，每当你看到有人公布 MFU 或 HFU 数字时，在你确认对方使用了相同的 FLOPS 计算方法之前，务必不要贸然把这些数字与其他类似数字相比。由于 <code>HFU=Actual_Achieved_FLOPS/Theoretical_FLOPS</code>，而 <code>Theoretical_FLOPS</code> 是固定的，这里唯一的变量就是 <code>Actual_Achieved_FLOPS</code>；而它大多数时候是根据参数形状估算出来的，所以外界存在许多版本的计算方法，有些略不准确，有些则非常不准确。编译器也可能影响有效 FLOPs，因为它会优化掉某些运算。此外，你还不知道迭代时间是如何测量的。</p>
+<p>回顾一下 <code>TFLOPS = FLOS / iteration_duration</code>。因此，要做公平的比较，两个关键要问的问题是：</p>
+<ol>
+<li>所用的浮点运算总数是否以相同的方式计算？</li>
+<li>时间部分是否背靠背地统计了每次迭代，包括 <code>DataLoader</code> 和日志记录，还是只统计了 <code>fwd</code>+<code>bwd</code> 部分。</li>
+</ol>
+<p>只要这两项中有一项或两项不一致，就无法做公平的比较。</p>
+<p>不幸的是，大多数时候论文和博客文章只报告 MFU 数字，而不给出其计算方法的链接。</p>
+<p>不过，别担心，如果你难以把自己的结果与竞争对手的结果相比较，请记住上面描述的那些测量上的假象（measurement artifacts）。这些假象不会改善最终的吞吐量，因此，只要你始终采用自己选定的同一种方式计算 TFLOPS，你就能立刻看出自己的应用性能是提升了还是下降了，因为对你来说最重要的就是相对数值。</p>
+<h4 id="mfu-is-a-very-rough-approximation">MFU 只是一个非常粗略的近似<a class="headerlink" href="#mfu-is-a-very-rough-approximation" title="Permanent link">&para;</a></h4>
+<p>大多数训练/微调方案都使用混合精度，但在计算 MFU/HFU 时用的是速度最快的那种数据格式的计算能力。例如，在 BF16 混合精度训练中，部分计算是用 BF16 完成的，另一些则是用 FP32！但我们测量 FLOPS 时却假设一切都用 BF16 完成，这当然会导致测量非常不准确。理想情况下，应当分段测量每一部分计算，以考虑何时使用了哪种格式。它之所以大致可行，是因为在这些混合精度训练方案中，小格式的计算通常占主导地位。</p>
+<p>此外，具体取决于集群的搭建方式——尤其是存储 IO 和网络 IO 的深度参与——同一套软件可能得出不同的 MFU，因为并非所有集群都是等同的。因此，比较自己这一特定配置在优化前后的 MFU 是没有问题的，但要把自己配置的 MFU 与另一个团队集群的 MFU 相比，就非常困难了。</p>
+<h2 id="how-to-improve-speed-and-save-memory">如何提高速度并节省内存<a class="headerlink" href="#how-to-improve-speed-and-save-memory" title="Permanent link">&para;</a></h2>
+<p>你能用于批次大小（batch size，BS）的 GPU 显存越多，GPU 执行计算的效率就越高，你处理数据的速度也就越快，从而完成任务的速度也越快。</p>
+<p>当然，当你即使 BS=1 也会出现 GPU OOM（显存溢出）、又不想租用/购买更多硬件时，本节就尤为关键了。</p>
+<p>下面概述了哪些方法能够帮助提升速度或节省内存</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">方法</th>
+<th style="text-align: left;">速度</th>
+<th style="text-align: left;">内存</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">梯度累积</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr>
+<td style="text-align: left;">梯度检查点</td>
+<td style="text-align: left;">否*</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr>
+<td style="text-align: left;">混合精度训练</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">否</td>
+</tr>
+<tr>
+<td style="text-align: left;">批次大小</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr>
+<td style="text-align: left;">优化器的选择</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr>
+<td style="text-align: left;">DataLoader</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">否</td>
+</tr>
+<tr>
+<td style="text-align: left;">DeepSpeed ZeRO</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">是</td>
+</tr>
+<tr>
+<td style="text-align: left;">Flash Attention</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">是</td>
+</tr>
+</tbody>
+</table>
+<p>* 对于给定的批次大小，梯度检查点会降低速度，但由于它释放了大量内存，从而允许使用大得多的 BS，所以实际上提升了整体速度。</p>
+<h3 id="anatomy-of-models-operations">模型运算剖析<a class="headerlink" href="#anatomy-of-models-operations" title="Permanent link">&para;</a></h3>
+<p>Transformer 架构包含 3 大类运算，下面按计算强度分组列出。</p>
+<ol>
+<li>
+<p><strong>张量收缩（Tensor Contractions）</strong></p>
+<p>线性层和多头注意力（Multi-Head Attention）的各个组成部分执行的都是批量<strong>矩阵-矩阵乘法</strong>。这些运算是训练 Transformer 时计算强度最高的部分。</p>
+</li>
+<li>
+<p><strong>统计归一化（Statistical Normalizations）</strong></p>
+<p>Softmax 和层归一化（layer normalization）的计算强度低于张量收缩，它们包含一个或多个<strong>归约操作（reduction operations）</strong>，归约的结果再通过一个映射（map）作用到数据上。</p>
+</li>
+<li>
+<p><strong>逐元素算子（Element-wise Operators）</strong></p>
+<p>这些是其余的算子：<strong>偏置（biases）、dropout、激活（activations）和残差连接（residual connections）</strong>。这些是计算强度最低的运算。</p>
+</li>
+</ol>
+<p>在分析性能瓶颈时，了解这些知识会有帮助。</p>
+<p>本小结整理自 <a href="https://arxiv.org/abs/2007.00072">Data Movement Is All You Need: A Case Study on Optimizing Transformers 2020</a></p>
+<h3 id="anatomy-of-models-memory-usage">模型内存使用剖析<a class="headerlink" href="#anatomy-of-models-memory-usage" title="Permanent link">&para;</a></h3>
+<p>我们已经看到，训练模型使用的内存远不止把模型放进 GPU 所占的那部分。这是因为训练过程中有许多组成部分都要使用 GPU 显存。GPU 显存中的组成部分如下：</p>
+<ol>
+<li>模型权重</li>
+<li>优化器状态</li>
+<li>梯度</li>
+<li>为计算梯度而保存的前向激活</li>
+<li>临时缓冲区</li>
+<li>特定功能的内存</li>
+</ol>
+<p>一个使用混合精度和 AdamW 训练的典型模型，每个模型参数需要 18 字节，此外还需要激活内存和临时内存。</p>
+<p>我们来看细节。</p>
+<p><strong>模型权重：</strong></p>
+<!---->
+
+<ul>
+<li>fp32 训练：每个参数 4 字节</li>
+<li>混合精度训练：每个参数 6 字节（内存中同时维护一份 fp32 模型和一份 fp16/bf16 模型）</li>
+</ul>
+<p><strong>优化器状态：</strong></p>
+<ul>
+<li>普通 AdamW：每个参数 8 字节（维护 2 个状态）</li>
+<li>以 bf16 运行的 AdamW：每个参数 4 字节。参见使用 <code>AnyPrecisionAdamW</code> 的<a href="https://github.com/huggingface/transformers/pull/21312">这项工作</a>。</li>
+<li>对于像带动量的 SGD 这样只维护 1 个状态的优化器，或 LION、Adafactor（以及其他）：每个参数 4 字节（Adafactor 在 4 字节之外还会使用一些额外内存）</li>
+<li>像 <a href="https://github.com/bitsandbytes-foundation/bitsandbytes">bitsandbytes</a> 这样的 8-bit AdamW 优化器：每个参数 2 字节</li>
+</ul>
+<p><strong>梯度</strong></p>
+<ul>
+<li>每个参数 4 字节：fp32 精度时如此，某些框架在混合半精度训练时也如此。</li>
+<li>每个参数 2 字节：非混合的半精度时如此，某些框架在混合半精度训练时也如此。</li>
+</ul>
+<p><strong>前向激活</strong></p>
+<ul>
+<li>大小取决于许多因素，其中关键的因素是序列长度、隐藏维大小（hidden size）和批次大小。</li>
+</ul>
+<p>这包括前向（forward）和反向（backward）函数传入和返回的输入与输出，以及为计算梯度而保存的前向激活。</p>
+<p>以下是每 GPU 激活内存的大致构成：</p>
+<!---->
+
+<ol>
+<li>激活工作内存：<code>dtype_size * num_of_hidden_states_copies * bs * seqlen * hidden_size</code></li>
+<li>激活检查点内存：<code>dtype_size * num_layers * bs * seqlen * hidden_size</code></li>
+<li>logits 工作内存：<code>fp32_size * bs * seqlen * vocab_size</code></li>
+</ol>
+<p>在以下所有计算中：</p>
+<!---->
+
+<ul>
+<li><code>dtype_size</code>：所用 <code>dtype</code> 单个元素的大小，例如 fp8 为 <code>1</code> 字节，bf16 为 <code>2</code>，fp32 为 <code>4</code> 等——完整集合参见<a href="../dtype.html">张量精度/数据类型</a></li>
+<li><code>fp32_size</code>：<code>4</code> 字节</li>
+<li><code>bs</code>：批次大小</li>
+<li><code>hidden_size</code>：模型的隐藏维大小</li>
+<li><code>seqlen</code>：序列长度</li>
+<li><code>num_layers</code>：模型拥有的层数</li>
+<li><code>vocab_size</code>：词汇表大小</li>
+</ul>
+<p>而 <code>dtype_size * bs * seqlen * hidden_size</code> 就是 <code>hidden_states</code> 张量的大小，因为那就是它的形状 <code>[bs, seqlen, hidden_size]</code> 乘以单个元素的字节数。</p>
+<p>在下面的讲解中，我们以 Llama-3 架构及其 <a href="https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct/blob/main/config.json">8B 配置</a>为例：
+<div class="highlight"><pre><span></span><code>hidden_size=4096
+num_layers=32
+vocab_size=128256
+</code></pre></div></p>
+<p>并且设：
+<div class="highlight"><pre><span></span><code>dtype=bf16 (2 bytes)
+bs=1
+seqlen=32768
+</code></pre></div></p>
+<p>我们可以立即算出 bf16 下 <code>hidden_states</code> 张量的大小为：<code>2 * 1 * 32768 * 4096 / 2**30 = 0.25GiB</code></p>
+<p>第 1 部分。首先让我们计算处理单个层的前向需要多少工作内存：</p>
+<p><code>activation_memory_per_layer = num_of_hidden_states_copies * dtype_size * bs * seqlen * hidden_size</code></p>
+<p><code>num_of_hidden_states_copies</code> 通常在 20 到 50 之间，并因模型架构不同而变化。为了对这些变化有个直观感受——我们用 <a href="benchmarks/activation-memory-per-layer.py">activation-memory-per-layer.py</a> 测量了一批模型，得到的结果是：
+<div class="highlight"><pre><span></span><code>24.0 "HuggingFaceTB/SmolLM2-360M"
+28.0 "meta-llama/Llama-3.1-8B-Instruct"
+28.0 "mistralai/Mistral-7B-Instruct-v0.3"
+29.8 "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B"
+38.0 "Qwen/Qwen3-4B"
+48.0 "google/gemma-1.1-2b-it"
+</code></pre></div></p>
+<p>因此很容易看出，Gemma 在计算单层前向时对 <code>hidden_states</code> 的拷贝数量是 SmolLM2 的两倍。</p>
+<p>如果各模型的 <code>hidden_size</code> 不同，就很难精确地比较它们的内存，但比较 <code>num_of_hidden_states_copies</code> 系数是很容易的。</p>
+<p>显然，某些架构除了 <code>hidden_states</code> 的拷贝之外还会分配额外内存，从 <code>deepseek-ai/DeepSeek-R1-0528-Qwen3-8B</code> 就能看出来，它的系数不是整数。</p>
+<p>现在回到我们的示例模型：</p>
+<p><code>activation_memory_per_layer = 2 * 28 * 1 * 32768 * 4096 / 2**30 = 7GiB</code>（<code>28</code> 来自前几段给出的对 <code>meta-llama/Llama-3.1-8B-Instruct</code> 的测量输出）。</p>
+<p>第 2 部分。既然我们已经知道了每层分配的内存，接下来会发生两种情况之一，取决于是否启用了<a href="#gradient-checkpointing">梯度检查点</a>：</p>
+<ul>
+<li>如果启用，那么我们需要存储 <code>num_layers * hidden_states</code>。</li>
+</ul>
+<p>在我们的示例中就是：<code>32 * 0.25 = 8GiB</code>（我们前面已经算出 <code>hidden_states = 0.25GiB</code>）。</p>
+<ul>
+<li>如果不启用，那么激活内存将增长到 <code>num_layers * activation_memory_per_layer</code>。</li>
+</ul>
+<p>在我们的示例中就是：<code>32 * 7 = 224GiB</code></p>
+<p>注意 8GiB 对比 224GiB——差别巨大——因此，显然所有人都会启用<a href="#gradient-checkpointing">梯度检查点</a>功能，哪怕要付出把前向过程重算一遍的代价。</p>
+<p>第 3 部分。最后是损失计算，它通常需要以 fp32 生成出 logits，而这里 <code>vocab_size</code> 通常是最大的维度，因此：<code>fp32_size * bs * seqlen * vocab_size</code></p>
+<p>在我们的示例中就是：<code>4 * 1 * 32768 * 128256 /  2**30 = 15.7GiB</code>（约 16GiB）</p>
+<p>你可以看到，对这个模型而言，logits 使用的内存比所有检查点激活加起来还要多。</p>
+<p>此外，实践中 <code>dtype_size</code> 的系数通常会变成 6 而不是 4，因为 <code>logits</code> 一般先以较低精度创建，然后再上转（upcast）为 fp32，所以你同时拥有它的 2 份拷贝，因此 <code>2+4=6</code>。</p>
+<p>第 4 部分。使用梯度检查点时，所需激活内存的总量 = 计算单层前向所需内存 + 激活检查点内存 + logits 激活内存。不使用梯度检查点时，它是第 2 项与第 3 项之和，即全部前向激活内存与 logits 内存之和。</p>
+<p>在我们的示例中：</p>
+<ul>
+<li>启用梯度检查点：<code>7 + 8 + 16 = 31GiB</code></li>
+<li>不启用梯度检查点：<code>224 + 16 = 240GiB</code></li>
+</ul>
+<p><strong>临时内存</strong></p>
+<p>此外还有各种各样的临时变量，它们在计算完成后会被释放，但就在那一刻，它们可能需要额外的内存，甚至可能把程序推向 OOM。因此，编码时要有策略地考虑这些临时变量，有时要在它们不再被需要之后立刻显式释放。</p>
+<p><strong>特定功能的内存</strong></p>
+<p>然后，你的软件还可能有特殊的内存需求。例如，使用束搜索（beam search）生成文本时，软件需要维护多份输入和输出。</p>
+<p>对于<strong>推理</strong>，计算方式与训练非常相似，只是去掉了优化器状态和梯度。而对于模型权重，只有一个参数量乘数：</p>
+<ul>
+<li>fp32 下 4 字节</li>
+<li>fp16/bf16 下 2 字节</li>
+<li>fp8/int8 下 1 字节</li>
+<li>fp4/int4 下 0.5 字节</li>
+</ul>
+<p>关于更低精度和量化格式（包括 fp8、fp6、fp4、整数量化以及 MX 格式），参见<a href="../../inference/index.html#model-weights">推理章节中的模型权重</a>。</p>
+<p>另一个带你了解内存需求及其他要求的好资源是 <a href="https://blog.eleuther.ai/transformer-math/">Transformer Math 101</a>。</p>
+<p><a href="https://github.com/EleutherAI/cookbook">EAI cookbook</a> 包含一组<a href="https://github.com/EleutherAI/cookbook/tree/main/calc">计算脚本</a>，能够根据你的配置和环境，输出给定训练或推理运行的理论内存开销。</p>
+<p>还有一个非常好用的、由 Alexander Smirnov 制作的 <a href="https://vram.asmirnov.xyz/">GPU VRAM Estimator</a>，以及<a href="https://asmirnov.xyz/vram">介绍其工作原理的说明</a>。</p>
+<h3 id="additional-gpu-memory-usage">额外的 GPU 内存占用<a class="headerlink" href="#additional-gpu-memory-usage" title="Permanent link">&para;</a></h3>
+<p>除了上一节描述的内存占用之外，GPU 显存还有其他消耗者——因此你永远无法把全部显存用于自己的模型。</p>
+<h4 id="preloaded-cuda-kernels-memory-usage">预加载 CUDA 内核的内存占用<a class="headerlink" href="#preloaded-cuda-kernels-memory-usage" title="Permanent link">&para;</a></h4>
+<p>当 PyTorch 第一次使用 CUDA 时，它可能会占用 0.5-2GiB 的 GPU 显存，从而减少 GPU 的总可用内存。这部分内存不会被 torch 内存剖析器统计到。</p>
+<p>为 cuda 内核分配的内存大小在不同 GPU 之间有所不同，在不同 pytorch 版本之间也可能不同。让我们在 cuda 上分配一个 4 字节的张量，看看一开始就用掉了多少 GPU 显存。</p>
+<p>使用 <code>pytorch==1.10.2</code> 时：
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span><span class="nv">CUDA_MODULE_LOADING</span><span class="o">=</span>EAGER<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import torch; x=torch.ones(1).cuda(); free, total = map(lambda x: x/2**30, torch.cuda.mem_get_info()); \</span>
+<span class="s2">used=total-free; print(f'pt={torch.__version__}: {used=:0.2f}GiB, {free=:0.2f}GiB, {total=:0.2f}GiB')"</span>
+<span class="nv">pt</span><span class="o">=</span><span class="m">1</span>.10.2:<span class="w"> </span><span class="nv">used</span><span class="o">=</span><span class="m">1</span>.78GiB,<span class="w"> </span><span class="nv">free</span><span class="o">=</span><span class="m">77</span>.43GiB,<span class="w"> </span><span class="nv">total</span><span class="o">=</span><span class="m">79</span>.21GiB
+</code></pre></div></p>
+<p>使用 <code>pytorch==1.13.1</code> 时：
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span><span class="nv">CUDA_MODULE_LOADING</span><span class="o">=</span>EAGER<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import torch; x=torch.ones(1).cuda(); free, total = map(lambda x: x/2**30, torch.cuda.mem_get_info()); \</span>
+<span class="s2">used=total-free; print(f'pt={torch.__version__}: {used=:0.2f}GiB, {free=:0.2f}GiB, {total=:0.2f}GiB')"</span>
+<span class="nv">pt</span><span class="o">=</span><span class="m">1</span>.13.1:<span class="w"> </span><span class="nv">used</span><span class="o">=</span><span class="m">0</span>.90GiB,<span class="w"> </span><span class="nv">free</span><span class="o">=</span><span class="m">78</span>.31GiB,<span class="w"> </span><span class="nv">total</span><span class="o">=</span><span class="m">79</span>.21GiB
+</code></pre></div></p>
+<p>旧的 pytorch 在 A100 上“浪费”了 1.78GiB，而新版只用了 0.9GiB——在 OOM 的情形下，找回的这 0.9GiB 可能就是救命稻草。</p>
+<p>不过，不要把这理解成一种单向的趋势。这项开销是特定 pytorch 与 CUDA 版本恰好如何打包和加载其内核的副产物，因此在不同版本之间它会朝两个方向变化：从 <code>1.10.2</code> 到 <code>1.13.1</code> 几乎减半，随后到下面的 <code>2.1.1</code> 又略有回升。这里的数字来自 2022-2023 年，保留它们是因为它们说明了这种波动可以有多大——仅仅因为版本变化，同一块 GPU 上就相差接近 1GiB。请把这些数字当作这一现象的演示，而不是用来做规划的依据，并在你自己的 GPU、pytorch 和 CUDA 组合上运行上面那条单行命令，得到真正适用于你的数字。</p>
+<p>如果我们想在较新的 pytorch 版本中强制预加载 cuda 内核，就需要 <code>CUDA_MODULE_LOADING=EAGER</code>，否则内核会按需惰性加载。但不建议在生产环境中使用这个设置，因为它很可能会使用超出需要的内存。惰性加载的全部意义就在于只加载需要的内核。</p>
+<p>使用 <code>pytorch==2.1.1</code> 时：
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span><span class="nv">CUDA_MODULE_LOADING</span><span class="o">=</span>EAGER<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import torch; x=torch.ones(1).cuda(); free, total = map(lambda x: x/2**30, torch.cuda.mem_get_info()); \</span>
+<span class="s2">used=total-free; print(f'pt={torch.__version__}: {used=:0.2f}GiB, {free=:0.2f}GiB, {total=:0.2f}GiB')"</span>
+<span class="nv">pt</span><span class="o">=</span><span class="m">2</span>.1.1+cu121:<span class="w"> </span><span class="nv">used</span><span class="o">=</span><span class="m">0</span>.92GiB,<span class="w"> </span><span class="nv">free</span><span class="o">=</span><span class="m">78</span>.23GiB,<span class="w"> </span><span class="nv">total</span><span class="o">=</span><span class="m">79</span>.15GiB
+</code></pre></div>
+与之相比，惰性模式下的情况：
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import torch; x=torch.ones(1).cuda(); free, total = map(lambda x: x/2**30, torch.cuda.mem_get_info()); \</span>
+<span class="s2">used=total-free; print(f'pt={torch.__version__}: {used=:0.2f}GiB, {free=:0.2f}GiB, {total=:0.2f}GiB')"</span>
+<span class="nv">pt</span><span class="o">=</span><span class="m">2</span>.1.1+cu121:<span class="w"> </span><span class="nv">used</span><span class="o">=</span><span class="m">0</span>.47GiB,<span class="w"> </span><span class="nv">free</span><span class="o">=</span><span class="m">78</span>.68GiB,<span class="w"> </span><span class="nv">total</span><span class="o">=</span><span class="m">79</span>.15GiB
+</code></pre></div>
+两者相差 450MiB，但这里我们只为执行 <code>torch.ones</code> 加载了内核——在实际运行时，随着其他代码使用 torch API，实际分配的内存会介于 0.47 到 0.92GiB 之间。</p>
+<h4 id="torchdistributed-memory-usage"><code>torch.distributed</code> 的内存占用<a class="headerlink" href="#torchdistributed-memory-usage" title="Permanent link">&para;</a></h4>
+<p>使用 <code>torch.distributed</code> 时，光是初始化就会占走约 1-2GiB 的 GPU 显存——GPU 越多，使用的内存越高。不同的后端很可能会使用不同的内存量。而且这部分内存不会被 torch 内存剖析器统计到。</p>
+<p>这里有一个 <a href="distributed/torch-dist-mem-usage.py">torch-dist-mem-usage.py</a>，它演示了实际的内存占用：</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>python<span class="w"> </span>-u<span class="w"> </span>-m<span class="w"> </span>torch.distributed.run<span class="w"> </span>--nproc_per_node<span class="o">=</span><span class="m">2</span><span class="w"> </span>--rdzv_endpoint<span class="w"> </span>localhost:6000<span class="w">  </span>--rdzv_backend<span class="w"> </span>c10d<span class="w"> </span><span class="se">\</span>
+torch-dist-mem-usage.py
+<span class="o">[</span>...<span class="o">]</span>
+<span class="o">[</span><span class="m">0</span><span class="o">]</span><span class="w"> </span>mp:<span class="w"> </span>before<span class="w"> </span>barrier
+<span class="o">[</span><span class="m">0</span><span class="o">]</span><span class="w"> </span>mp:<span class="w"> </span>MA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>Max_MA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>CA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>Max_CA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>NV<span class="w"> </span><span class="m">0</span>.55<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>CPU<span class="w"> </span>Virtual<span class="w"> </span>Memory:<span class="w">  </span><span class="nv">used</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">68</span>.79<span class="w"> </span>GiB,<span class="w"> </span><span class="nv">percent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3</span>.4%
+<span class="o">[</span><span class="m">0</span><span class="o">]</span><span class="w"> </span>mp:<span class="w"> </span>after<span class="w"> </span>barrier
+<span class="o">[</span><span class="m">0</span><span class="o">]</span><span class="w"> </span>mp:<span class="w"> </span>MA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>Max_MA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>CA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>Max_CA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>NV<span class="w"> </span><span class="m">2</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>CPU<span class="w"> </span>Virtual<span class="w"> </span>Memory:<span class="w">  </span><span class="nv">used</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">69</span>.33<span class="w"> </span>GiB,<span class="w"> </span><span class="nv">percent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3</span>.5%
+<span class="o">[</span><span class="m">0</span><span class="o">]</span><span class="w"> </span>mp:<span class="w"> </span>after<span class="w"> </span>2nd<span class="w"> </span>barrier
+<span class="o">[</span><span class="m">0</span><span class="o">]</span><span class="w"> </span>mp:<span class="w"> </span>MA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>Max_MA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>CA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>Max_CA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>NV<span class="w"> </span><span class="m">2</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>CPU<span class="w"> </span>Virtual<span class="w"> </span>Memory:<span class="w">  </span><span class="nv">used</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">69</span>.33<span class="w"> </span>GiB,<span class="w"> </span><span class="nv">percent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3</span>.5%
+<span class="o">[</span><span class="m">0</span><span class="o">]</span><span class="w"> </span>mp:<span class="w"> </span>after<span class="w"> </span>dist<span class="w"> </span>destroy
+<span class="o">[</span><span class="m">0</span><span class="o">]</span><span class="w"> </span>mp:<span class="w"> </span>MA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>Max_MA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>CA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>Max_CA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>NV<span class="w"> </span><span class="m">1</span>.28<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>CPU<span class="w"> </span>Virtual<span class="w"> </span>Memory:<span class="w">  </span><span class="nv">used</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">69</span>.25<span class="w"> </span>GiB,<span class="w"> </span><span class="nv">percent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3</span>.5%
+<span class="o">[</span><span class="m">0</span><span class="o">]</span><span class="w"> </span>mp:<span class="w"> </span>after<span class="w"> </span>dist<span class="w"> </span>destroy
+<span class="o">[</span><span class="m">0</span><span class="o">]</span><span class="w"> </span>mp:<span class="w"> </span>MA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>Max_MA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>CA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>Max_CA<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>NV<span class="w"> </span><span class="m">1</span>.28<span class="w"> </span>GiB<span class="w"> </span><span class="p">|</span><span class="w"> </span>CPU<span class="w"> </span>Virtual<span class="w"> </span>Memory:<span class="w">  </span><span class="nv">used</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">69</span>.25<span class="w"> </span>GiB,<span class="w"> </span><span class="nv">percent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3</span>.5%
+</code></pre></div>
+<p>因此你可以看到，<a href="#preloaded-cuda-kernels-memory-usage">CUDA 内核</a>占用了 0.55GiB（第一行的 <code>NV 0.55 GiB</code>），而当运行 <code>dist.barrier</code> 时又额外消耗了 1.5GiB。如果你在调用 <code>init_process_group</code> 时带上 <code>device_id</code> 参数，那么额外的内存分配就会转移到那个调用上，<code>dist.barrier</code> 使用的内存会更少。</p>
+<h4 id="choosing-between-nccl-nccl2-and-nccl-lazy">在 <code>nccl</code>、<code>nccl2</code> 与 <code>nccl-lazy</code> 之间做选择<a class="headerlink" href="#choosing-between-nccl-nccl2-and-nccl-lazy" title="Permanent link">&para;</a></h4>
+<p>从 PyTorch 2.14 开始，PyTorch 的分布式包在同一个 NCCL 库之上包含了第二套实现。尽管名字如此，<code>nccl2</code> 并不是 NCCL 的第 2 版，也不会取代 NCCL 的集合通信算法。它改变的是 PyTorch 如何创建、拆分、等待和中止这些集合通信所运行的通信器（communicator）。在 PyTorch 2.14 中，<code>init_process_group("nccl")</code> 仍然会选择原有的 <code>ProcessGroupNCCL</code>；要显式选择新实现，请使用 <code>backend="nccl2"</code>，或者设置 <code>TORCH_DIST_USE_NCCL2=1</code>，使 <code>"nccl"</code> 也解析到新实现。显式的 <code>nccl-legacy</code> 名称始终选择原有实现；而 <code>nccl-lazy</code> 是 <code>nccl2</code> 的一个变体，它不会预先创建通信器，而是在首次使用某个对端（peer）时才为它创建。</p>
+<p>在一台空闲的 8 卡 H200 节点上，使用 PyTorch 2.14.0、CUDA 13.0 和 NCCL 2.30.7 测量时，一次 1GiB 的 <code>all_reduce</code> 在两种实现下都落在 458 到 466GBps 的 <code>busbw</code> 之间，而对同一实现重复运行的波动幅度与两者之间的差距一样大——因此这些测试没有显示出吞吐量差异。两者发出的是同样的 NCCL 集合通信。</p>
+<p>可测量的差异在显存占用上。在 <code>init_process_group</code> 和第一次 <code>dist.barrier</code> 之后，rank 0 的加速卡在 <code>nccl</code> 下占用 1.56GiB，而在 <code>nccl2</code> 下占用 5.16GiB——多次运行都能复现，并且与是否传入 <code>device_id</code> 无关。所以，不要指望切换后集合通信会更快；在采用它之前，请先在你自己的拓扑上测量它的显存开销。<code>nccl2</code> 真正提供的是对通信器生命周期的控制：子组在调用 <code>new_group</code> 时就建立，而不是等到它们第一次执行集合通信时才建立；并且——通过 2.14 版被标记为不稳定的 API——在某个 rank 死亡之后，可以在原地重建一个组，而不需要重启整个任务。</p>
+<p><code>nccl-lazy</code> 适用于每个 rank 只与少数几个对端通信的场景，例如<a href="../model-parallelism/index.html#pipeline-parallelism">流水线并行</a>，因为从未被使用的通信器就永远不会被创建。对于一个从第一步起就执行集合通信的组，它不会降低峰值显存，因为那个通信器无论如何都会被创建。</p>
+<p>参考：<a href="https://pytorch.org/blog/pytorch-2-14-release-blog/">PyTorch 2.14 发布博客</a>。</p>
+<h4 id="memory-fragmentation">显存碎片化<a class="headerlink" href="#memory-fragmentation" title="Permanent link">&para;</a></h4>
+<p>随着模型不断分配和释放张量，显存可能出现碎片化。也就是说，空闲内存的总量也许足够分配比如说 1GiB 的连续内存，但这些空闲空间可能以数百个小片段散布在整个显存中，因此尽管内存在总量上是可用的，除非只做非常小的分配，否则无法使用它。</p>
+<p>环境变量 <code>PYTORCH_ALLOC_CONF</code> 可以帮上忙，它允许你用更高效的机制替换默认的内存分配机制。更多信息见<a href="https://docs.pytorch.org/docs/stable/notes/cuda.html#memory-management">内存管理</a>。我发现，当代码进行大量张量重塑（reshaping）——这通常会把显存严重碎片化——时，<code>PYTORCH_ALLOC_CONF=expandable_segments:True</code> 极其有用。</p>
+<h3 id="batch-sizes">批次大小<a class="headerlink" href="#batch-sizes" title="Permanent link">&para;</a></h3>
+<p>首先，通常存在两种批次大小：</p>
+<ol>
+<li>
+<p>微批次大小（micro batch size，MBS），也称为每 GPU 批次大小——指单个 GPU 在模型的一次 <code>forward</code> 调用中消耗的样本数量。</p>
+</li>
+<li>
+<p>全局批次大小（global batch size，GBS）——指所有参与的 GPU 在两次优化器步骤之间消耗的样本总数。</p>
+</li>
+</ol>
+<p>模型副本（model replica）指容纳完整模型所需的 GPU 数量。</p>
+<!---->
+
+<ul>
+<li>如果模型能装进单个 GPU，一个模型副本只占 1 个 GPU。通常这时可以使用多个 GPU 来做 <a href="../model-parallelism/index.html#data-parallelism">数据并行</a></li>
+<li>如果模型装不进单个 GPU，通常就需要某种分片技术——可以是 <a href="../model-parallelism/index.html#tensor-parallelism">张量并行</a>（TP）、<a href="../model-parallelism/index.html#pipeline-parallelism">流水线并行</a>（PP），或 <a href="../model-parallelism/index.html#zero-data-parallelism">ZeRO 数据并行</a>（ZeRO-DP）。</li>
+</ul>
+<p>你可以拥有与模型副本数量相同的数据流，也就是 DP 的值。</p>
+<ul>
+<li>所以在模型能装进单个 GPU 的简单情况下，数据流数量等于 GPU 数量，DP=N_GPUS</li>
+<li>当模型装不进单个 GPU 时，在 3D 并行的情况下 <code>DP=N_GPUs/(TP*PP)</code>，在 ZeRO 并行的情况下 DP=ZeRO-DP。</li>
+</ul>
+<p>回到我们的全局批次大小（GBS），它按下式计算：</p>
+<div class="highlight"><pre><span></span><code>GBS = MBS*DP
+</code></pre></div>
+<p>因此，如果你有 8 个 GPU（N_GPUS=8），MBS=4，并且做数据并行，那么最终 GBS=32，因为：</p>
+<div class="highlight"><pre><span></span><code>GBS = MBS*DP = 4*8 = 32
+</code></pre></div>
+<p>如果你使用并行度为 2 的 TP（TP=2）和并行度为 2 的 PP（PP=2），这意味着每个模型副本要占 4 个 GPU（<code>TP*PP</code>），于是在 N_GPUS=8 时</p>
+<p><div class="highlight"><pre><span></span><code>DP = N_GPUS/(TP*PP) = 8 / (2*2) = 2
+</code></pre></div>
+现在 GBS 变为：</p>
+<div class="highlight"><pre><span></span><code>GBS = MBS*DP = 4*2 = 8
+</code></pre></div>
+<p>如果你的训练设置需要<a href="#gradient-accumulation">梯度累积</a>，通常需要定义在执行一次梯度累积之前要等待多少步。这个量通常称为梯度累积步数（Gradient Accumulation Steps，GAS）。如果 GAS=4（即每 4 步同步一次梯度），且 TP=1、PP=1、DP=8：</p>
+<div class="highlight"><pre><span></span><code>DP = N_GPUS/(TP*PP) = 8 / (1*1) = 8
+GBS = MBS*DP*GAS = 4*8*4 = 128
+</code></pre></div>
+<p>通常你会希望把微批次大小尽可能调大，让显存接近用满，但又不能太满。</p>
+<p>对于大模型，通常没有太多空闲显存来支撑较大的微批次，因此每多装下一个样本都很重要。</p>
+<p>尽管为了达到最高性能，序列长度、隐藏维大小以及各种其他超参数最好是较大的 2 的倍数（64、128 或更高），但由于在大多数模型中，计算时批次维度会与序列长度维度展平合并，微批次大小的对齐通常对性能几乎没有影响，或完全没有影响。</p>
+<p>因此，如果你尝试用 8 的微批次结果 OOM 了，而 7 能装下——那就用后者，而不是退到 4。批次大小越大，单步中能装入的样本就越多。</p>
+<p>当然，当使用数百个 GPU 时，你的全局批次大小可能变得非常大。这种情况下，你可以使用更小的微批次、使用更少的 GPU，或者换用另一种形式的数据并行，让 GPU 的工作效率更高。</p>
+<h3 id="gradient-accumulation">梯度累积<a class="headerlink" href="#gradient-accumulation" title="Permanent link">&para;</a></h3>
+<p>梯度累积的思路是：不是一次性计算整个批次的梯度，而是分更小的步骤来做。具体做法是：以较小的批次迭代地对模型做前向和反向传播来计算梯度，并在此过程中把梯度累加起来。当累加了足够的梯度后，再执行模型的优化步骤。这样，我们就能轻松地把整体批次大小提高到 GPU 显存根本无法容纳的规模。但作为代价，额外增加的前向和反向传播会让训练稍微变慢一些。</p>
+<p>梯度累积步数（GAS）定义的是在不更新模型权重的情况下连续执行多少步。</p>
+<p>使用流水线并行时，必须进行很大规模的梯度累积，才能<a href="../model-parallelism/index.html#naive-model-parallelism-vertical">把流水线的气泡（bubble）控制在最小</a>。</p>
+<p>由于有了梯度累积，优化器步骤不必执行得那么频繁，所以这里还会有额外的加速。</p>
+<p>下面的基准测试展示了增加梯度累积步数如何提升整体吞吐量（加速 20-30%）：</p>
+<ul>
+<li><a href="https://github.com/huggingface/transformers/issues/14608#issuecomment-1004392537">RTX-3090</a></li>
+<li><a href="https://github.com/huggingface/transformers/issues/15026#issuecomment-1005033957">A100</a></li>
+</ul>
+<p>当使用<a href="../model-parallelism/index.html#data-parallelism">数据并行</a>时，梯度累积还会进一步提升训练吞吐量，因为它减少了梯度归约（gradient reduction）调用的次数；梯度归约通常通过 <code>all_reduce</code> 集合通信完成，其代价是被归约梯度大小 2 倍的通信量。例如，在 <code>DistributedDataParallelism</code>（DDP）中把 GAS 从 1 提高到 8，网络开销就减少为原来的 1/8，这在节点间网络较慢的情况下，能带来训练吞吐量的明显改善。</p>
+<h3 id="gradient-checkpointing">梯度检查点<a class="headerlink" href="#gradient-checkpointing" title="Permanent link">&para;</a></h3>
+<p><strong>梯度检查点（Gradient Checkpointing）</strong> 也称为<strong>激活重计算（Activation Recomputation）</strong> 和<strong>激活检查点（Activation Checkpointing）</strong>。</p>
+<p>这种方法只与训练相关，与推理无关。</p>
+<p>启用梯度检查点，可以拿训练吞吐量去换取加速器的内存。启用该功能后，比如说，transformer 块的输出不再被保留到 <code>backward</code> 结束，而是被丢弃，这就释放出了大量的加速器内存。但当然，没有 <code>forward</code> 的输出就无法进行 <code>backward</code>，因此这些输出必须重新计算。</p>
+<p>这个代价当然因模型而异，但通常要付出大约 20-25% 的吞吐量下降；不过由于释放了大量 GPU 显存，你现在可以增大每 GPU 的批次大小，从而整体上提高系统的有效吞吐量。在某些情况下，如果你原本就能在不发生 OOM 的前提下使用一个较小的批次，这样做可以让批次大小翻倍甚至翻两番。（近期论文报告的额外开销高达 30-40%。）</p>
+<p>例如，对于 HF Transformers 模型，在你的自定义 Trainer 中可以调用 <code>model.gradient_checkpointing_enable()</code> 来启用它；如果你使用 HF Trainer，则可以通过 <code>--gradient_checkpointing 1</code> 来启用。</p>
+<p>另外也去看看这篇论文：<a href="https://arxiv.org/abs/2205.05198">Reducing Activation Recomputation in Large Transformer Models</a>，它描述了一种避免大部分激活重计算的方法，从而同时节省内存和计算。</p>
+<h4 id="offloading-the-activation-checkpoints-to-cpu-memory">将激活检查点卸载（offload）到 CPU 内存<a class="headerlink" href="#offloading-the-activation-checkpoints-to-cpu-memory" title="Permanent link">&para;</a></h4>
+<p>梯度检查点仍然会在加速器上为每个被检查点的层保留一个张量——即该层的输入，它的 <code>forward</code> 就是从这份输入重新计算的。那是 <code>layers x sequence x hidden</code> 个元素，在长序列长度下会成为激活内存中最大的部分：Qwen3-8B（36 层，隐藏维 4096）在 128K 词元、bf16 下会保留 <code>36 x 131072 x 4096 x 2</code> 字节 = 36GiB 这样的数据。</p>
+<p>从 <code>transformers==5.17</code> 起，这些张量可以在 <code>forward</code> 期间被移到锁页（pinned）CPU 内存中，并在 <code>backward</code> 时取回：</p>
+<div class="highlight"><pre><span></span><code><span class="n">args</span> <span class="o">=</span> <span class="n">TrainingArguments</span><span class="p">(</span>
+    <span class="n">gradient_checkpointing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">gradient_checkpointing_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"offload"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>它用 PyTorch 的 <a href="https://docs.pytorch.org/docs/stable/autograd.html#torch.autograd.graph.save_on_cpu"><code>save_on_cpu(pin_memory=True)</code></a> 来包装模型的检查点函数，因此任何支持梯度检查点的模型都支持这个功能。在 <a href="../../debug/pytorch.html#pytorch-memory-profiler">PyTorch 内存剖析器</a>的内存剖析结果中可以看到它的效果：把激活检查点卸载之后，加速器内存在整个 <code>forward</code> 过程中保持平稳，而不是随每一层攀升，因此增加层数也不再增加内存占用。</p>
+<p>只有当激活检查点属于峰值时刻驻留的那些张量时，卸载才会降低峰值内存占用。如果峰值出现在 <code>backward</code> 阶段——那时占主导的是梯度——峰值几乎不会变化：Qwen3-1.7B 在 32K 词元下，<code>forward</code> 之后释放了 3.5GiB，但其峰值只从 11.13GB 降到 10.16GB。</p>
+<p>这里有两个代价。其一，被卸载的张量现在位于 CPU 内存中，在一个节点的范围内会不断累加：Llama-70B 在 3M 词元的序列下，借助 <a href="../model-parallelism/index.html#arctic-long-sequence-training">Arctic Long Sequence Training</a> 切分到 32 张加速卡上时，仅卸载的激活检查点一项就需要每个节点 915GiB 的 CPU 内存。其二，这些拷贝与计算运行在同一个 CUDA 流上，并且 <code>backward</code> 之前没有预取，所以每一步都会变慢。</p>
+<p>脚注：截至 2026-10，这是一个低效的实现：两次拷贝都在计算流上运行，<code>backward</code> 之前也没有任何预取。<a href="https://github.com/Snowflake-AI-Research/Arctic-Platform">Arctic Platform</a> 的 <a href="https://github.com/Snowflake-AI-Research/Arctic-Platform/blob/4f50c5bbea3f1ba102daba675bd480796c6dfea5/arctic_platform/model/implementations/gpu/activation_offload.py#L175"><code>ActivationOffloadManager</code></a> 的开销接近于 0，因为它在与计算流分离的 CUDA 流上做拷贝，使拷贝与计算重叠，并且在每一层 <code>backward</code> 之前预取该层的激活检查点。</p>
+<h3 id="memory-efficient-optimizers">节省显存的优化器<a class="headerlink" href="#memory-efficient-optimizers" title="Permanent link">&para;</a></h3>
+<p>最常用的优化器是 Adam。它及其各种衍生版本每个参数都要用 8 字节（2 个 fp32 张量——每个动量一个），这几乎占到模型、优化器和梯度总内存分配的一半。所以有时候，改用其他优化器也许能帮你在关键时刻解围——前提是它们确实能训练成功。并非所有优化器都适合所有训练任务。</p>
+<p>4 字节优化器：</p>
+<ul>
+<li>
+<p>有些优化器只需要 4 字节，比如 Adafactor。<a href="https://arxiv.org/abs/2302.06675">LION 优化器</a>也是如此。</p>
+</li>
+<li>
+<p><code>AnyPrecisionAdamW</code>。一些勇敢的先行者尝试用 BF16（不是混合精度！）完成整个训练，优化器也不例外，因此优化器状态每个参数只需要 4 字节。见<a href="https://github.com/huggingface/transformers/pull/21312">这项工作</a>。提示：这个优化器需要 Kahan 求和（Kahan summation）和/或随机舍入（stochastic rounding），参见 <a href="https://arxiv.org/abs/2010.06192">Revisiting BFloat16 Training (2020)</a>。这样一来，权重、优化器状态和梯度每个参数总共只需要 8 字节！而不是 18 字节！</p>
+</li>
+</ul>
+<p>2 字节优化器：</p>
+<ul>
+<li>也有像 <code>bnb.optim.Adam8bit</code> 这样的量化方案，它只用 2 字节而不是 8 字节（每个动量 1 字节）。你可以从<a href="https://github.com/bitsandbytes-foundation/bitsandbytes">这里</a>获取它。安装之后，如果你使用 HF Trainer，只需传入 <code>--optim adamw_bnb_8bit</code> 就能启用它！</li>
+</ul>
+<p>速度对比见<a href="https://github.com/huggingface/transformers/issues/22101">这个基准测试</a>。就速度而言：<code>apex</code> 的 <code>apex.optimizers.FusedAdam</code> 优化器目前是最快的 Adam 实现。自 pytorch-2.0 起，<a href="https://docs.pytorch.org/docs/stable/generated/torch.optim.AdamW.html">torch.optim.AdamW</a> 增加了对 <code>fused=True</code> 选项的支持，这使它几乎与 <code>apex.optimizers.FusedAdam</code> 不相上下。</p>
+<h2 id="model-execution-speed">模型执行速度<a class="headerlink" href="#model-execution-speed" title="Permanent link">&para;</a></h2>
+<h3 id="forward-vs-backward-execution-speed"><code>forward</code> 与 <code>backward</code> 的执行速度<a class="headerlink" href="#forward-vs-backward-execution-speed" title="Permanent link">&para;</a></h3>
+<p>对于卷积层和线性层，反向传播的 FLOPS 是前向传播的 2 倍，这通常意味着大约慢 2 倍（有时更慢，因为反向传播时的形状往往更别扭）。激活函数通常受带宽限制，而且激活在反向传播时往往要比前向传播读入更多数据（例如：激活的前向传播读一次、写一次；激活的反向传播读两次——<code>gradOutput</code> 和前向传播的输出——再写一次，即 <code>gradInput</code>）。</p>
+<h3 id="input-data-affects-measured-speed">输入数据会影响测量到的速度<a class="headerlink" href="#input-data-affects-measured-speed" title="Permanent link">&para;</a></h3>
+<p>测量得到的单步耗时取决于张量中的<em>数值</em>，而不仅仅是它们的形状。高熵的输入每个周期会翻转更多晶体管，消耗更多功率，并可能在与低熵或全零输入根本不会触及的同一功耗/散热限制（envelope）之下，把加速频率（boost clock）拉低——因此同一个内核完成计算的时间，可能与在相同形状的低熵或全零输入上不同。对训练或推理的基准测试来说，这意味着：要为构造输入所用的随机数发生器设置种子（<code>torch.manual_seed(...)</code>），并喂入符合真实分布的数据，而不是全零。当分布保持不变时，这个影响很小，但并不为零。完整的说明——包括功耗和非规格化数（denormal）机制以及相关引用——见<a href="../../compute/accelerator/benchmarks/index.html#input-data-affects-measured-performance">输入数据会影响测量到的性能</a>。这里说的是<em>时间</em>测量条件；关于<em>数值</em>上的确定性，见<a href="../reproducibility/index.html">可复现性</a>。</p>
+<h2 id="vector-and-matrix-size-divisibility">向量与矩阵大小的整除性<a class="headerlink" href="#vector-and-matrix-size-divisibility" title="Permanent link">&para;</a></h2>
+<p>论文 <a href="https://arxiv.org/abs/2401.14489">The Case for Co-Designing Model Architectures with Hardware</a> 研究了 transformer 的规模设置对底层硬件的影响。<a href="https://github.com/EleutherAI/cookbook/tree/main/benchmarks/sizing">配套脚本</a>让你可以在 NVIDIA V100/A100 之外的硬件上自己跑这些基准测试。</p>
+<p>当批次大小和输入/输出神经元数量能被某个数整除时，性能最高效；这个数通常从 8 起步，但也可能高得多。这个数值因所使用的具体硬件和模型的 dtype 而有很大差异。</p>
+<p>对于全连接层（对应 GEMM），NVIDIA 提供了关于<a href="https://docs.nvidia.com/deeplearning/performance/dl-performance-fully-connected/index.html#input-features">输入/输出神经元数量</a>和<a href="https://docs.nvidia.com/deeplearning/performance/dl-performance-fully-connected/index.html#batch-size">批次大小</a>的建议。</p>
+<p><a href="https://docs.nvidia.com/deeplearning/performance/dl-performance-matrix-multiplication/index.html#requirements-tc">Tensor Core Requirements</a> 根据 dtype 和硬件定义了这个倍数。例如，对 fp16 推荐使用 8 的倍数，但在 A100 上是 64！</p>
+<p>对于较小的维度参数，还要考虑<a href="https://docs.nvidia.com/deeplearning/performance/dl-performance-matrix-multiplication/index.html#dim-quantization">维度量化效应</a>，这里发生的是分块（tiling），选对倍数能带来显著的加速。</p>
+<p><a href="https://arxiv.org/abs/2401.14489">The Case for Co-Designing Model Architectures with Hardware</a> 对分块/波次量化以及注意力头数量提供了更详尽的细节，但要点如下：</p>
+<h3 id="tile-and-wave-quantization">分块量化与波次量化<a class="headerlink" href="#tile-and-wave-quantization" title="Permanent link">&para;</a></h3>
+<p>符号说明：</p>
+<ul>
+<li><code>a</code>：注意力头的数量</li>
+<li><code>h</code>：隐藏维大小</li>
+<li><code>s</code>：序列长度</li>
+<li><code>b</code>：微批次大小</li>
+<li><code>t</code>：张量并行的规模</li>
+</ul>
+<p>先来一点背景知识。</p>
+<p>如下图所示，NVIDIA GPU 会把输出矩阵划分成若干区域，也就是分块（tile），并把它们调度到 GPU 上某个可用的流式多处理器（streaming multiprocessor，SM）上（例如，A100 GPU 有 108 个 SM）。每个分块或者说线程块（thread block）都由 Tensor Core 处理，Tensor Core 是 NVIDIA 为快速张量运算引入的。NVIDIA Tensor Core 只适用于维度合适的 GEMM。对于 V100 和 A100 GPU，当 GEMM 的维度 <code>m</code>、<code>k</code>、<code>n</code> 分别是 16 字节和 128 字节的倍数时，Tensor Core 才能得到充分利用。由于一个 FP16 元素占 2 字节，这分别对应维度大小为 8 个和 64 个元素的倍数。如果无法达到这些维度大小，对于 2 字节的倍数，倍数越大，Tensor Core 的表现越好。</p>
+<p><img alt="分块" src="images/tiling.png" /></p>
+<p>内核可以选择的分块大小有很多种。如果 GEMM 的大小不能被分块大小整除，就会有被浪费的计算：线程块必须在 SM 上完整执行，但实际上只需要其中一部分输出。这被称为<strong>分块量化（tile quantization）</strong>效应，因为输出被量化到了离散的分块中。</p>
+<p>另一种量化效应称为<strong>波次量化（wave quantization）</strong>。当线程块被调度到 SM 上时，一次只能调度与 SM 数量相同的线程块——A100 上是 108 个，H100/H200 上是 132 个（用 <code>torch.cuda.get_device_properties(0).multi_processor_count</code> 测得，所以在使用这里的任何数字之前，请先换成你自己加速器的实际数量）。以 A100 的 108 为例：如果需要调度 109 个线程块，就必须分两轮，也就是两个波次（wave），把线程块调度到 GPU 上。第一个波次有 108 个线程块，第二个波次只有 1 个。第二个波次的延迟与第一个几乎相同，但有效计算只占很小一部分。随着矩阵大小增加，最后一个、也就是尾部波次会增长。吞吐量会上升，直到需要新的一个波次，然后吞吐量就会下降。</p>
+<p>这对 transformer 的含义是：对于给定的 <code>h/a</code> 比值，需要确保自己处在波峰的有利位置上。如果你使用的是 NVIDIA V100/A100 GPU，我们在 https://arxiv.org/pdf/2401.14489 中已经替你做了这项工作。</p>
+<p>下面是注意力头数为 32 时的一个示例：</p>
+<p><img alt="波次量化" src="images/wave-quant.png" /></p>
+<p>让 <code>h/a</code> 的因子中 2 的幂越多越有利！</p>
+<h3 id="do-more-sms-give-more-tflops">更多的 SM 会带来更多的 TFLOPS 吗？<a class="headerlink" href="#do-more-sms-give-more-tflops" title="Permanent link">&para;</a></h3>
+<p>设想两台针对某一给定 dtype 完全相同的加速器——每个 SM 的矩阵乘法单元相同，每个时钟的 <a href="../../compute/accelerator/index.html#how-to-calculate-theoretical-tflops">FMAs</a> 数相同，时钟频率也相同——只是其中一台的 SM 更多。理论峰值随 SM 数量线性增长，因为它的推导方式就是如此——<code>clock * FMAs_per_clock_cycle_per_compute_unit * 2 * num_compute_units</code>——而最后一项是 SM 数量的固定倍数：在 NVIDIA 的 Ampere、Hopper 和 Blackwell 上，每个 SM 有 4 个 Tensor Core，AMD 和 Intel 则按他们自己的单元计数。这里唯一重要的是这个倍数是固定的。实际可达的吞吐量并<em>不</em>随数量线性增长，其中的差距就是波次量化。</p>
+<p>一个 GEMM 会被分解成 <code>C</code> 个线程块，对于 <code>Tm x Tn</code> 的分块，<code>C = ceil(m/Tm) * ceil(n/Tn)</code>。在 <code>S</code> 个 SM 上这需要 <code>W = ceil(C/S)</code> 个波次，而由于一个波次无论排满与否代价都相同，所以耗时与 <code>W</code> 成正比。因此当 <code>S1 &lt; S2</code> 时，加速比并不是 <code>S2/S1</code>，而是：</p>
+<div class="highlight"><pre><span></span><code>speedup = ceil(C/S1) / ceil(C/S2)
+</code></pre></div>
+<p>由此画出的图是一条阶梯，而不是一条直线。例如，B300 至少以两种 SKU 出货，分别有 <strong>148</strong> 和 <strong>152</strong> 个 SM——同样的芯片，同样的时钟，SM 之比为 <code>152/148</code> = <strong>1.027</strong>：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">线程块数</th>
+<th style="text-align: right;">148 SM 波次</th>
+<th style="text-align: right;">152 SM 波次</th>
+<th style="text-align: right;">加速比</th>
+<th style="text-align: left;">发生了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">148</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.000x</td>
+<td style="text-align: left;">两者都只需一个波次——4 个 SM 空闲</td>
+</tr>
+<tr>
+<td style="text-align: right;">152</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.000x</td>
+<td style="text-align: left;">交叉点——多 2.7% 的 SM 带来 2 倍加速</td>
+</tr>
+<tr>
+<td style="text-align: right;">296</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1.000x</td>
+<td style="text-align: left;">没有收益——296 = 2 x 148 恰好填满 148</td>
+</tr>
+<tr>
+<td style="text-align: right;">304</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1.500x</td>
+<td style="text-align: left;">再次到达交叉点</td>
+</tr>
+<tr>
+<td style="text-align: right;">3584</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">1.042x</td>
+<td style="text-align: left;">真实的 transformer MLP 形状，见下文</td>
+</tr>
+<tr>
+<td style="text-align: right;">50000</td>
+<td style="text-align: right;">338</td>
+<td style="text-align: right;">329</td>
+<td style="text-align: right;">1.027x</td>
+<td style="text-align: left;">趋向 1.027x 的 SM 比值这一渐近线</td>
+</tr>
+</tbody>
+</table>
+<p>脚注：线程块也被称为协作线程阵列（Cooperative Thread Array，CTA）</p>
+<p>仅仅由于形状不同，多 2.7% 的 SM 换来的收益从<strong>毫无用处</strong>到 <strong>2 倍</strong>都有可能。当工作不足一个波次时，多出的 SM 无事可做。在交叉点上，较窄的那部分要为一个几乎空的第二波次付出代价，损失可达 2 倍。一旦两者需要的波次数相同，它们就又打平了，而且此时<em>更宽</em>的那部分浪费得更多：在 <code>C = 296</code> 时，148 SM 的那颗芯片恰好排满两个波次，而 152 SM 的那颗在第二个波次里空着 8 个槽位。只有当 <code>C</code> 增大时，优势才逐渐稳定到 SM 的比值上——在 3584 处仍差 1.4%，到 50000 时误差已在 0.03% 以内——这就是为什么厂商在巨大的矩阵乘法上标称峰值，因为那是阶梯唯一平坦的地方。</p>
+<p><code>3584</code> 这一行对应的是你实际会跑的形状：Llama-3.1-8B 在 8K 词元下前向传播中 MLP 的 up-projection。<code>hidden_size=4096</code> 和 <code>intermediate_size=14336</code> 给出一个 <code>8192 x 14336</code> 的输出，按 <code>128 x 256</code> 的分块计算就是 <code>64 * 56</code> = 3584 个块，32 层中每层一次。它落在 1.027x 比值<em>之上</em>——阶梯是从两侧跨过这个比值的，而不是从下方逼近它。</p>
+<p>所以，不知道你的形状，<strong>SM 数量并不能告诉你吞吐量的优势</strong>；在一个部件上调试好的形状，在另一个部件上可能正好落在交叉点的错误一侧。要确定自己的位置，请数出你的线程块数，再除以你自己的 SM 数量。</p>
+<p>标称峰值是<strong>整颗芯片的总量</strong>，绝不是单个 SM 的速率：B300 的 2250TFLOPS bf16 是全部 148 个 SM 一起达到的成绩，平均每个 SM 约 15.2。只占一个波次的矩阵乘法只受那个每 SM 速率的限制。</p>
+<p><strong>而且 SM 数量取决于 SKU，所以标称峰值也会随之变化。</strong> NVIDIA 给出"完整 GPU 实现"有 160 个 SM，同时附带说明"实际可用的 SM 数量和 HBM 容量因 SKU 而异"——这与 <a href="../../compute/accelerator/index.html#caches">cache 表</a>中记录的一代之前的情况如出一辙：<code>GH100 full implementation</code> 是 144，而 <code>H100 SXM</code> 是 132。被测的两款 B300 SKU 都低于完整的裸片（die），而且一款 B200 SKU 也读出来是 148。把每个标称数字除以 148 再折算到 152 个 SM，就得到另一款 SKU 有资格标称的数字：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">dtype</th>
+<th style="text-align: right;">标称值</th>
+<th style="text-align: right;">每 SM（/148）</th>
+<th style="text-align: right;">152 个 SM 时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">bf16</td>
+<td style="text-align: right;">2250</td>
+<td style="text-align: right;">15.20</td>
+<td style="text-align: right;">2311</td>
+</tr>
+<tr>
+<td style="text-align: left;">fp8</td>
+<td style="text-align: right;">4500</td>
+<td style="text-align: right;">30.41</td>
+<td style="text-align: right;">4622</td>
+</tr>
+<tr>
+<td style="text-align: left;">mxfp4</td>
+<td style="text-align: right;">13500</td>
+<td style="text-align: right;">91.22</td>
+<td style="text-align: right;">13865</td>
+</tr>
+<tr>
+<td style="text-align: left;">nvfp4</td>
+<td style="text-align: right;">13500</td>
+<td style="text-align: right;">91.22</td>
+<td style="text-align: right;">13865</td>
+</tr>
+</tbody>
+</table>
+<p>每种 dtype 都按同样的 1.027x 变化，由此得到一个推论：<strong>NVIDIA 为 <code>B300 SXM</code> 只公布了一组数字，而两款真实存在的 SKU 不可能同时符合这组数字。</strong> 如果 2250 属于 148 SM 的那颗芯片，那么 152 SM 的那颗有资格标称 2311；如果 2250 属于 152 SM 的那颗，那么 148 SM 的那颗只能达到 2191。所以，不附带 SM 数量的标称峰值，对以该名称出售的两款芯片中的至少一款来说只是近似值。注意这里的不对称：<em>标称</em>峰值上那 2.7% 的差距是精确的，而<em>实际可达</em>吞吐量的差距是上面那条阶梯——完全取决于形状，可能是毫无收益、2 倍，或者 2.7%。</p>
+<p>要获取你的加速器的 SM 数量：</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import torch; p=torch.cuda.get_device_properties(0); print(p.name, p.multi_processor_count)"</span>
+</code></pre></div>
+<h3 id="number-and-size-of-attention-heads">注意力头的数量与大小<a class="headerlink" href="#number-and-size-of-attention-heads" title="Permanent link">&para;</a></h3>
+<p>通常，在不造成准确率退化的前提下，把 <code>h/a</code> 的比值保持得尽可能大，在计算上是最高效的。<a href="https://arxiv.org/abs/2401.14489">The Case for Co-Designing Model Architectures with Hardware</a> 中有一张展示这种效应的很好的图：</p>
+<p><img alt="注意力头" src="images/attention-less-heads.png" /></p>
+<h3 id="flash-attention">Flash attention<a class="headerlink" href="#flash-attention" title="Permanent link">&para;</a></h3>
+<p>如果你在使用 <a href="https://github.com/Dao-AILab/flash-attention">Flash Attention</a>，好消息！这些 MHA 的尺寸约束已经替你处理好了。你唯一的约束是让 <code>h/a</code> 的比值足够大，以便让 GPU 的核心满负荷运转：</p>
+<p><img alt="flash attention" src="images/flash-attention.png" /></p>
+<p>你运行的<em>是哪个版本</em>，与是否使用它同样重要，因为每个大版本都针对一代加速器——FA3 针对 Hopper，FA4 针对 Blackwell——在更新的硬件上跑旧版本，就意味着新架构的特性无人可用。本书实测了这个差距：在一个 8B 的因果注意力形状上，B200 上的 FA4 对比 H200 上的 FA3，<strong>在 8K 序列长度下 <code>forward</code>+<code>backward</code> 达到 1.88x，到 32K 升至 1.95x</strong>，而硬件之比是 2.28x——所以注意力已经接近上限，<em>不是</em>限制这次特定升级的因素。完整对比以及产生这些结果的脚本见 <a href="../../insights/when-to-upgrade-gpus/index.html#worked-example-meta-llamallama-31-8b-training-step-fa3-vs-fa4">FA3 vs FA4</a>。</p>
+<p>陷阱在于芯片与内核之间的脱节。完全可用的 FA4 过了好几个月才出现——上文做测量时它还处于 beta 阶段——在那之前的退路是 FA2，而 FA2 在 Blackwell 上非常慢，恰恰是因为它无法利用新架构。所以，新的加速器可能已经上架安装，但它的注意力内核还没就绪，这样你实际能运行的版本就成了升级的制约条件，而不是升级中的一个细节；<a href="../../insights/when-to-upgrade-gpus/index.html#software-support-the-cost-of-switching-too-early">软件支持：过早切换的代价</a> 把这一点视为一道硬性门槛。HF Transformers 会通过 <code>attn_implementation</code> 针对每种加速器自动选择后端，所以要检查它实际选择了哪个版本，而不要想当然地以为用的是最新的。</p>
+<h3 id="swiglu-based-mlp">基于 SwiGLU 的 MLP<a class="headerlink" href="#swiglu-based-mlp" title="Permanent link">&para;</a></h3>
+<p>PaLM、LLaMA、Mistral 等模型使用 SwiGLU 激活函数，取代了更为常见的 GLU 激活函数。</p>
+<p>基于 SwiGLU 的 MLP 在其激活函数中包含一个额外的可学习矩阵。在那里，MLP 模块包含 3 个矩阵而不是原来的 2 个。为了保持 MLP 模块的总参数量不变，提出 <a href="https://arxiv.org/abs/2002.05202">SwiGLU</a> 的论文建议改用 <code>dim_mlp = 8/3*dim_attn</code>，而不是通常的 <code>dim_mlp = 4*dim_attn</code>。<a href="https://arxiv.org/abs/2401.14489">与硬件协同设计模型架构的理由</a>这篇论文给出了如何寻找隐藏维度（<code>h</code>）取值以获得最佳 <code>matmul</code> 性能的建议，而如果你使用 <code>8/3*h</code>，很可能会得到一个慢得多的 MLP 模块，因为 <code>8/3</code> 会破坏所有的对齐。</p>
+<p>要克服这个问题，只需要认识到 <code>8/3</code> 这个系数只是一个建议，因此完全可以寻找其他接近的系数，从而得到形状更好的 MLP 矩阵。事实上，如果你看一下公开可用的 LLama-2 模型，它的 7B 变体使用的系数是 <code>11008/4096 = 2.6875</code>，这与 <code>8/3 = 2.667</code> 相当接近；而它的 70B 变体则使用了一个大得多的系数 <code>28672/8192 = 3.5</code>。这样一来，70B 变体的 MLP 模块就包含了比不使用 SwiGLU 的典型 transformer 模块多得多的参数。</p>
+<p>既然我们知道推荐的系数并不精确，而且好的 <code>h</code> 已经选好，那么就可以接着寻找一个接近的、仍然能让 MLP 中的 GEMM 达到高性能的优秀系数。运行一次暴力搜索后发现，Llama-2-7B 的中间层尺寸（intermediate size）确实是其取值范围内性能最好的尺寸之一。</p>
+<p>这里有一个 <a href="benchmarks/matrix-shape/swiglu-maf-bench.py">swiglu-maf-bench.py</a>，它很容易改写以适应你的用例；在训练将要运行的目标硬件上跑过一遍之后，你就能找到 MLP 的最佳隐藏尺寸。</p>
+<p>我们在 H100 上以 <code>h = 4096</code> 运行它：</p>
+<div class="highlight"><pre><span></span><code>./swiglu-maf-bench.py
+Wanted<span class="w"> </span>the<span class="w"> </span>closest<span class="w"> </span>to<span class="w"> </span><span class="m">10922</span><span class="w"> </span>d_ff<span class="w"> </span>value<span class="w"> </span>that<span class="w"> </span>leads<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>highest<span class="w"> </span>TFLOPS<span class="w"> </span><span class="o">(</span><span class="nv">d_hidden</span><span class="o">=</span><span class="m">4096</span><span class="o">)</span>
+
+Searching<span class="w"> </span><span class="m">50</span><span class="w"> </span>steps<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>range<span class="w"> </span>of<span class="w"> </span><span class="m">10822</span><span class="w"> </span>..<span class="w"> </span><span class="m">11022</span>
+Results:<span class="w"> </span>baseline,<span class="w"> </span>followed<span class="w"> </span>by<span class="w"> </span>near-by<span class="w"> </span>best<span class="w"> </span>performing<span class="w"> </span>d_ff<span class="w"> </span>results:
+
+<span class="w"> </span>d_ff<span class="w">  </span>tflops<span class="w"> </span>mlp_params
+-------------------------
+<span class="m">10922</span><span class="w">  </span><span class="m">272</span>.73<span class="w"> </span><span class="m">134209536</span>
+-------------------------
+<span class="m">10944</span><span class="w">  </span><span class="m">398</span>.38<span class="w"> </span><span class="m">134479872</span>
+<span class="m">10848</span><span class="w">  </span><span class="m">395</span>.62<span class="w"> </span><span class="m">133300224</span>
+<span class="m">10880</span><span class="w">  </span><span class="m">395</span>.52<span class="w"> </span><span class="m">133693440</span>
+<span class="m">10912</span><span class="w">  </span><span class="m">395</span>.16<span class="w"> </span><span class="m">134086656</span>
+<span class="m">11008</span><span class="w">  </span><span class="m">395</span>.01<span class="w"> </span><span class="m">135266304</span>
+</code></pre></div>
+<p>很容易看出，<code>8/3*4096=10922</code> 会带来相当慢的性能。而 <code>10944</code> 只比 <code>10922</code> 大 <code>22</code>，却让 <code>matmul</code> 获得了高达 46% 的加速。输出中还打印了对应的 MLP 总参数量，以防你想选择稍慢一些但参数量不同的取值。</p>
+<h3 id="final-recommendations-for-model-sizing">模型尺寸的最终建议<a class="headerlink" href="#final-recommendations-for-model-sizing" title="Permanent link">&para;</a></h3>
+<p>完整的建议如下：</p>
+<ol>
+<li>词表大小能被 64 整除</li>
+<li>微批次大小尽可能大</li>
+<li><code>b*s</code>、<code>h/a</code> 和 <code>h/t</code> 应能被 2 的幂整除</li>
+<li><code>(b*a)/t</code> 应为整数</li>
+<li><code>t</code> 应尽可能小</li>
+<li>对于 SwiGLU，在 <code>8/3*h</code> 附近搜索性能最佳的隐藏尺寸</li>
+</ol>
+<h3 id="additional-reading">延伸阅读<a class="headerlink" href="#additional-reading" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="https://www.thonking.ai/p/what-shapes-do-matrix-multiplications">矩阵乘法喜欢什么样的形状？</a></li>
+</ul>
+<h2 id="numa-affinity">NUMA 亲和性<a class="headerlink" href="#numa-affinity" title="Permanent link">&para;</a></h2>
+<p><a href="https://en.wikipedia.org/wiki/Non-uniform_memory_access">非一致性内存访问（Non-uniform memory access, NUMA）</a>是一种用于多处理的计算机内存设计，其中内存访问时间取决于内存相对于处理器的位置。由于现代服务器拥有不止一个 CPU，为了获得最佳性能，与相应 CPU 位于同一 NUMA 节点的加速器，其进程应当绑定到同一个 NUMA 节点。</p>
+<p>首先，让我们来理解 NUMA 节点意味着什么。</p>
+<p>下面是一台典型的 8 卡 A100 服务器的 NUMA 节点示意图：</p>
+<p><img alt="a100 服务器的 NUMA 节点" src="images/a100-server-hwloc.png" /></p>
+<p>可以看到，它有 2 个 CPU，每个 CPU 定义一个 NUMA 块，每个这样的块包含一组 4 块 GPU。GPU 就是那些标着 <code>CoProc</code> 的灰色块，各有 108 个计算单元（SM）和 79GiB 的显存。</p>
+<p>脚注：该图由 <a href="https://github.com/open-mpi/hwloc">hwloc</a> 的 <code>lstopo a100.png</code> 生成。</p>
+<p>如果你使用了超线程（Hyper-Threads），那么应当使用 <code>lstopo -l</code>，以便正确显示 HT 核心数。例如，如果你有 2 个 NUMA 节点、8 块加速器、104 个物理 CPU 核心和 208 个逻辑核心——也就是（每个 GPU <code>208/8=26</code> 个 HT 核心）——那么 HT 核心的归属将是：</p>
+<ul>
+<li>gpu0..3 <code>[0, 1,  2, 3, ...,  51, 104, 105, 106, ..., 129]</code></li>
+<li>gpu4..7 <code>[52, 53, 54, ..., 103, 156, 157, 158, ..., 207]</code></li>
+</ul>
+<p>你会先得到物理 CPU 核心的编号，然后才是其余的 HT 核心，所以才会出现这种奇怪的间隔。</p>
+<p>如果这是一台 NVIDIA 节点，另一种查看 CPU 亲和性的简单方法是运行：</p>
+<p><div class="highlight"><pre><span></span><code>$<span class="w"> </span>nvidia-smi<span class="w"> </span>topo<span class="w"> </span>-m
+<span class="w">        </span>GPU0<span class="w">    </span>GPU1<span class="w">    </span>GPU2<span class="w">    </span>GPU3<span class="w">    </span>GPU4<span class="w">    </span>GPU5<span class="w">    </span>GPU6<span class="w">    </span>GPU7<span class="w">    </span>CPU<span class="w"> </span>Affinity<span class="w">    </span>NUMA<span class="w"> </span>Affinity
+GPU0<span class="w">     </span>X<span class="w">      </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span><span class="m">0</span>-51,104-155<span class="w">    </span><span class="m">0</span>
+GPU1<span class="w">    </span>NV18<span class="w">     </span>X<span class="w">      </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span><span class="m">0</span>-51,104-155<span class="w">    </span><span class="m">0</span>
+GPU2<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">     </span>X<span class="w">      </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span><span class="m">0</span>-51,104-155<span class="w">    </span><span class="m">0</span>
+GPU3<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">     </span>X<span class="w">      </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span><span class="m">0</span>-51,104-155<span class="w">    </span><span class="m">0</span>
+GPU4<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">     </span>X<span class="w">      </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span><span class="m">52</span>-103,156-207<span class="w">  </span><span class="m">1</span>
+GPU5<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">     </span>X<span class="w">      </span>NV18<span class="w">    </span>NV18<span class="w">    </span><span class="m">52</span>-103,156-207<span class="w">  </span><span class="m">1</span>
+GPU6<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">     </span>X<span class="w">      </span>NV18<span class="w">    </span><span class="m">52</span>-103,156-207<span class="w">  </span><span class="m">1</span>
+GPU7<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">    </span>NV18<span class="w">     </span>X<span class="w">      </span><span class="m">52</span>-103,156-207<span class="w">  </span><span class="m">1</span>
+</code></pre></div>
+在这台 8 GPU 节点上，你可以看到 <code>CPU Affinity</code> 列，它告诉你哪些核心与第一组和第二组 GPU 位于一起，以及 <code>NUMA Affinity</code> 列。</p>
+<p>既然已经清楚各种计算组件被划分在 2 组或更多组中，为了达到最佳性能，我们需要确保这些组件在所属的组内通信，避免任何跨组通信造成的串扰。例如，如果 gpu0 属于 NUMA 节点 0，那么驱动这块 GPU 的进程应当只使用 NUMA 节点 0 的 CPU 核心。</p>
+<p>同样的原则也应适用于网络或任何你能控制的其他组件。</p>
+<p>不过根据我目前的实际经验，如果你的作业几乎不怎么消耗 CPU，这一改动对整体性能的影响很小；但如果大量使用 CPU，它可能相当有效果。反过来说，如果做最有效率的事情很容易，那么哪怕再微小的改进，在长时间的训练作业中也可能会不断累积，所以值得去实现，依我之见（IMHO）。</p>
+<h3 id="numa-process-binding">NUMA 进程绑定<a class="headerlink" href="#numa-process-binding" title="Permanent link">&para;</a></h3>
+<p>把进程绑定到正确 NUMA 节点的 CPU 核心上有多种方法。</p>
+<h4 id="numactl">numactl<a class="headerlink" href="#numactl" title="Permanent link">&para;</a></h4>
+<p>最常用的工具之一是 <code>numactl</code>，它在启动新进程的同时设置 NUMA 亲和性。</p>
+<p>例如，我们来看看它如何与 <code>torchrun</code> 启动器集成。</p>
+<p>该启动器目前需要一个辅助工具 <a href="benchmarks/numa/numa-set.sh">numa-set.sh</a> 来完成 NUMA 亲和性设置。将其下载并设为可执行之后，你就可以用下面的命令获得正确的 NUMA 亲和性：</p>
+<div class="highlight"><pre><span></span><code>torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span><span class="m">8</span><span class="w"> </span>--role<span class="w"> </span>:<span class="w"> </span>--tee<span class="w"> </span><span class="m">3</span><span class="w"> </span>--no-python<span class="w"> </span>./numa-set.sh<span class="w"> </span>your-program.py
+</code></pre></div>
+<p>注意：你的系统上需要安装 <code>numactl</code>，这个工具才能工作。</p>
+<p>例如，下面这样就能验证分配是否正确：
+<div class="highlight"><pre><span></span><code>torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span><span class="m">8</span><span class="w"> </span>--role<span class="w"> </span>:<span class="w"> </span>--tee<span class="w"> </span><span class="m">3</span><span class="w"> </span>--no-python<span class="w"> </span>./numa-set.sh<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="se">\</span>
+<span class="s1">'import os; cores=os.sched_getaffinity(0); print(f"{len(cores)} visible cpu cores: {cores}")'</span>
+</code></pre></div></p>
+<p>在拥有 208 个 HT CPU 核心的系统上，你很可能会看到：</p>
+<div class="highlight"><pre><span></span><code>[:0]:104 visible cpu cores: {0, 1, 2, 3, 4, 5...
+[:1]:104 visible cpu cores: {0, 1, 2, 3, 4, 5...
+[:2]:104 visible cpu cores: {0, 1, 2, 3, 4, 5...
+[:3]:104 visible cpu cores: {0, 1, 2, 3, 4, 5...
+[:4]:104 visible cpu cores: {52, 53, 54, 55, ...
+[:5]:104 visible cpu cores: {52, 53, 54, 55, ...
+[:6]:104 visible cpu cores: {52, 53, 54, 55, ...
+[:7]:104 visible cpu cores: {52, 53, 54, 55, ...
+</code></pre></div>
+<p>前 4 块加速器使用了前一半的 CPU 核心，另外 4 块使用后一半，这与前面关于正确设置的说明一致。</p>
+<p>如果你去掉 <code>./numa-set.sh</code>，就会得到：</p>
+<p><div class="highlight"><pre><span></span><code>torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span><span class="m">8</span><span class="w"> </span>--role<span class="w"> </span>:<span class="w"> </span>--tee<span class="w"> </span><span class="m">3</span><span class="w"> </span>--no-python<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="se">\</span>
+<span class="s1">'import os; cores=os.sched_getaffinity(0); print(f"{len(cores)} visible cpu cores: {cores}")'</span>
+</code></pre></div>
+你会看到全部 8 个进程都能看到全部 208 个 CPU 核心：
+<div class="highlight"><pre><span></span><code>[:0]:208 visible cpu cores: {0, 1, 2, 3, ...
+</code></pre></div></p>
+<p>于是每个进程都能访问任意 CPU 核心——就可能发生串扰，从而引入一点性能开销。</p>
+<h4 id="ossched_setaffinity">os.sched_setaffinity<a class="headerlink" href="#ossched_setaffinity" title="Permanent link">&para;</a></h4>
+<p>当然，你也可以在程序启动之后再修改 NUMA 亲和性。你已经看到了用 <code>os.sched_getaffinity</code> 获取当前设置，对应的 <code>os.sched_setaffinity</code> 则用来修改它。</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">sched_setaffinity</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</code></pre></div>
+这里我们告诉系统：运行该脚本的进程（<code>0</code>）只能使用 CPU 核心 <code>0</code> 和 <code>1</code>。</p>
+<p>所以现在只需要弄清楚如何用程序化的方式为每块加速器的进程获得正确的 CPU 集合。用 <a href="#pynvml">pynvml</a> 的做法如下。</p>
+<h4 id="pynvml">pynvml<a class="headerlink" href="#pynvml" title="Permanent link">&para;</a></h4>
+<p>如果你使用的是 NVIDIA GPU，<code>pynvml</code>（<code>pip install nvidia-ml-py</code>——模块的导入名仍然是 <code>pynvml</code>）在获取 GPU 的各类信息方面会非常有用，而且不需要调用 <code>nvidia-smi</code>——在这里，我们将用它根据给定的 GPU 索引告诉我们正确的 CPU 亲和性。</p>
+<p>在 <a href="benchmarks/numa/numa-set-pynvml.py">numa-set-pynvml.py</a> 中你会发现一个可用的辅助函数，你可以在训练循环的最开头这样调用它：
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="n">gpu_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"LOCAL_RANK"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="n">set_numa_affinity</span><span class="p">(</span><span class="n">gpu_index</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+要在初始化 <code>DataLoader</code> 之前调用它，好让各个工作进程（worker）使用正确的 CPU 核心！</p>
+<p>通常，进程的本地 rank 等于 GPU 索引，但如果使用了 <code>CUDA_VISIBLE_DEVICES</code>——这一点可能就不再成立——如果你用了它，就需要把进程 rank 重新映射到实际的索引：</p>
+<div class="highlight"><pre><span></span><code><span class="n">gpu_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"LOCAL_RANK"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="k">if</span> <span class="s2">"CUDA_VISIBLE_DEVICES"</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+    <span class="n">ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"CUDA_VISIBLE_DEVICES"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)))</span>
+    <span class="n">gpu_index</span> <span class="o">=</span> <span class="n">ids</span><span class="p">[</span><span class="n">gpu_index</span><span class="p">]</span> <span class="c1"># 重新映射</span>
+</code></pre></div>
+<p>另一个坑是 <code>CUDA_DEVICE_ORDER</code>，它通常默认为 <code>PCI_BUS_ID</code>；如果你混用了不同型号的 GPU，也可以把它设置为 <code>CUDA_DEVICE_ORDER=FASTEST_FIRST</code>，但在高端服务器环境中，你几乎不可能遇到这种情况，所以可以放心地忽略这一点。</p>
+<h4 id="srun">srun<a class="headerlink" href="#srun" title="Permanent link">&para;</a></h4>
+<p>如果你使用的是 SLURM，并且愿意用 <code>srun</code> 而不是 <code>torchrun</code>、<code>accelerate</code> 等作为启动器，它会自动替你完成所有绑定工作。完整的启动脚本见<a href="../../orchestration/slurm/launchers/srun-launcher.slurm">这里</a>。</p>
+<p>要让它支持 NUMA 亲和性，你只需要添加这 2 个头：
+<div class="highlight"><pre><span></span><code>#SBATCH --gres-flags=enforce-binding
+#SBATCH --ntasks-per-socket=4
+</code></pre></div></p>
+<p><code>--ntasks-per-socket=4</code> 假设你有 2 个 CPU 插槽（socket）和 8 块加速器——即每个插槽 <code>8/2=4</code> 块加速器。</p>
+<p>这是一个更精确的方案，因为它会给每个进程分配自己的一组 CPU 核心，而不是简单地把 NUMA 节点 0 的全部 CPU 核心都给驱动加速器 0-3 的进程、把 NUMA 节点 1 的 CPU 核心给驱动加速器 4-7 的进程。</p>
+<h4 id="specific-launchers">特定启动器<a class="headerlink" href="#specific-launchers" title="Permanent link">&para;</a></h4>
+<p>各种启动器对 NUMA 亲和性设置的支持情况如下：</p>
+<ul>
+<li><a href="https://github.com/huggingface/accelerate">HF Accelerate</a> 有一个标志 <code>--enable_cpu_affinity</code>，把它加到 <code>accelerate</code> 的启动命令上，它就会替你完成这件事。自 <code>accelerate&gt;0.28.0</code> 起可用。</li>
+<li><a href="https://github.com/pytorch/pytorch">torchrun</a> 没有这个功能，但我在这一<a href="#numactl">节</a>中展示了怎么做。</li>
+<li>srun 已在<a href="#srun">这里</a>讲过。</li>
+</ul>
+<h2 id="dataloader">DataLoader<a class="headerlink" href="#dataloader" title="Permanent link">&para;</a></h2>
+<h3 id="asynchronous-dataloader">异步 DataLoader<a class="headerlink" href="#asynchronous-dataloader" title="Permanent link">&para;</a></h3>
+<p>默认设置是 <code>num_workers=0</code>，这意味着每当你调用 <code>next(iter(dataloader))</code> 时，数据都是实时主动获取的——也就是说会有 IO 开销，而且如果有任何数据变换，它们同样会实时执行——这些都会阻塞加速器的计算。</p>
+<p>解决办法是通过设置 <code>num_workers &gt; 0</code> 来使用异步的 <code>DataLoader</code>。通常，除非你的 <code>DataLoader</code> 极其慢，2 个工作进程就够了：</p>
+<div class="highlight"><pre><span></span><code>DataLoader(..., num_workers=2, ...
+</code></pre></div>
+<p>这样，当调用 <code>next(iter(dataloader))</code> 时，数据应当已经完成了所有变换并位于 CPU 内存中。它仍需要被拷贝到加速器内存——要加快这一步，参见<a href="#pinned-memory-and-non-blocking-device-copy">锁页内存与非阻塞设备拷贝</a>。</p>
+<p>下面这个基准测试模拟了一个较慢的数据变换：<a href="benchmarks/dataloader/num-workers-bench.py">num-workers-bench.py</a></p>
+<div class="highlight"><pre><span></span><code>num_workers=0: average time: 5.388
+num_workers=1: average time: 3.900
+num_workers=2: average time: 1.333
+num_workers=3: average time: 0.839
+num_workers=4: average time: 0.875
+</code></pre></div>
+<p>可以看到，在这个具体例子中，速度随着工作进程数增加而显著提升，直到 3 个工作进程为止。如果 <code>DataLoader</code> 非常轻量、几乎不做什么工作，差别会小得多，但 0 个工作进程总会带来最大的开销。</p>
+<p>通过测量你的作业的性能，你可以尝试更小和更大的值来微调这个数字。但要记住，每个工作进程都可能消耗大量 CPU 内存。所以在拥有 8 块加速器的节点上使用 2 个工作进程，就意味着多出 16 个进程。如今的计算节点通常有数百个 CPU 核心和 TB 级的 CPU 内存，因此支撑大量工作进程的资源应该是充足的。过去则完全是另一回事。</p>
+<p>另外要注意，由于任何数据变换都是异步、提前完成的，在这种情况下 CPU 和内存的速度并不重要。例如，在 2 个工作进程的情况下，只要下一次迭代的数据准备所花的时间少于 2 次计算迭代的时间，<code>DataLoader</code> 就不应该成为瓶颈。</p>
+<p>要小心，使用 <code>num_workers &gt; 0</code> 时你有时会遇到问题——pytorch 的 Issues 里有几个相关的问题多年都没有解决，涉及工作进程挂起。尤其是在同时存在 2 个 <code>Dataloader</code> 的时候。事实上，我们在 BLOOM-176B 训练期间就遇到过这个问题：训练的 <code>Dataloader</code> 用 2 个工作进程运行良好，但一旦加上评估用的 <code>Dataloader</code>，就会随机挂起——我们在没能查明原因之后，只好采用变通办法：只在评估时使用 <code>num_workers=0</code>，并把评估做得非常少。最终我们完全停止了评估，转而对保存下来的中间检查点做 lm-harness 风格的异步评估，这同时也加快了训练过程。</p>
+<p>案例研究：在 IDEFICS-80B 训练期间，我们使用的是流式（streaming）<code>Dataloader</code>，它的表现非常差，每个工作进程都会消耗巨量的内存，内存占用还经常飙升；我们大约有 1TiB 的 CPU 内存，却没法启动足够多的工作进程——于是 <code>Dataloader</code> 成了瓶颈。当时我们没有时间找到更好的方案，所以就这样完成了训练。</p>
+<h3 id="pinned-memory-and-non-blocking-device-copy">锁页内存与非阻塞设备拷贝<a class="headerlink" href="#pinned-memory-and-non-blocking-device-copy" title="Permanent link">&para;</a></h3>
+<p>把以下两项组合起来：</p>
+<ol>
+<li><code>DataLoader(pin_memory=True, ...)</code></li>
+<li><code>batch.to(device="cuda", non_blocking=True)</code></li>
+</ol>
+<p>很可能会让 <code>DataLoader</code> 不那么容易成为瓶颈。</p>
+<ol>
+<li>启用锁页内存（pinned memory）可以让从 CPU 到加速器内存的数据传输更高效。</li>
+<li>non-blocking 允许计算和数据搬运在一定程度上重叠，从而进一步提速。</li>
+</ol>
+<p>这里有一个展示差异的小型基准测试：<a href="benchmarks/dataloader/pin-memory-non-block-bench.py">pin-memory-non-block-bench.py</a>。我在一块 A100 80GB-PCIe 上运行时，输出是：
+<div class="highlight"><pre><span></span><code>pin_memory= True, non_blocking= True: average time: 0.459
+pin_memory= True, non_blocking=False: average time: 0.522
+pin_memory=False, non_blocking= True: average time: 0.658
+pin_memory=False, non_blocking=False: average time: 0.646
+</code></pre></div>
+可以看到，<code>pin_memory=True</code>+<code>non_blocking=True</code> 是一个值得做的改动。</p>
+<p>更多背景可以阅读 <a href="https://docs.pytorch.org/docs/stable/notes/cuda.html#use-pinned-memory-buffers">1</a> 和 <a href="https://developer.nvidia.com/blog/how-optimize-data-transfers-cuda-cc/">2</a>。</p>
+<p>注意：</p>
+<ul>
+<li>锁页内存会被操作系统特殊对待：在总可用内存不足时也不允许被换出，因此它减少了其他程序可用的内存总量。所以要谨慎使用。</li>
+<li>我记得有过几次，人们报告使用锁页内存时出了问题——我想多数情况是系统本身的 CPU 内存就很少，或者使用了过多的锁页内存，导致操作系统开始大量换页。</li>
+<li>如果你测量了自己的<a href="#tflops-as-a-performance-metric">每次迭代 TFLOPS</a>，就可以对比有和没有这些改动时的吞吐量，选择效果最好的方案。如果你把 <code>DataLoader</code> 的开销与 <code>forward/backwards</code>（前向/反向）以及计算后的收尾工作（通常是日志记录，有时会出奇地慢）分开测量，会更容易看清影响。</li>
+</ul>
+<h2 id="torchcompile">torch.compile<a class="headerlink" href="#torchcompile" title="Permanent link">&para;</a></h2>
+<p><code>torch.compile</code> 通过把你的模型追踪（trace）成一张图并为其生成融合内核，来同时加速训练和推理。它随 PyTorch 2.0 发布，截至 2026-08，生态中很大一部分已经默认运行它，但在任意模型上获得可观的加速仍然不是自动的——追踪器必须能够"看到"你的代码，这正是需要下功夫的地方。</p>
+<h3 id="where-it-pays-off">收益出现在哪里<a class="headerlink" href="#where-it-pays-off" title="Permanent link">&para;</a></h3>
+<p>回顾<a href="#anatomy-of-models-operations">模型运算剖析</a>中的三个类别，因为它们在编译下的表现非常不同：</p>
+<ol>
+<li>
+<p><strong>张量收缩（tensor contractions）</strong> 已经分派给运行在接近硬件极限的厂商 GEMM 库，所以编译器在这里几乎没有可赢的收益。<code>mode="max-autotune"</code> 会搜索 Triton 的 matmul 变体，偶尔能胜过厂商库，但这是最没有希望的一类。</p>
+</li>
+<li>
+<p><strong>统计归一化（statistical normalizations）</strong> 和 3. <strong>逐元素算子（element-wise operators）</strong> 才是收益所在。这些操作是内存带宽受限的，而不是计算受限的：每个操作都要从 HBM 读取输入，只做很少的算术运算，再把结果写回去。在 eager 模式下，这个往返开销每个操作都要付出一次。把一串这样的操作融合成单个内核，就只需为整条链付出一次。这就是 <code>torch.compile</code> 对 transformer 所做工作的主体，也是由许多小操作构成的模型比以大 matmul 为主的模型获益更多的原因。</p>
+</li>
+</ol>
+<p>因此，你能期待的加速比取决于步骤时间中有多少花在第 2、3 类工作上。先用 <a href="../../debug/pytorch.html#profilers">PyTorch 性能剖析工具</a>做性能剖析，然后再编译。</p>
+<p>当你受内核启动开销限制而非受带宽限制时，还有另一个独立的收益：<code>mode="reduce-overhead"</code> 会把一个步骤捕获为 CUDA graphs，然后重放一次启动序列，而不是发出成千上万次单独的内核启动。这一点在小批次大小和低延迟推理解码阶段最重要——那时加速器空闲着，等待 CPU 给它喂数据。它的代价是内存，因为被捕获的图会固定（pin）它的缓冲区，而且它需要静态形状。</p>
+<p>在单块 NVIDIA B200、<code>torch=2.13.0+cu130</code> 环境下做的两组测量（取自 2026-08-09）框定了这个范围；在两组测量中，<code>forward</code> 行都是 <code>no_grad</code> 下的推理，而两个反向行都启用了梯度检查点（gradient checkpointing，一种激活重计算）——在这个规模上这是标准做法，也正是它让 8B 的步骤能放进单块 GPU 的显存。第一组是短序列上的小模型——Llama 3.2 1B（<code>NousResearch/Llama-3.2-1B</code>）、bf16、SDPA、批次 1 x 序列 512——每个步骤只有几毫秒，因此时间主要花在内核启动开销以及第 2、3 类受内存带宽限制的工作上。这是 <code>torch.compile</code> 最占便宜的情形。以下是预热（warmup）之后的稳态步骤时间，括号中是相对 eager 的比率：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">工作负载</th>
+<th style="text-align: right;">eager</th>
+<th style="text-align: right;"><code>torch.compile()</code></th>
+<th style="text-align: right;"><code>mode="reduce-overhead"</code></th>
+<th style="text-align: right;"><code>mode="max-autotune"</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">前向（推理）</td>
+<td style="text-align: right;">8.1ms</td>
+<td style="text-align: right;">3.4ms (2.4x)</td>
+<td style="text-align: right;">1.9ms (4.2x)</td>
+<td style="text-align: right;">2.0ms (4.1x)</td>
+</tr>
+<tr>
+<td style="text-align: left;">前向+反向</td>
+<td style="text-align: right;">48.8ms</td>
+<td style="text-align: right;">12.6ms (3.9x)</td>
+<td style="text-align: right;">8.1ms (6.0x)</td>
+<td style="text-align: right;">8.0ms (6.1x)</td>
+</tr>
+<tr>
+<td style="text-align: left;">+ AdamW 步骤</td>
+<td style="text-align: right;">58.8ms</td>
+<td style="text-align: right;">18.7ms (3.1x)</td>
+<td style="text-align: right;">17.6ms (3.3x)</td>
+<td style="text-align: right;">17.5ms (3.4x)</td>
+</tr>
+</tbody>
+</table>
+<p>第二组是长序列上的大模型——Llama 3.1 8B（<code>meta-llama/Llama-3.1-8B</code>）、同样的 dtype 和注意力后端、批次 1 x 序列 8192——每个步骤长达数百毫秒，其中几乎所有时间都花在第 1 类的大 matmul 上，而这些 matmul 在厂商 GEMM 库上已经跑在接近硬件极限：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">工作负载</th>
+<th style="text-align: right;">eager</th>
+<th style="text-align: right;"><code>torch.compile()</code></th>
+<th style="text-align: right;"><code>mode="reduce-overhead"</code></th>
+<th style="text-align: right;"><code>mode="max-autotune"</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">前向（推理）</td>
+<td style="text-align: right;">152.4ms</td>
+<td style="text-align: right;">155.6ms (0.98x)</td>
+<td style="text-align: right;">155.8ms (0.98x)</td>
+<td style="text-align: right;">154.8ms (0.98x)</td>
+</tr>
+<tr>
+<td style="text-align: left;">前向+反向</td>
+<td style="text-align: right;">590.7ms</td>
+<td style="text-align: right;">630.2ms (0.94x)</td>
+<td style="text-align: right;">629.2ms (0.94x)</td>
+<td style="text-align: right;">633.7ms (0.93x)</td>
+</tr>
+<tr>
+<td style="text-align: left;">+ AdamW 步骤</td>
+<td style="text-align: right;">637.3ms</td>
+<td style="text-align: right;">673.8ms (0.95x)</td>
+<td style="text-align: right;">671.4ms (0.95x)</td>
+<td style="text-align: right;">680.0ms (0.94x)</td>
+</tr>
+</tbody>
+</table>
+<p>两张表之间的差距就是全部的教训。小的、受开销限制的模型获得了最高约 6 倍的收益；大的、计算受限的模型则毫无收益——每种编译模式的结果都落在 eager 的百分之几以内，而且这里还在更慢的一侧。编译并没有失败；只是它根本没有可消除的东西。1B 模型上有两种效应叠加。第一，它的普通步骤受内核启动和带宽限制，因此把这许多小内核融合起来本身就是巨大的收益。第二，两个反向行启用了梯度检查点，它会丢弃激活值，并在反向传播期间重新计算整个前向传播——所以这些步骤中的每一个都要运行两次前向。在这么小的模型上，那次额外的前向传播本身就受启动开销限制，而编译能以与原始内核几乎同样的低成本融合重计算出的内核，吸收了其中的大部分——这就是为什么 <code>forward+backward</code> 和 <code>+ AdamW</code> 行显示的加速比只运行 <code>forward</code> 的行更大。</p>
+<p>在这个序列长度下的 8B 步骤中，这两种效应都不存在：GEMM 已经以 cuBLAS 的峰值性能运行并占据主导，检查点带来的重计算只不过是更多同样已逼近峰值的 matmul，而编译本可以消除的启动间隙，相对于半秒长的内核来说只是舍入误差。这就是三种编译模式都收敛到同一个约 0.94x 的原因——<code>max-autotune</code> 的 Triton matmul 搜索在这些形状上打不过 cuBLAS，而 <code>reduce-overhead</code> 的 CUDA graphs 消除的是一项本来就微不足道的启动开销。所以，可期待的加速比跟你的步骤在多大程度上受带宽或启动开销限制相关，而这正是<a href="#where-it-pays-off">收益出现在哪里</a>一节的性能剖析想告诉你的：由许多小操作构成的模型，或以小批次、短序列运行的任何模型，获益最多；而大形状上的稠密 matmul 作业获益最少——有时甚至是负收益。</p>
+<p>冷启动成本是真实存在的，而当稳态收益很小或不存在时，它恰恰决定了编译到底值不值得。在全新的 Inductor 缓存下，默认编译下第一个 <code>forward+backward</code> 步骤耗时约 22 秒（1B）和 47 秒（8B），在 <code>max-autotune</code> 下则升到 83 秒（1B）和 168 秒（8B）。在 1B 模型上这笔开销很快就能收回：默认编译每个步骤节省约 35 毫秒，所以大约 600 步就与 eager 打平，之后的每一步都是净收益。而在 8B/8192 这种情况下，没有任何稳态节省可供摊薄——编译后的步骤还略慢一点——所以编译时间是纯粹的成本，在这个形状上永远回不了本，这是"对十步的冒烟测试来说是致命的"这句话最尖锐的版本。优化器步骤不会增加编译的开销：编译模型才是开销所在，一旦前向/反向的图已经建好，把 <code>opt.step()</code> 纳入计时范围并不会触发重新编译——注意 <code>+ AdamW 步骤</code> 行上接近于零的冷启动耗时，因为同一次运行中较早的 <code>forward+backward</code> 用例已经把图建好了。编译本身也会随着 PyTorch 各版本的发布而改进，所以这些绝对毫秒数——以及 8B 结果是正是负——只能视为这个工具链当前状态下的结果，而不是模型的固有属性。</p>
+<p>如果你想自己动手实验，两张表都出自 <a href="benchmarks/torch-compile-bench.py">torch-compile-bench.py</a>：一个遍历各个工作负载和模式的循环，为每个单元格新建一个模型，在反向工作负载上启用梯度检查点（这也让 8B/8192 的步骤能放进单块 GPU 的显存），把第一个步骤的耗时作为冷启动成本、把后续步骤的平均值作为稳态来计时，并为每种模式打印一行，附上相对 eager 的比率。模型、序列长度、批次、随机种子和模式列表都是文件顶部的变量（<code>SEED = 42</code>）；上面的 8B 数字是默认设置，1B 表则来自取消那两行 <code>NousResearch/Llama-3.2-1B</code> / <code>SEQ = 512</code> 的注释（批次保持为 1）。随机种子固定了随机的输入词元，使重复运行时看到相同的数据。</p>
+<h3 id="what-makes-it-hard">难在哪里<a class="headerlink" href="#what-makes-it-hard" title="Permanent link">&para;</a></h3>
+<p>追踪器必须把你的 <code>forward</code> 变成一张图，任何它无法追踪的东西都会成为一次<strong>图断裂（graph break）</strong>——它会编译自己能编译的部分，对无法追踪的部分回退到 eager，然后再开始一张新图。每次断裂同时也是一条融合边界，所以一个有很多断裂的模型可以在 <code>torch.compile</code> 下"工作"，却几乎没有任何收益。依赖数据的控制流、<code>.item()</code>、<code>print</code> 和不受支持的操作都会造成图断裂。</p>
+<p>另一个陷阱是<strong>重新编译（recompilation）</strong>。编译出的图是针对追踪时遇到的形状特化的，所以一个新的序列长度就会触发一次重新编译，而这种情况只会发生有限的次数（<code>torch._dynamo.config.recompile_limit</code>，默认为 8），之后编译器就会放弃那个函数，此后一直按 eager 运行它。变长批次是最常见的原因，而且很普遍——所以如果你的输入形状会变化，<code>torch.compile(model, dynamic=True)</code> 是标准的应对办法。它会预先编译一张与形状无关的图，放弃一些峰值性能来换取永不重新编译。在形状会变化时把它当作默认选择，而不是等你注意到重新编译之后再拿来补救。</p>
+<p>这两个陷阱都不神秘——两者都可以打印出来：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">TORCH_LOGS</span><span class="o">=</span><span class="s2">"graph_breaks,recompiles"</span><span class="w"> </span>python<span class="w"> </span>train.py
+</code></pre></div>
+<p>它会针对造成每次断裂的那行你的代码报告该断裂，并针对每次重新编译报告未通过的守卫（guard）。<code>torch.compile(model, fullgraph=True)</code> 会把断裂提升为错误，这是以最快速度一次找出所有断裂的方法。</p>
+<p>编译本身会在第一个步骤上消耗时间（墙钟时间），在任何使缓存失效的改动之后还会再来一次。当模型由同一个模块重复 <code>n</code> 次构成时，只编译这个模块而不是整个模型会大幅削减这部分开销，因为编译器只做一次工作，然后在每一层复用。</p>
+<p>如果你试了但事情不顺利，你可以：</p>
+<ol>
+<li>向 PyTorch 团队报告这个问题，最好附上一个小型的可复现示例</li>
+<li>通读 PyTorch 自己的 <a href="https://docs.pytorch.org/docs/stable/user_guide/torch_compiler/torch.compiler_troubleshooting.html">torch.compile 排障指南</a>，它与编译器同步维护，上面每一种失败模式都有对应的章节，你可能能让一些问题正常工作，并且可能仍需向 PyTorch 报告一些问题</li>
+</ol>
+<p>请使用较新的 PyTorch 版本——编译器在各版本之间的进步很大，你在旧版本上碰到的问题，在当前稳定版上可能并不存在。</p>
+<h2 id="automatic-garbage-collection">自动垃圾回收<a class="headerlink" href="#automatic-garbage-collection" title="Permanent link">&para;</a></h2>
+<p>Python 会根据内部启发式规则周期性地执行自动垃圾回收。在成百上千块加速器以同步方式协同工作的 LLM 训练场景中——如果不同的 rank 哪怕只是走了稍微不同的代码路径，自动垃圾回收就可能在不同时刻被不同的 rank 触发。这意味着一个或多个 rank 在执行这一操作时会比其他 rank 慢，从而成为掉队者（straggler），拖慢整个集体。</p>
+<p>通常可以通过研究 <a href="#mfu-vs-hfu">MFU 图</a>看到这一点：其中会出现向下的尖峰。</p>
+<p>如果你的训练遇到了这种情况，可以用下面的代码禁用自动垃圾回收：
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
+<span class="n">gc</span><span class="o">.</span><span class="n">disable</span><span class="p">()</span>
+</code></pre></div>
+放在训练程序的开头，然后按你希望的间隔手动执行垃圾回收。例如，在一次训练迭代中调用一次：
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
+<span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+</code></pre></div></p>
+<p>更多细微之处请参阅 <a href="https://docs.python.org/3/library/gc.html"><code>gc</code> 的手册页</a>。</p>
+<h2 id="memory-profiler-tools">内存剖析工具<a class="headerlink" href="#memory-profiler-tools" title="Permanent link">&para;</a></h2>
+<p>在这一章中，我们讨论了某项功能应该以 MB 为单位占用多少内存的理论计算。但现实中情况往往并非完全如此。你按某个模型大小和批次大小做好了规划，可真正开始使用时，却突然发现内存不够了。因此，你需要结合实际代码和模型，看看哪一部分占用了多少内存，哪里算错了，或者还有哪些额外的、被遗漏的开销没有被计入。</p>
+<p>为此你会想用某种内存剖析工具（memory profiler）。市面上有各种各样的内存剖析工具。</p>
+<p>我开发过一个好用的工具，可以快速、轻松地剖析每一行或每一个代码块，它就是 <a href="https://github.com/stas00/ipyexperiments">IPyExperiments</a>。你只需要把代码加载到 jupyter notebook 中，它就会自动告诉你每个代码块分配/释放了多少 CPU/GPU 内存。例如，如果你想看看加载一个模型占用了多少内存，然后执行单个推理步骤又额外占用了多少内存——它还包括峰值内存的报告。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../model-parallelism/index.html" class="md-footer__link md-footer__link--prev" aria-label="上一页: 模型并行">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                模型并行
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../fault-tolerance/index.html" class="md-footer__link md-footer__link--next" aria-label="下一页: 故障容错">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                故障容错
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

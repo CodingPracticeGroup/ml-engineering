@@ -1,0 +1,3200 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="《Machine Learning Engineering》(Stas Bekman) 简体中文翻译，面向计算机专业本科低年级读者">
+      
+      
+      
+        <link rel="canonical" href="https://codingpracticegroup.github.io/ml-engineering/network/debug/index.html">
+      
+      
+        <link rel="prev" href="../comms.html">
+      
+      
+        <link rel="next" href="../benchmarks/index.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>网络调试 - 机器学习工程（ML Engineering）· 简体中文版</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#network-debug" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../index.html" title="机器学习工程（ML Engineering）· 简体中文版" class="md-header__button md-logo" aria-label="机器学习工程（ML Engineering）· 简体中文版" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器学习工程（ML Engineering）· 简体中文版
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              网络调试
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="切换浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CodingPracticeGroup/ml-engineering" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../index.html" title="机器学习工程（ML Engineering）· 简体中文版" class="md-nav__button md-logo" aria-label="机器学习工程（ML Engineering）· 简体中文版" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器学习工程（ML Engineering）· 简体中文版
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CodingPracticeGroup/ml-engineering" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Machine Learning Engineering 开放书籍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    洞见：算力与云服务
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    洞见：算力与云服务
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../insights/ai-battlefield.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 战场上的工程实践——你需要了解的事
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../insights/how-to-choose-cloud-provider.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何挑选云服务商
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../insights/when-to-upgrade-gpus/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    升级 GPU 什么时候才值得？
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    计算硬件
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    计算硬件
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    计算
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    加速器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/benchmarks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    加速器基准测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/nvidia/debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排查 NVIDIA GPU 问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/amd/debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排查 AMD GPU 问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/amd/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AMD GPU 性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/cpu/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CPU
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/cpu-memory/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CPU 内存
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    存储
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    存储
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../storage/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    存储：文件系统与 IO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    网络
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    节点间与节点内网络硬件
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../comms.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通信模式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络调试
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="index.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络调试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        术语表
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-diagnose-nccl-multi-gpu-and-multi-node-connectivity-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何诊断 NCCL 多 GPU 与多节点连接问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nccl-with-docker-containers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL 与 docker 容器
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-check-if-p2p-is-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何检查是否支持 P2P
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-count-nccl-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何统计 NCCL 调用次数
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#useful-nccl-debug-environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        有用的 NCCL 调试环境变量
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="有用的 NCCL 调试环境变量">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nccl_debug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL_DEBUG
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nccl_debug_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL_DEBUG_FILE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nccl_debug_subsys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL_DEBUG_SUBSYS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nccl_ib_hca" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL_IB_HCA
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nccl_p2p_disable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL_P2P_DISABLE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nccl_socket_ifname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL_SOCKET_IFNAME
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络基准测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编排与调度
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    编排与调度
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编排
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    在 SLURM 环境中工作
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/admin.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLURM 管理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/users.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面向用户的 SLURM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLURM 性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/launchers/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用 SLURM 的单节点与多节点启动器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/kubernetes/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kubernetes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    训练
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../model-parallelism/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型并行
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/model-parallelism/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型并行
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/performance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    软件调优以获得最佳性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/fault-tolerance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    故障容错
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/reproducibility/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    可复现性
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/instabilities/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    不稳定的避免、恢复与理解
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/instabilities/training-loss-patterns.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    理解训练损失模式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/checkpoints/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    检查点
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/hparams.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    选择训练超参数与模型初始化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/dtype.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    张量精度 / 数据类型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/emulate-multi-node.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    只用单个节点模拟多节点环境
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/re-train-hub-models.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用微调示例从头重新训练 HF Hub 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/datasets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    处理数据集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../inference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试与排障
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    调试与排障
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试与故障排查
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/pytorch.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试 PyTorch 程序
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/tools.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试工具
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/nccl-performance-debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NCCL：调试与性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/torch-distributed-hanging-solutions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    诊断多节点多 GPU Python 程序中的挂起与死锁
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/underflow_overflow.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    下溢与上溢检测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/make-tiny-models-tokenizers-datasets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用小型模型、分词器与数据集加快调试和开发速度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/tiny-scripts/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    脚本备份
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    测试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    测试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编写与运行测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    资源汇总
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    资源汇总
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resources/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    资源
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献者
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    贡献者
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributors.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献者
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程：设计并运行一次大模型训练
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程：设计并运行一次大模型训练
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../courses/lesson-learned/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练大语言模型的经验教训（一门课程）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录：本书的构建方式
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    附录：本书的构建方式
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../build/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图书构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        术语表
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-diagnose-nccl-multi-gpu-and-multi-node-connectivity-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何诊断 NCCL 多 GPU 与多节点连接问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nccl-with-docker-containers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL 与 docker 容器
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-check-if-p2p-is-supported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何检查是否支持 P2P
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-count-nccl-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何统计 NCCL 调用次数
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#useful-nccl-debug-environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        有用的 NCCL 调试环境变量
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="有用的 NCCL 调试环境变量">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nccl_debug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL_DEBUG
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nccl_debug_file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL_DEBUG_FILE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nccl_debug_subsys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL_DEBUG_SUBSYS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nccl_ib_hca" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL_IB_HCA
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nccl_p2p_disable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL_P2P_DISABLE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nccl_socket_ifname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL_SOCKET_IFNAME
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<p class="en-origin-link">📄 <a href="https://github.com/CodingPracticeGroup/ml-engineering/blob/master/network/debug/README.md" target="_blank" rel="noopener">本页英文原文（GitHub master）</a></p><h1 id="network-debug">网络调试<a class="headerlink" href="#network-debug" title="Permanent link">&para;</a></h1>
+<p>很多时候，你并不需要成为网络工程师也能弄清楚网络问题。阅读下面的笔记，一些常见问题就能得到解决。</p>
+<h2 id="glossary">术语表<a class="headerlink" href="#glossary" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Bonding（网卡绑定）：把多张 NIC 一起使用，以获得更快的速度或作为备份</li>
+<li>HCA：主机通道适配器（Host Channel Adapter）——InfiniBand 对网络适配器的称呼</li>
+<li>IB：InfiniBand（最初由 Mellanox 开发，后被 NVIDIA 收购）</li>
+<li>NIC：网络接口卡（Network Interface Card）</li>
+<li>OOB：带外（Out-of-Band），通常是一张速度较慢的以太网 NIC</li>
+<li>RDMA：远程直接内存访问（Remote Direct Memory Access）</li>
+</ul>
+<h2 id="how-to-diagnose-nccl-multi-gpu-and-multi-node-connectivity-issues">如何诊断 NCCL 多 GPU 与多节点连接问题<a class="headerlink" href="#how-to-diagnose-nccl-multi-gpu-and-multi-node-connectivity-issues" title="Permanent link">&para;</a></h2>
+<p>另见<a href="../../debug/pytorch.html#debugging-multi-node-training">调试多节点训练</a>，介绍如何在 PyTorch 层面调试多节点问题。</p>
+<p>本节显然不面面俱到，只是打算覆盖一些我在实际中经常遇到的最常见的配置问题。对于更复杂的问题，请研究 <a href="https://github.com/NVIDIA/nccl/issues">NCCL 仓库的 Issues</a>，如果找不到与你情况匹配的 Issue，就新建一个。NCCL 文档也包含一个简短的<a href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/troubleshooting.html">故障排查小节</a>，但通常阅读 <a href="https://github.com/NVIDIA/nccl/issues">Issues</a> 能学到更多。</p>
+<p>做网络诊断时，我不建议使用一个完整的应用程序——它可能启动很久，而且还会牵涉无关的问题；我建议使用这个专门开发的、用于设计验证的测试脚本：<a href="../../debug/torch-distributed-gpu-test.py">torch-distributed-gpu-test.py</a>。</p>
+<p>首先，在设置了下面的内容之后再运行基于 nccl 的程序：</p>
+<p><div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_DEBUG</span><span class="o">=</span>INFO
+</code></pre></div>
+这会打印大量关于 NCCL 设置及其网络流量的调试信息。</p>
+<p>例如，如果你使用前面提到的那个调试脚本，在一台带有 8 块 GPU 的单节点上，你可以这样做：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">NCCL_DEBUG</span><span class="o">=</span>INFO<span class="w"> </span>torchrun<span class="w"> </span>--nproc_per_node<span class="w"> </span><span class="m">8</span><span class="w"> </span>--nnodes<span class="w"> </span><span class="m">1</span><span class="w"> </span>torch-distributed-gpu-test.py
+</code></pre></div>
+<p>要在多个节点上启动它，你要么使用某种编排软件，比如 SLURM 或 Kubernetes，要么在每个节点上手动启动（<code>pdsh</code> 会帮上大忙）——详见 <a href="../../debug/torch-distributed-gpu-test.py">torch-distributed-gpu-test.py</a> 内部的说明。不过，为了理解整个机制是如何运作的，我建议先只在 1 个节点上开始，然后再推进到 2 个，之后再到更多节点。</p>
+<p>现在，检查程序的输出，寻找以如下内容开头的行：
+<div class="highlight"><pre><span></span><code>NCCL INFO NET/
+</code></pre></div>
+然后检查它正在使用哪个协议以及哪些接口。</p>
+<p>例如，下面这段输出：
+<div class="highlight"><pre><span></span><code>NCCL INFO NET/FastSocket : Using [0]ibs108:10.0.19.12&lt;0&gt; [1]ibs109:10.0.19.13&lt;0&gt; [2]ibs110:10.0.19.14&lt;0&gt; [3]ibs111:10.0.19.15&lt;0&gt; [4]ibs112:10.0.19.16&lt;0&gt; [5]ibs113:10.0.19.17&lt;0&gt; [6]ibs114:10.0.19.18&lt;0&gt; [7]ibs115:10.0.19.19&lt;0&gt;
+</code></pre></div></p>
+<p>告诉我们使用的是 <a href="https://github.com/google/nccl-fastsocket">nccl-fastsocket</a> 传输层插件，它发现了 8 个 <code>ibs*</code> 网络接口（NIC 卡）。如果你用的是 Google Cloud，这是正确的，你的 NCCL 很可能也就配置正确。但如果你使用的是 InfiniBand (IB)，却得到了上面的输出，那么你很可能只会得到非常低的节点间速度，因为这意味着你激活了错误的插件。</p>
+<p>在使用 IB 的情况下，你应当看到的是 <code>NET/IB</code> 及其 IB 接口：
+<div class="highlight"><pre><span></span><code>NCCL INFO NET/IB : Using [0]mlx5_0:1/IB [1]mlx5_1:1/IB [2]mlx5_2:1/IB [3]mlx5_3:1/IB [4]mlx5_4:1/IB [5]mlx5_5:1/IB [6]mlx5_6:1/IB [7]mlx5_7:1/IB [RO]; OOB eno1:101.262.0.9&lt;0&gt;
+</code></pre></div></p>
+<p>在这里你可以看到，IB 使用 8 个 <code>mlx5_*</code> 接口来进行集合通信，还有一个 OOB，即带外（Out-Of-Band），它用于引导建立连接，通常使用一张速度较慢的以太网 NIC（有时<a href="https://wiki.linuxfoundation.org/networking/bonding">会把多张 NIC 绑定成一张</a>——如果你正好奇接口名里的 <code>bond</code> 是什么意思，就是指这个）。</p>
+<p>要知道你的节点有哪些 TCP/IP 接口，可以在其中一台节点上运行 <code>ifconfig</code>（通常所有同型号节点都会有相同的接口名，但并不总是如此）。</p>
+<p>如果你的集合通信网络是 IB，那么你要运行的不是 <code>ifconfig</code>，而是 <code>ibstat</code>。上面最后一个 <code>NCCL INFO NET</code> 示例会对应如下输出：</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ibstat<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>mlx5
+CA<span class="w"> </span><span class="s1">'mlx5_0'</span>
+CA<span class="w"> </span><span class="s1">'mlx5_1'</span>
+CA<span class="w"> </span><span class="s1">'mlx5_2'</span>
+CA<span class="w"> </span><span class="s1">'mlx5_3'</span>
+CA<span class="w"> </span><span class="s1">'mlx5_4'</span>
+CA<span class="w"> </span><span class="s1">'mlx5_5'</span>
+CA<span class="w"> </span><span class="s1">'mlx5_6'</span>
+CA<span class="w"> </span><span class="s1">'mlx5_7'</span>
+</code></pre></div>
+<p>这些命令中的哪些能真正给出回答，取决于网络架构（fabric），所以了解每个命令问的是什么会有帮助。<code>ibstat</code> 与 <code>ibnetdiscover</code>、<code>iblinkinfo</code>、<code>ibhosts</code>、<code>ibswitches</code> 和 <code>perfquery</code> 一样，都是向子网管理器（subnet manager）查询——子网管理器是覆盖整个网络架构的服务，在 InfiniBand 上负责分配地址并回答拓扑问题。它们只对真正的 InfiniBand 网络架构给出报告，上面的示例就是这种情况。而 <code>ibv_devices</code>、<code>ibv_devinfo</code> 和 <code>ibstatus</code> 询问的是本地适配器，所以只要是被 RDMA 协议栈枚举出来的网络架构，它们都能回答；直接用 <code>cat /sys/class/infiniband/*/ports/1/rate</code> 读取端口也是如此。</p>
+<p>所以要先确定网络架构，使用第二组中的某个命令。在 InfiniBand 上，端口的 <code>link_layer</code> 是 <code>InfiniBand</code>，并且子网管理器工具可用。在 RoCE 上——它把 RDMA 承载在以太网之上——<code>link_layer</code> 是 <code>Ethernet</code>。在 EFA 上没有子网管理器：<code>ibv_devinfo</code> 报告 <code>transport: unspecified</code> 和 <code>link_layer: Unspecified</code>，<code>ibstatus</code> 报告每个端口都以各自的速率处于 <code>ACTIVE</code>，而子网管理器工具会失败——<code>ibnetdiscover</code> 报 <code>Can't open SMI UMAD port</code>，<code>ibstat -l</code> 则什么都不输出。这种毫无动静的空输出正是陷阱所在，因为它看起来像是"这个节点没有 RDMA 设备"；在本章为实测而使用的一台 2026 年 9 月的 AWS 节点上，它什么都没打印，而该节点其实有 16 块适配器，每一块都在 <code>200 Gb/sec (4X HDR)</code> 速率下处于 <code>ACTIVE</code>。</p>
+<p>除了高速的节点间连接 NIC 之外，你很可能还有一张低速的管理用以太网 NIC（甚至好几张），它的存在是为了让你能配置节点、使用共享文件系统、访问互联网，所以几乎可以肯定，<code>ifconfig</code> 的输出还会包含额外的 NIC。此外你还可能有 docker 网络接口、<code>lo</code> 回环接口以及其他一些接口。例如，在我的台式机上，我可能得到如下输出：</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ifconfig
+docker0:<span class="w"> </span><span class="nv">flags</span><span class="o">=</span><span class="m">4163</span>&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;<span class="w">  </span>mtu<span class="w"> </span><span class="m">1500</span>
+<span class="w">        </span>inet<span class="w"> </span><span class="m">172</span>.99.0.1<span class="w">  </span>netmask<span class="w"> </span><span class="m">255</span>.255.0.0<span class="w">  </span>broadcast<span class="w"> </span><span class="m">172</span>.99.255.255
+<span class="w">        </span>inet6<span class="w"> </span>f330::42:fe33:f335:7c94<span class="w">  </span>prefixlen<span class="w"> </span><span class="m">64</span><span class="w">  </span>scopeid<span class="w"> </span>0x20&lt;link&gt;
+<span class="w">        </span>ether<span class="w"> </span><span class="m">02</span>:42:fe:15:1c:94<span class="w">  </span>txqueuelen<span class="w"> </span><span class="m">0</span><span class="w">  </span><span class="o">(</span>Ethernet<span class="o">)</span>
+<span class="w">        </span>RX<span class="w"> </span>packets<span class="w"> </span><span class="m">219909</span><span class="w">  </span>bytes<span class="w"> </span><span class="m">650966314</span><span class="w"> </span><span class="o">(</span><span class="m">650</span>.9<span class="w"> </span>MB<span class="o">)</span>
+<span class="w">        </span>RX<span class="w"> </span>errors<span class="w"> </span><span class="m">0</span><span class="w">  </span>dropped<span class="w"> </span><span class="m">0</span><span class="w">  </span>overruns<span class="w"> </span><span class="m">0</span><span class="w">  </span>frame<span class="w"> </span><span class="m">0</span>
+<span class="w">        </span>TX<span class="w"> </span>packets<span class="w"> </span><span class="m">262998</span><span class="w">  </span>bytes<span class="w"> </span><span class="m">20750134</span><span class="w"> </span><span class="o">(</span><span class="m">20</span>.7<span class="w"> </span>MB<span class="o">)</span>
+<span class="w">        </span>TX<span class="w"> </span>errors<span class="w"> </span><span class="m">0</span><span class="w">  </span>dropped<span class="w"> </span><span class="m">0</span><span class="w"> </span>overruns<span class="w"> </span><span class="m">0</span><span class="w">  </span>carrier<span class="w"> </span><span class="m">0</span><span class="w">  </span>collisions<span class="w"> </span><span class="m">0</span>
+
+lo:<span class="w"> </span><span class="nv">flags</span><span class="o">=</span><span class="m">73</span>&lt;UP,LOOPBACK,RUNNING&gt;<span class="w">  </span>mtu<span class="w"> </span><span class="m">65536</span>
+<span class="w">        </span>inet<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w">  </span>netmask<span class="w"> </span><span class="m">255</span>.0.0.0
+<span class="w">        </span>inet6<span class="w"> </span>::1<span class="w">  </span>prefixlen<span class="w"> </span><span class="m">128</span><span class="w">  </span>scopeid<span class="w"> </span>0x10&lt;host&gt;
+<span class="w">        </span>loop<span class="w">  </span>txqueuelen<span class="w"> </span><span class="m">1000</span><span class="w">  </span><span class="o">(</span>Local<span class="w"> </span>Loopback<span class="o">)</span>
+<span class="w">        </span>RX<span class="w"> </span>packets<span class="w"> </span><span class="m">1147283113</span><span class="w">  </span>bytes<span class="w"> </span><span class="m">138463231270</span><span class="w"> </span><span class="o">(</span><span class="m">138</span>.4<span class="w"> </span>GB<span class="o">)</span>
+<span class="w">        </span>RX<span class="w"> </span>errors<span class="w"> </span><span class="m">0</span><span class="w">  </span>dropped<span class="w"> </span><span class="m">0</span><span class="w">  </span>overruns<span class="w"> </span><span class="m">0</span><span class="w">  </span>frame<span class="w"> </span><span class="m">0</span>
+<span class="w">        </span>TX<span class="w"> </span>packets<span class="w"> </span><span class="m">1147283113</span><span class="w">  </span>bytes<span class="w"> </span><span class="m">138463231270</span><span class="w"> </span><span class="o">(</span><span class="m">138</span>.4<span class="w"> </span>GB<span class="o">)</span>
+<span class="w">        </span>TX<span class="w"> </span>errors<span class="w"> </span><span class="m">0</span><span class="w">  </span>dropped<span class="w"> </span><span class="m">0</span><span class="w"> </span>overruns<span class="w"> </span><span class="m">0</span><span class="w">  </span>carrier<span class="w"> </span><span class="m">0</span><span class="w">  </span>collisions<span class="w"> </span><span class="m">0</span>
+
+eth0:<span class="w"> </span><span class="nv">flags</span><span class="o">=</span><span class="m">4163</span>&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;<span class="w">  </span>mtu<span class="w"> </span><span class="m">1500</span>
+<span class="w">        </span>inet<span class="w"> </span><span class="m">10</span>.0.0.23<span class="w">  </span>netmask<span class="w"> </span><span class="m">255</span>.255.255.0<span class="w">  </span>broadcast<span class="w"> </span><span class="m">10</span>.0.0.255
+<span class="w">        </span>inet6<span class="w"> </span><span class="m">2601</span>:3108:1c71:600:4224:7e4b:13e4:7b54<span class="w">  </span>prefixlen<span class="w"> </span><span class="m">64</span><span class="w">  </span>scopeid<span class="w"> </span>0x0&lt;global&gt;
+<span class="w">        </span>ether<span class="w"> </span><span class="m">04</span>:41:1a:16:17:bd<span class="w">  </span>txqueuelen<span class="w"> </span><span class="m">1000</span><span class="w">  </span><span class="o">(</span>Ethernet<span class="o">)</span>
+<span class="w">        </span>RX<span class="w"> </span>packets<span class="w"> </span><span class="m">304675330</span><span class="w">  </span>bytes<span class="w"> </span><span class="m">388788486256</span><span class="w"> </span><span class="o">(</span><span class="m">388</span>.7<span class="w"> </span>GB<span class="o">)</span>
+<span class="w">        </span>RX<span class="w"> </span>errors<span class="w"> </span><span class="m">0</span><span class="w">  </span>dropped<span class="w"> </span><span class="m">0</span><span class="w">  </span>overruns<span class="w"> </span><span class="m">0</span><span class="w">  </span>frame<span class="w"> </span><span class="m">0</span>
+<span class="w">        </span>TX<span class="w"> </span>packets<span class="w"> </span><span class="m">74956770</span><span class="w">  </span>bytes<span class="w"> </span><span class="m">28501279127</span><span class="w"> </span><span class="o">(</span><span class="m">28</span>.5<span class="w"> </span>GB<span class="o">)</span>
+<span class="w">        </span>TX<span class="w"> </span>errors<span class="w"> </span><span class="m">0</span><span class="w">  </span>dropped<span class="w"> </span><span class="m">0</span><span class="w"> </span>overruns<span class="w"> </span><span class="m">0</span><span class="w">  </span>carrier<span class="w"> </span><span class="m">0</span><span class="w">  </span>collisions<span class="w"> </span><span class="m">0</span>
+<span class="w">        </span>device<span class="w"> </span>memory<span class="w"> </span>0xa3b00000-a3bfffff
+</code></pre></div>
+<p>我之所以提到这一切，是因为关键部分在于确保 NCCL 在其 <code>Using</code> 调试行中只报告正确的接口。如果像 <code>docker0</code>、<code>lo</code> 或 <code>eth0</code> 这样的接口最终也被报告出来，例如：</p>
+<div class="highlight"><pre><span></span><code>NCCL INFO NET/Socket : Using [0]eth0:10.0.0.23&lt;0&gt;
+</code></pre></div>
+<p>而你有更快的网络接口可用，那么这多半不是你想要的。当然，在某些情况下，以太网 NIC 是你仅有的选择，这种情况下上面的输出也没什么问题——只是会非常慢。</p>
+<p>有时候，如果最终用上了错误的接口，应用程序可能直接挂起。</p>
+<p>如果你拥有的既有全部正确的接口，又夹杂着一些不正确的接口，NCCL 也许能工作，但速度会更慢。</p>
+<p>如果这是云环境，通常你的云服务商应该会给出让配置正确起来的说明。如果他们没给，那么至少要问清楚：为了配置 NCCL，你需要使用哪些网络接口。</p>
+<p>尽管 NCCL 会尽力自动发现它该使用哪些接口，但如果它没能正确地做到这一点，你就可以帮它一把，告诉它该用或不该用哪些接口：</p>
+<ul>
+<li>在不使用 InfiniBand 时，<code>NCCL_SOCKET_IFNAME</code> 可用来指定要包含或排除哪些 <code>ifconfig</code> 接口。下面是一些例子：</li>
+</ul>
+<p><div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_SOCKET_IFNAME</span><span class="o">=</span>eth<span class="w">         </span><span class="c1"># 所有以 eth 开头的接口</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_SOCKET_IFNAME</span><span class="o">==</span>eth0<span class="w">       </span><span class="c1"># 仅 eth0</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_SOCKET_IFNAME</span><span class="o">==</span>eth0,eth1<span class="w">  </span><span class="c1"># 仅接口 eth0 和 eth1</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_SOCKET_IFNAME</span><span class="o">=</span>^docker<span class="w">     </span><span class="c1"># 不使用任何以 docker 开头的接口</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_SOCKET_IFNAME</span><span class="o">=</span>^<span class="o">=</span>docker0<span class="w">   </span><span class="c1"># 不使用接口 docker0</span>
+</code></pre></div>
+完整文档见<a href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html#nccl-socket-ifname">这里</a>。</p>
+<ul>
+<li>当使用 IB RDMA（IB Verbs 接口）时，不要用 <code>NCCL_SOCKET_IFNAME</code>，而要改用环境变量 <code>NCCL_IB_HCA</code>，它为集合通信选择接口。示例：</li>
+</ul>
+<p><div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_IB_HCA</span><span class="o">=</span>mlx5<span class="w">                </span><span class="c1"># 名称以 mlx5 开头的每张卡的全部端口</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_IB_HCA</span><span class="o">==</span>mlx5_0:1,mlx5_1:1<span class="w">  </span><span class="c1"># 仅 mlx5_0 和 mlx5_1 的端口 1</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_IB_HCA</span><span class="o">=</span>^<span class="o">=</span>mlx5_1,mlx5_4<span class="w">     </span><span class="c1"># 不使用 mlx5_1 和 mlx5_4</span>
+</code></pre></div>
+完整文档见<a href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html#nccl-ib-hca">这里</a>。</p>
+<p>例如，在使用 IB 时，常常会有诸如 <code>mlx5_bond_0</code> 这样的额外接口，你并不希望它们被纳入 NCCL 通信。比如，下面这份报告就说明错误的 <code>[8]mlx5_bond_0:1/RoCE</code> 接口被包含进来了，而这几乎肯定会导致低带宽：
+<div class="highlight"><pre><span></span><code>NCCL INFO NET/IB : Using [0]mlx5_0:1/IB [1]mlx5_1:1/IB [2]mlx5_2:1/IB [3]mlx5_3:1/IB [4]mlx5_4:1/IB [5]mlx5_5:1/IB [6]mlx5_6:1/IB [7]mlx5_7:1/IB [8]mlx5_bond_0:1/RoCE [RO]; OOB ibp25s0:10.0.12.82&lt;0&gt;
+</code></pre></div>
+此时你可以用下面的方式把它排除掉：
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_IB_HCA</span><span class="o">=</span>^mlx5_bond_0:1
+</code></pre></div>
+或者，你也可以显式列出你想要的接口，例如：
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_IB_HCA</span><span class="o">==</span>mlx5_0,mlx5_1,mlx5_2,mlx5_3,mlx5_4,mlx5_5,mlx5_6,mlx5_7
+</code></pre></div></p>
+<p>如前所述，如果网络架构是 InfiniBand，在任一节点上运行 <code>ibstat</code> 就会列出可用的接口；在任何其他 RDMA 网络架构上，则使用 <code>ibv_devices</code> 或 <code>ibv_devinfo</code>。</p>
+<p>由于 NCCL 会尝试自动选择最佳的网络接口，你只有在 NCCL 无法工作或速度很慢时才需要做上面的事情。正常情况下，NCCL 应当开箱即用，用户不需要做任何特别的操作。</p>
+<p>另外，取决于使用的是哪家云，云服务商很可能会给你一大堆需要设置的环境变量。如果你把其中一些设置错了，NCCL 可能会运行缓慢，或者完全无法工作。</p>
+<p>用户还会遇到另一个典型问题：试图把在云 A 上已经能正常工作的 NCCL 配置原样复用到云 B 上。通常这些东西并不通用，你必须小心地清除之前设置过的所有环境变量，再针对新的云重新正确地设置一遍。即使你用的是同一家云、但不同类型的实例，也很可能出现这个问题，因为有些网络配置是针对特定实例的，换个环境就行不通。</p>
+<p>一旦你认为已经把 NCCL 配置正确了，下一件事就是对你的连接做基准测试，确认它达到了标称的速度（好吧，大约是其 80%）。请转到<a href="../benchmarks/index.html">基准测试章节</a>。</p>
+<h2 id="nccl-with-docker-containers">NCCL 与 docker 容器<a class="headerlink" href="#nccl-with-docker-containers" title="Permanent link">&para;</a></h2>
+<ul>
+<li>通过向 docker <code>run</code> 添加这些额外参数来给出足够的资源：<code>--shm-size=1g --ulimit memlock=-1</code>（<a href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/troubleshooting.html#sharing-data">更多细节</a>）</li>
+<li>特权访问：有时你需要在 docker <code>run</code> 的参数里加上 <code>--privileged</code>。</li>
+<li>让 docker 镜像包含正确的软件包，例如，如果使用 IB，你至少需要安装 <code>libibverbs1 librdmacm1</code></li>
+</ul>
+<h2 id="how-to-check-if-p2p-is-supported">如何检查是否支持 P2P<a class="headerlink" href="#how-to-check-if-p2p-is-supported" title="Permanent link">&para;</a></h2>
+<p>有时你需要知道计算节点上的 GPU 是否支持 P2P 访问（Peer2Peer，点对点）。禁用 P2P 通常会导致节点内部连接变慢。</p>
+<p>可以看到，在这台特定的 8x NVIDIA H100 节点上，P2P 是受支持的：</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>nvidia-smi<span class="w"> </span>topo<span class="w"> </span>-p2p<span class="w"> </span>r
+<span class="w">        </span>GPU0<span class="w">    </span>GPU1<span class="w">    </span>GPU2<span class="w">    </span>GPU3<span class="w">    </span>GPU4<span class="w">    </span>GPU5<span class="w">    </span>GPU6<span class="w">    </span>GPU7
+<span class="w"> </span>GPU0<span class="w">   </span>X<span class="w">       </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK
+<span class="w"> </span>GPU1<span class="w">   </span>OK<span class="w">      </span>X<span class="w">       </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK
+<span class="w"> </span>GPU2<span class="w">   </span>OK<span class="w">      </span>OK<span class="w">      </span>X<span class="w">       </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK
+<span class="w"> </span>GPU3<span class="w">   </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>X<span class="w">       </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK
+<span class="w"> </span>GPU4<span class="w">   </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>X<span class="w">       </span>OK<span class="w">      </span>OK<span class="w">      </span>OK
+<span class="w"> </span>GPU5<span class="w">   </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>X<span class="w">       </span>OK<span class="w">      </span>OK
+<span class="w"> </span>GPU6<span class="w">   </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>X<span class="w">       </span>OK
+<span class="w"> </span>GPU7<span class="w">   </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>OK<span class="w">      </span>X
+
+Legend:
+
+<span class="w">  </span><span class="nv">X</span><span class="w">    </span><span class="o">=</span><span class="w"> </span>Self
+<span class="w">  </span><span class="nv">OK</span><span class="w">   </span><span class="o">=</span><span class="w"> </span>Status<span class="w"> </span>Ok
+<span class="w">  </span><span class="nv">CNS</span><span class="w">  </span><span class="o">=</span><span class="w"> </span>Chipset<span class="w"> </span>not<span class="w"> </span>supported
+<span class="w">  </span><span class="nv">GNS</span><span class="w">  </span><span class="o">=</span><span class="w"> </span>GPU<span class="w"> </span>not<span class="w"> </span>supported
+<span class="w">  </span><span class="nv">TNS</span><span class="w">  </span><span class="o">=</span><span class="w"> </span>Topology<span class="w"> </span>not<span class="w"> </span>supported
+<span class="w">  </span><span class="nv">NS</span><span class="w">   </span><span class="o">=</span><span class="w"> </span>Not<span class="w"> </span>supported
+<span class="w">  </span><span class="nv">U</span><span class="w">    </span><span class="o">=</span><span class="w"> </span>Unknown
+</code></pre></div>
+<p>另一方面，在这台特定的 2x NVIDIA L4 上，P2P 不受支持：
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>nvidia-smi<span class="w"> </span>topo<span class="w"> </span>-p2p<span class="w"> </span>r
+<span class="w">        </span>GPU0<span class="w">    </span>GPU1
+<span class="w"> </span>GPU0<span class="w">   </span>X<span class="w">       </span>CNS
+<span class="w"> </span>GPU1<span class="w">   </span>CNS<span class="w">     </span>X
+</code></pre></div></p>
+<p>正如从上面的 Legend（图例）中可以看到的那样，<code>CNS</code> 表示 "Chipset is not supported"（芯片组不支持）。</p>
+<p>如果你用的是高端数据中心 GPU，这种情况几乎不会发生。不过，有些低端数据中心 GPU 可能不支持 P2P，就像上面 L4 的例子那样。</p>
+<p>对于消费级 GPU，你的 GPU 不受支持的原因可能有很多种，通常是启用了 IOMMU 和/或 ACS 特性。另一些时候则只是驱动版本的问题。如果你多花些时间搜索，可能会发现有人在改造驱动，让本不支持 P2P 的 GPU 支持了 P2P，比如下面这个 <a href="https://github.com/tinygrad/open-gpu-kernel-modules">4090 P2P 支持仓库</a>。</p>
+<p>要检查 PCI 访问控制服务（Access Control Services，ACS）是否启用以及如何禁用它们，请遵循<a href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/troubleshooting.html#pci-access-control-services-acs">这份指南</a>。</p>
+<p>IOMMU 可以在 BIOS 中禁用。</p>
+<p>你也可以用 torch 检查特定 GPU 之间的 P2P 支持——这里我们在检查 GPU 0 和 GPU 1：</p>
+<p><div class="highlight"><pre><span></span><code>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import torch; print(torch.cuda.can_device_access_peer(torch.device('cuda:0'), torch.device('cuda:1')))"</span>
+</code></pre></div>
+如果不支持 P2P，上面的命令会打印 <code>False</code>。</p>
+<h2 id="how-to-count-nccl-calls">如何统计 NCCL 调用次数<a class="headerlink" href="#how-to-count-nccl-calls" title="Permanent link">&para;</a></h2>
+<p>启用 NCCL 针对子系统——集合通信——的调试日志：
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_DEBUG</span><span class="o">=</span>INFO
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_DEBUG_SUBSYS</span><span class="o">=</span>COLL
+</code></pre></div></p>
+<p>如果你在一个有很多节点的 slurm 环境中工作，你可能希望只在 rank 0 上这样做，如下所示：
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="o">[[</span><span class="w"> </span><span class="nv">$SLURM_PROCID</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"0"</span><span class="w"> </span><span class="o">]]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">  </span><span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_DEBUG</span><span class="o">=</span>INFO
+<span class="w">  </span><span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_DEBUG_SUBSYS</span><span class="o">=</span>COLL
+<span class="k">fi</span>
+</code></pre></div></p>
+<p>假设你的日志全部发送到了 <code>main_log.txt</code>，那么你可以用下面的命令统计每种集合通信调用执行了多少次：
+<div class="highlight"><pre><span></span><code>grep<span class="w"> </span>-a<span class="w"> </span><span class="s2">"NCCL INFO Broadcast"</span><span class="w"> </span>main_log.txt<span class="w">     </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<span class="m">2590</span>
+grep<span class="w"> </span>-a<span class="w"> </span><span class="s2">"NCCL INFO AllReduce"</span><span class="w"> </span>main_log.txt<span class="w">     </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<span class="m">5207</span>
+grep<span class="w"> </span>-a<span class="w"> </span><span class="s2">"NCCL INFO AllGather"</span><span class="w"> </span>main_log.txt<span class="w">     </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<span class="m">1849749</span>
+grep<span class="w"> </span>-a<span class="w"> </span><span class="s2">"NCCL INFO ReduceScatter"</span><span class="w"> </span>main_log.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<span class="m">82850</span>
+</code></pre></div></p>
+<p>最好先隔离出训练的某个特定阶段，因为加载与保存的模式和训练迭代的模式会非常不同。</p>
+<p>所以我通常先切出一个迭代。例如，如果每次迭代的日志以 <code>iteration: ...</code> 开头，那么我会先执行：
+<div class="highlight"><pre><span></span><code>csplit main_log.txt '/iteration: /' "{*}"
+</code></pre></div>
+然后分析对应迭代的那些结果文件中的一个。默认情况下，它的名字类似 <code>xx02</code>。</p>
+<h2 id="useful-nccl-debug-environment-variables">有用的 NCCL 调试环境变量<a class="headerlink" href="#useful-nccl-debug-environment-variables" title="Permanent link">&para;</a></h2>
+<p>在调试与 NCCL 相关的问题（例如挂起和崩溃）时，下列环境变量最为有用。完整列表可以在<a href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html">这里</a>找到。</p>
+<h3 id="nccl_debug"><code>NCCL_DEBUG</code><a class="headerlink" href="#nccl_debug" title="Permanent link">&para;</a></h3>
+<p>这是调试网络问题时最常用的环境变量。</p>
+<p>取值：</p>
+<ul>
+<li><code>VERSION</code> - 在程序开始时打印 NCCL 版本。</li>
+<li><code>WARN</code> - 每当任何一次 NCCL 调用出错时，打印一条明确的错误信息。</li>
+<li><code>INFO</code> - 打印调试信息</li>
+<li><code>TRACE</code> - 为每一次调用打印可回放的跟踪信息。</li>
+</ul>
+<p>例如：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">NCCL_DEBUG</span><span class="o">=</span>INFO<span class="w"> </span>torchrun<span class="w"> </span>--nproc_per_node<span class="w"> </span><span class="m">2</span><span class="w"> </span>--nnodes<span class="w"> </span><span class="m">1</span><span class="w"> </span>torch-distributed-gpu-test.py
+</code></pre></div>
+<p>这会转储大量与 NCCL 相关的调试信息，如果你发现有报告出来的问题，就可以拿它们去网上搜索。</p>
+<p>而在使用 <code>NCCL_DEBUG</code> 时，<code>NCCL_DEBUG_FILE</code> 应该会非常有用，因为信息量非常大，尤其是在使用很多节点的时候。</p>
+<h3 id="nccl_debug_file"><code>NCCL_DEBUG_FILE</code><a class="headerlink" href="#nccl_debug_file" title="Permanent link">&para;</a></h3>
+<p>使用 <code>NCCL_DEBUG</code> 环境变量时，把所有 NCCL 调试日志输出重定向到一个文件。</p>
+<p>默认值是 <code>stdout</code>。当使用很多 GPU 时，把每个进程的调试信息保存进各自独立的日志文件会非常有用，可以这样做：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">NCCL_DEBUG_FILE</span><span class="o">=</span>/path/to/nccl-log.%h.%p.txt
+</code></pre></div>
+<ul>
+<li><code>%h</code> 会被替换为主机名</li>
+<li><code>%p</code> 会被替换为进程的 PID。</li>
+</ul>
+<p>如果你随后需要一次分析上百个这样的文件，这里有一些有用的小技巧：</p>
+<ul>
+<li>用 grep 查找特定的匹配项，并同时打印找到它的文件和行号：</li>
+</ul>
+<div class="highlight"><pre><span></span><code>grep<span class="w"> </span>-n<span class="w"> </span><span class="s2">"Init COMPLETE"</span><span class="w"> </span>nccl-log*
+</code></pre></div>
+<ul>
+<li>显示所有 nccl 日志文件的 <code>tail -1</code> 结果，并在其后附上每个文件的名称</li>
+</ul>
+<div class="highlight"><pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-name<span class="w"> </span><span class="s2">"nccl*"</span><span class="w"> </span>-exec<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s1">'echo "$(tail -1 "$1") ($1)"'</span><span class="w"> </span>_<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span>
+</code></pre></div>
+<h3 id="nccl_debug_subsys"><code>NCCL_DEBUG_SUBSYS</code><a class="headerlink" href="#nccl_debug_subsys" title="Permanent link">&para;</a></h3>
+<p><code>NCCL_DEBUG_SUBSYS</code> 与 <code>NCCL_DEBUG</code> 配合使用，用来告诉后者要显示哪些子系统。通常你不必指定这个变量，但有时帮助你的开发人员可能会要求把输出限制在某些子系统，例如：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">NCCL_DEBUG_SUBSYS</span><span class="o">=</span>INIT,GRAPH,ENV,TUNING
+</code></pre></div>
+<h3 id="nccl_ib_hca"><code>NCCL_IB_HCA</code><a class="headerlink" href="#nccl_ib_hca" title="Permanent link">&para;</a></h3>
+<p>当集合通信通过 IB Verbs 而不是套接字运行时，就是这个变量在选择它们使用哪些适配器——它是 <a href="#nccl_socket_ifname"><code>NCCL_SOCKET_IFNAME</code></a> 在 RDMA 下的对应变量。运行 <code>ibv_devinfo</code> 可以查看节点上有什么设备。</p>
+<p>有三种形式：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_IB_HCA</span><span class="o">=</span>mlx5<span class="w">                </span><span class="c1"># 名称以 mlx5 开头的每张卡的每个端口</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_IB_HCA</span><span class="o">==</span>mlx5_0:1,mlx5_1:1<span class="w">  </span><span class="c1"># 仅 mlx5_0 和 mlx5_1 的端口 1</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_IB_HCA</span><span class="o">=</span>^<span class="o">=</span>mlx5_1,mlx5_4<span class="w">     </span><span class="c1"># 除 mlx5_1 和 mlx5_4 之外的全部</span>
+</code></pre></div>
+<p>关于如何用排除形式绕开单块有问题的适配器，一个完整的示例见<a href="#how-to-diagnose-nccl-multi-gpu-and-multi-node-connectivity-issues">如何诊断 NCCL 多 GPU 与多节点连接问题</a>。完整文档见<a href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html#nccl-ib-hca">这里</a>。</p>
+<h3 id="nccl_p2p_disable"><code>NCCL_P2P_DISABLE</code><a class="headerlink" href="#nccl_p2p_disable" title="Permanent link">&para;</a></h3>
+<p>禁用 P2P 通信——例如，即使有 NVLink 也不会使用它，性能因此会慢得多。通常你不会想要这样，但在紧要关头，调试期间它有时会有用。</p>
+<h3 id="nccl_socket_ifname"><code>NCCL_SOCKET_IFNAME</code><a class="headerlink" href="#nccl_socket_ifname" title="Permanent link">&para;</a></h3>
+<p>如果你有多个网络接口，并且想指定使用其中某一个，这个变量非常有用。</p>
+<p><code>NCCL_SOCKET_IFNAME</code> 选择 NCCL 可以用于引导（bootstrap）以及经由 TCP/IP 运行的集合通信的套接字——它不选择 InfiniBand Verbs 适配器（那些由 <a href="#nccl_ib_hca"><code>NCCL_IB_HCA</code></a> 负责）。</p>
+<p>例如，要把 NCCL 限制在以太网接口上：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">NCCL_SOCKET_IFNAME</span><span class="o">=</span>eth
+</code></pre></div>
+<p>这个环境变量有时可用于调试连接问题，比如说某个接口被防火墙挡住了，而其他接口可能没有，于是可以改用其他接口试试。又或者你不确定某个问题是与网络接口有关还是与别的东西有关，这时测试其他接口有助于排除"问题来自网络"这一可能。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../comms.html" class="md-footer__link md-footer__link--prev" aria-label="上一页: 通信模式">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                通信模式
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../benchmarks/index.html" class="md-footer__link md-footer__link--next" aria-label="下一页: 网络基准测试">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                网络基准测试
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,114 @@
+/* 让页面自适应浏览器宽度（覆盖 material 主题的固定宽度上限） */
+
+/* 1. 内容区随浏览器宽度伸缩，不再固定在窄栏 */
+.md-grid {
+  max-width: none;          /* 解除主题的居中定宽容器 */
+}
+.md-sidebar--secondary {
+  margin-left: 0;
+}
+
+/* 2. 超宽内容兜底：表格、代码块在窄窗口内横向滚动，不撑破页面 */
+.md-typeset table:not([class]) {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.md-typeset table {
+  max-width: 100%;
+}
+.md-typeset pre {
+  overflow-x: auto;
+}
+.md-typeset code {
+  overflow-wrap: anywhere;
+}
+
+/* 3. 图片随列宽缩放 */
+.md-typeset img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ===== 左栏导航层级区分 ===== */
+
+/* L1 分组标题：加粗 + 主色文字 + 左侧色条 + 浅色底块 */
+.md-sidebar--primary .md-nav__item--nested > .md-nav__link {
+  font-weight: 700;
+  font-size: .62rem;
+  color: var(--md-primary-fg-color);
+  background: rgba(63, 81, 181, 0.10);
+  border-left: 3px solid var(--md-primary-fg-color);
+  border-radius: 0 2px 2px 0;
+  padding: .32rem .5rem;
+  margin: .5rem .4rem 0 0;
+}
+.md-sidebar--primary .md-nav__item--nested > .md-nav__link:hover {
+  background: rgba(63, 81, 181, 0.18);
+}
+
+/* 首页：与分组标题同级强调（它是一级可点项） */
+.md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item:not(.md-nav__item--nested) > .md-nav__link {
+  font-weight: 700;
+  font-size: .62rem;
+}
+
+/* L2 及更深层：缩进导引线 + 更小的字号，与分组拉开对比 */
+.md-sidebar--primary .md-nav__item .md-nav {
+  border-left: 2px solid var(--md-default-fg-color--lightest);
+  margin-left: .65rem;
+}
+.md-sidebar--primary .md-nav__item .md-nav > .md-nav__list > .md-nav__item > .md-nav__link {
+  font-size: .56rem;
+  color: var(--md-default-fg-color--light);
+}
+.md-sidebar--primary .md-nav__item .md-nav > .md-nav__list > .md-nav__item > .md-nav__link:hover {
+  color: var(--md-text-link-color);
+}
+
+/* L3 当前页页内锚点：虚线导引 + 再弱一档 */
+.md-sidebar--primary .md-nav .md-nav .md-nav {
+  border-left-style: dashed;
+}
+.md-sidebar--primary .md-nav .md-nav > .md-nav__list .md-nav .md-nav > .md-nav__list > .md-nav__item > .md-nav__link {
+  font-size: .53rem;
+  opacity: .85;
+}
+
+/* 兜底：左栏所有导航条目默认 80% 字号（覆盖主题 .7rem） */
+.md-sidebar--primary .md-nav__link {
+  font-size: .56rem;
+}
+
+/* ===== 全站字号 80% ===== */
+
+/* 正文：主题默认 .8rem → .64rem；标题/代码/表格均为相对单位，随之等比 */
+.md-typeset {
+  font-size: .64rem;
+}
+
+/* 右栏页内目录：与左栏同档 .56rem */
+.md-sidebar--secondary .md-nav__link {
+  font-size: .56rem;
+}
+
+/* 页脚翻页与版权信息同步缩小 */
+.md-footer__inner {
+  font-size: .64rem;
+}
+
+/* ===== 底栏翻页字号（子元素有独立 rem 声明，需逐个压到 80%） ===== */
+.md-footer__link,
+.md-footer__title,
+.md-footer__direction {
+  font-size: .56rem;
+}
+
+/* ===== 正文顶部“英文原文”链接条 ===== */
+.en-origin-link {
+  text-align: right;
+  margin: 0 0 .8em;
+  font-size: .56rem;
+  opacity: .75;
+}
+.en-origin-link:hover { opacity: 1; }

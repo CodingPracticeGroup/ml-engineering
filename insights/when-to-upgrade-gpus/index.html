@@ -1,0 +1,3819 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="《Machine Learning Engineering》(Stas Bekman) 简体中文翻译，面向计算机专业本科低年级读者">
+      
+      
+      
+        <link rel="canonical" href="https://codingpracticegroup.github.io/ml-engineering/insights/when-to-upgrade-gpus/index.html">
+      
+      
+        <link rel="prev" href="../how-to-choose-cloud-provider.html">
+      
+      
+        <link rel="next" href="../../compute/index.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>升级 GPU 什么时候才值得？ - 机器学习工程（ML Engineering）· 简体中文版</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#when-is-it-worth-upgrading-gpus" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../index.html" title="机器学习工程（ML Engineering）· 简体中文版" class="md-header__button md-logo" aria-label="机器学习工程（ML Engineering）· 简体中文版" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器学习工程（ML Engineering）· 简体中文版
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              升级 GPU 什么时候才值得？
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="切换浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CodingPracticeGroup/ml-engineering" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../index.html" title="机器学习工程（ML Engineering）· 简体中文版" class="md-nav__button md-logo" aria-label="机器学习工程（ML Engineering）· 简体中文版" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器学习工程（ML Engineering）· 简体中文版
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CodingPracticeGroup/ml-engineering" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Machine Learning Engineering 开放书籍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    洞见：算力与云服务
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    洞见：算力与云服务
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-battlefield.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 战场上的工程实践——你需要了解的事
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to-choose-cloud-provider.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何挑选云服务商
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    升级 GPU 什么时候才值得？
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="index.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    升级 GPU 什么时候才值得？
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#key-spec-differences-h200-vs-b200" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        关键规格差异：H200 对比 B200
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mamf-the-realistic-ceiling-not-the-marketing-number" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MAMF：现实中的上限，而不是营销数字
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-framework-part-1--do-you-need-a-new-dtype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        决策框架第一部分——你需要新的数据类型吗？
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-framework-part-2--is-it-worth-it-on-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        决策框架第二部分——就性能而言值得吗？
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worked-example-meta-llamallama-31-8b-training-step-fa3-vs-fa4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        完整示例：meta-llama/Llama-3.1-8B 训练步，FA3 对比 FA4
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="完整示例：meta-llama/Llama-3.1-8B 训练步，FA3 对比 FA4">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#results-speedup-grows-with-sequence-length" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        结果：加速比随序列长度增长
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-the-bigger-gpu-unlock-configs-the-old-one-cant-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        更大的 GPU 能解锁旧 GPU 跑不了的配置吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        注意事项
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-b200-worth-2-the-h200-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        价格约为 H200 两倍的 B200 值得吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where-the-dense-path-deficit-comes-from-why-not-the-full-228" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        稠密路径的差距从何而来（为什么不是完整的 2.28×？）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#environment-used-for-these-experiments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        这些实验所用的环境
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#software-support-the-cost-of-switching-too-early" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        软件支持：过早切换的代价
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rent-the-new-target-hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        先租用新的目标硬件
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#applying-this-framework-to-your-own-upgrade-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        把这套框架应用到你自己的升级决策上
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#same-generation-upgrades" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        同代升级
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproduce-this-benchmark" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        复现本基准测试
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="复现本基准测试">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#files-at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        文件一览
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1--set-up-an-identical-stack-on-each-gpu-once-per-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤 1——在每台 GPU 上搭建完全相同的软件栈（每个节点一次）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2--run-the-sequence-length-sweep-on-each-gpu-speedup--memory-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤 2——在一台 GPU 上运行序列长度扫描（加速比 + 显存表）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3--isolated-attention-micro-benchmark-dense-path-deep-dive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤 3——独立的注意力微基准测试（稠密路径深入分析）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4--step-decomposition-attention-vs-everything-else-buckets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤 4——步分解（注意力 vs 其他所有部分的桶）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5--the-memory-usage-investigation-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤 5——显存占用调查（可选）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6--regenerate-the-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤 6——重新生成结果图
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸阅读
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    计算硬件
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    计算硬件
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    计算
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    加速器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/benchmarks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    加速器基准测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/nvidia/debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排查 NVIDIA GPU 问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/amd/debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排查 AMD GPU 问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/amd/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AMD GPU 性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/cpu/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CPU
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/cpu-memory/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CPU 内存
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    存储
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    存储
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../storage/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    存储：文件系统与 IO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    网络
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    节点间与节点内网络硬件
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/comms.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通信模式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/debug/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络调试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/benchmarks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络基准测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编排与调度
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    编排与调度
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编排
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    在 SLURM 环境中工作
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/admin.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLURM 管理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/users.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面向用户的 SLURM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLURM 性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/launchers/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用 SLURM 的单节点与多节点启动器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/kubernetes/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kubernetes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    训练
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../model-parallelism/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型并行
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/model-parallelism/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型并行
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/performance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    软件调优以获得最佳性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/fault-tolerance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    故障容错
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/reproducibility/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    可复现性
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/instabilities/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    不稳定的避免、恢复与理解
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/instabilities/training-loss-patterns.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    理解训练损失模式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/checkpoints/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    检查点
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/hparams.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    选择训练超参数与模型初始化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/dtype.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    张量精度 / 数据类型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/emulate-multi-node.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    只用单个节点模拟多节点环境
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/re-train-hub-models.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用微调示例从头重新训练 HF Hub 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/datasets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    处理数据集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../inference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试与排障
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    调试与排障
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试与故障排查
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/pytorch.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试 PyTorch 程序
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/tools.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试工具
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/nccl-performance-debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NCCL：调试与性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/torch-distributed-hanging-solutions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    诊断多节点多 GPU Python 程序中的挂起与死锁
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/underflow_overflow.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    下溢与上溢检测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/make-tiny-models-tokenizers-datasets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用小型模型、分词器与数据集加快调试和开发速度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/tiny-scripts/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    脚本备份
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    测试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    测试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编写与运行测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    资源汇总
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    资源汇总
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resources/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    资源
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献者
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    贡献者
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributors.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献者
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程：设计并运行一次大模型训练
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程：设计并运行一次大模型训练
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../courses/lesson-learned/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练大语言模型的经验教训（一门课程）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录：本书的构建方式
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    附录：本书的构建方式
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../build/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图书构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#key-spec-differences-h200-vs-b200" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        关键规格差异：H200 对比 B200
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mamf-the-realistic-ceiling-not-the-marketing-number" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MAMF：现实中的上限，而不是营销数字
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-framework-part-1--do-you-need-a-new-dtype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        决策框架第一部分——你需要新的数据类型吗？
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision-framework-part-2--is-it-worth-it-on-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        决策框架第二部分——就性能而言值得吗？
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worked-example-meta-llamallama-31-8b-training-step-fa3-vs-fa4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        完整示例：meta-llama/Llama-3.1-8B 训练步，FA3 对比 FA4
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="完整示例：meta-llama/Llama-3.1-8B 训练步，FA3 对比 FA4">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#results-speedup-grows-with-sequence-length" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        结果：加速比随序列长度增长
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-the-bigger-gpu-unlock-configs-the-old-one-cant-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        更大的 GPU 能解锁旧 GPU 跑不了的配置吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        注意事项
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#is-b200-worth-2-the-h200-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        价格约为 H200 两倍的 B200 值得吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where-the-dense-path-deficit-comes-from-why-not-the-full-228" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        稠密路径的差距从何而来（为什么不是完整的 2.28×？）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#environment-used-for-these-experiments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        这些实验所用的环境
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#software-support-the-cost-of-switching-too-early" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        软件支持：过早切换的代价
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rent-the-new-target-hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        先租用新的目标硬件
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#applying-this-framework-to-your-own-upgrade-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        把这套框架应用到你自己的升级决策上
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#same-generation-upgrades" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        同代升级
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproduce-this-benchmark" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        复现本基准测试
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="复现本基准测试">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#files-at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        文件一览
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1--set-up-an-identical-stack-on-each-gpu-once-per-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤 1——在每台 GPU 上搭建完全相同的软件栈（每个节点一次）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2--run-the-sequence-length-sweep-on-each-gpu-speedup--memory-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤 2——在一台 GPU 上运行序列长度扫描（加速比 + 显存表）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3--isolated-attention-micro-benchmark-dense-path-deep-dive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤 3——独立的注意力微基准测试（稠密路径深入分析）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4--step-decomposition-attention-vs-everything-else-buckets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤 4——步分解（注意力 vs 其他所有部分的桶）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5--the-memory-usage-investigation-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤 5——显存占用调查（可选）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-6--regenerate-the-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤 6——重新生成结果图
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#further-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸阅读
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<p class="en-origin-link">📄 <a href="https://github.com/CodingPracticeGroup/ml-engineering/blob/master/insights/when-to-upgrade-gpus/README.md" target="_blank" rel="noopener">本页英文原文（GitHub master）</a></p><h1 id="when-is-it-worth-upgrading-gpus">升级 GPU 什么时候才值得？<a class="headerlink" href="#when-is-it-worth-upgrading-gpus" title="Permanent link">&para;</a></h1>
+<p>这是一份实用指南，帮助判断升级 GPU 代际是否值回其价。文中用一个真实的 DeepSpeed 训练基准测试（meta-llama/Llama-3.1-8B，H200 上的 FlashAttention-3 对比 B200 上的 FlashAttention-4）作为具体的完整示例。这套框架建立在 Hopper H200 → Blackwell B200 的数字之上，但可以推广到任何“我该不该从 X 号 GPU 升级到 Y 号 GPU”的决策。</p>
+<h2 id="key-spec-differences-h200-vs-b200">关键规格差异：H200 对比 B200<a class="headerlink" href="#key-spec-differences-h200-vs-b200" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>规格</th>
+<th>H200 SXM</th>
+<th>B200 SXM</th>
+<th style="text-align: right;">倍数（B200/H200）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>架构</td>
+<td>Hopper</td>
+<td>Blackwell</td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td>计算能力</td>
+<td>sm90</td>
+<td>sm100</td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td>注意力内核（HF 自动选择）</td>
+<td>FlashAttention-3</td>
+<td>FlashAttention-4（beta 版）</td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td>bf16 峰值 TFLOPS（理论值）</td>
+<td>989</td>
+<td>2250</td>
+<td style="text-align: right;"><strong>2.28×</strong></td>
+</tr>
+<tr>
+<td>fp8 峰值 TFLOPS（理论值）</td>
+<td>1979</td>
+<td>4500</td>
+<td style="text-align: right;">2.27×</td>
+</tr>
+<tr>
+<td>HBM 容量（可用）HBM3e</td>
+<td>~141GiB</td>
+<td>~180GiB</td>
+<td style="text-align: right;">1.28×</td>
+</tr>
+<tr>
+<td>HBM 带宽</td>
+<td>4.8TBps</td>
+<td>8.0TBps</td>
+<td style="text-align: right;">1.67×</td>
+</tr>
+<tr>
+<td>TDP</td>
+<td>700W</td>
+<td>1000W</td>
+<td style="text-align: right;">1.43×</td>
+</tr>
+</tbody>
+</table>
+<p>理论峰值 TFLOPS 是<a href="../../training/performance/index.html#tflops-as-a-performance-metric">一个现实中没人能达到的天花板</a>——真正能做到多少，请看<a href="#mamf-the-realistic-ceiling-not-the-marketing-number">后文的 MAMF 数字</a>。完整的规格表（所有数据类型、所有厂商、内存、功耗、频率）：<a href="../../compute/accelerator/index.html#tflops-comparison-table">ml-engineering 加速卡规格表</a>。</p>
+<h2 id="mamf-the-realistic-ceiling-not-the-marketing-number">MAMF：现实中的上限，而不是营销数字<a class="headerlink" href="#mamf-the-realistic-ceiling-not-the-marketing-number" title="Permanent link">&para;</a></h2>
+<p><strong>MAMF（Maximum Achievable Matmul FLOPS，最大可达矩阵乘法 FLOPS）</strong>是在真实硬件/软件上实测出来的 <code>matmul</code> 最佳吞吐（形状完美对齐、尺寸取到最大、不使用稀疏性）——与之相对的是物理上无法达到的理论峰值。可以用它来判断你自己的训练 TFLOPS 还有没有优化空间，还是已经接近天花板了（用 <a href="../../compute/accelerator/benchmarks/mamf-finder.py"><code>mamf-finder.py</code></a> 在你自己的 GPU 上测量 MAMF）。数据来源及跨多家厂商的完整对比：<a href="../../compute/accelerator/index.html#maximum-achievable-and-sustainable-matmul-flops-comparison-table">MAMF 对比表</a>。</p>
+<p><strong>BF16：</strong></p>
+<table>
+<thead>
+<tr>
+<th>加速卡</th>
+<th style="text-align: right;">MAMF（TFLOPS）</th>
+<th style="text-align: right;">理论值</th>
+<th style="text-align: right;">效率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H100/H200 SXM</td>
+<td style="text-align: right;">794.5</td>
+<td style="text-align: right;">989</td>
+<td style="text-align: right;">80.3%</td>
+</tr>
+<tr>
+<td>B200 SXM</td>
+<td style="text-align: right;">1745.0</td>
+<td style="text-align: right;">2250</td>
+<td style="text-align: right;">77.6%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>FP8：</strong></p>
+<table>
+<thead>
+<tr>
+<th>加速卡</th>
+<th style="text-align: right;">MAMF（TFLOPS）</th>
+<th style="text-align: right;">理论值</th>
+<th style="text-align: right;">效率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H200 SXM</td>
+<td style="text-align: right;">1453.4</td>
+<td style="text-align: right;">1979</td>
+<td style="text-align: right;">73.4%</td>
+</tr>
+<tr>
+<td>B200 SXM</td>
+<td style="text-align: right;">3432.5</td>
+<td style="text-align: right;">4500</td>
+<td style="text-align: right;">76.3%</td>
+</tr>
+</tbody>
+</table>
+<p>要点：<em>实际可达</em>的 bf16 倍率（1745/794.5 = <strong>2.20×</strong>）与理论上的 2.28× 非常接近，因为两颗芯片的效率相近（80.3% vs 77.6%）。而在 fp8 上，实际可达倍率甚至<em>高于</em>理论值（3432.5/1453.4 = <strong>2.36×</strong>），因为 B200 的 fp8 路径相对（76.3%）比 H200 的（73.4%）更成熟。无论如何，<strong>2.2–2.4× 就是这次升级在纯矩阵乘法上现实可达的上限</strong>——把注意力的提升幅度、稠密 GEMM 的成熟度和通信开销都考虑进来之后，真实的训练吞吐量会落在这个数字以下（<a href="#worked-example-meta-llamallama-31-8b-training-step-fa3-vs-fa4">后文的完整示例</a>正好说明了会低多少，以及原因）。</p>
+<h2 id="decision-framework-part-1--do-you-need-a-new-dtype">决策框架第一部分——你需要新的数据类型吗？<a class="headerlink" href="#decision-framework-part-1--do-you-need-a-new-dtype" title="Permanent link">&para;</a></h2>
+<p>从这里开始，因为仅凭这一个问题就可能把决策定下来，完全不需要做基准测试。真正该先问的第一个问题不是<em>“它快了多少”</em>，而是<em>“新 GPU 能做到当前 GPU <strong>做不到</strong>的事吗？”</em>——而对于一次硬件跨代升级，最明显的这类能力差距就是<strong><a href="../../training/dtype.html">新的低精度数据类型（dtype）</a></strong>。</p>
+<p>Blackwell 新增了 Hopper <strong>在硬件上完全无法执行</strong>的 <strong>FP4/NVFP4/FP6</strong>——这与 FP4 推理或微缩放（microscaling）训练方案有关<sup id="fnref:unlocks"><a class="footnote-ref" href="#fn:unlocks">1</a></sup>。如果你要采用的方案需要这些格式之一，旧 GPU 的得分是零，而不是“慢 2 倍”——没有任何可测的东西，你要么需要这项能力，要么不需要。（注意：这也恰恰是<em>最</em>容易受软件成熟度风险影响的功能——芯片能做到，不代表框架/内核/数值方案已经能做到；参见<a href="#software-support-the-cost-of-switching-too-early">后文软件支持部分</a>。）</p>
+<p><strong>在<em>为了</em>某项功能升级<em>之前</em>，先确认你实际使用的软件支持它。</strong> 一项你的软件栈用不上的硬件能力，就是白花出去的钱——规格表列出的是芯片<em>能</em>做什么，而不是你的框架/内核/库今天允许你做什么。例如：</p>
+<ul>
+<li><strong>NVLink-C2C</strong>（基于 Grace 的系统上的 CPU↔GPU 一致性互联）纸面上很漂亮，但刚推出时几乎没有训练/推理软件利用它——所以在软件跟上之前，为它花钱买不来多少现实收益。<ul>
+<li>类似地，完全可用的 flash attention 4 也过了好几个月才出现。在那之前只能继续用 flash attention 2，而它在 Blackwell 上非常慢，因为它无法利用新架构的优势。</li>
+</ul>
+</li>
+</ul>
+<p>对任何以功能为动机的升级，都要把“我的软件栈支持这个功能吗？”当作一道硬性关卡（并且要随着时间推移反复检查，因为支持会逐步完善）。</p>
+<p>新 GPU 带来的其他一切——更多显存、更大带宽、更快的互联、更多裸 FLOPS——都只是<em>你已有东西在数量上的增加</em>，而不是全新能力，因此它们本身并不能决定决策；这要靠测量。这就是<a href="#decision-framework-part-2--is-it-worth-it-on-performance">第二部分</a>的内容。</p>
+<h2 id="decision-framework-part-2--is-it-worth-it-on-performance">决策框架第二部分——就性能而言值得吗？<a class="headerlink" href="#decision-framework-part-2--is-it-worth-it-on-performance" title="Permanent link">&para;</a></h2>
+<p>如果你不需要<a href="#decision-framework-part-1--do-you-need-a-new-dtype">第一部分</a>所涉及的新功能，那么升级就是一个“花钱能买到多少速度和容量”的量化问题——而这必须由你亲自<strong>测量</strong>。在相信任何厂商的幻灯片或单个基准测试数字之前，请先走完下面这些步骤：</p>
+<ol>
+<li><strong>让两块 GPU 的软件栈完全一致。</strong> 新旧硬件上使用相同的 torch/CUDA/库版本——新 GPU 往往<em>也是</em>在更新的软件栈上验证过的，仅软件栈差异本身就可能带来两位数的百分比差距（参见后文<a href="#caveats">“在完全相同的软件栈上比较”</a>）。要做对等的比较。</li>
+<li><strong>找出你的负载中注意力与稠密部分的占比，以及它随你的真实配置如何变化。</strong> 新一代 GPU 对注意力（FlashAttention 内核）的提升通常远快于稠密 GEMM 的成熟速度（cuBLAS/cuDNN 在新架构上需要时间才能追上）。如果你的负载以注意力为主（长上下文），你获得的收益会比短上下文/稠密计算受限的负载大得多——而且这个占比不是固定的，它会随序列长度增长。要测量，不要假设。<sup id="fnref:linear-attn"><a class="footnote-ref" href="#fn:linear-attn">2</a></sup></li>
+<li><strong>针对<em>你的</em>负载，权衡新 GPU 在硬件数量上的优势——显存、带宽、互联。</strong> 这些只是“量”的提升，不是新能力，所以它们的价值取决于具体负载，必须测量：<ul>
+<li><strong>更多显存</strong>（例如 180 vs 141GiB）是最处于临界状态的一项。它能让那些在旧 GPU 上会 OOM（显存溢出）的配置跑起来，还能让你丢掉那些牺牲吞吐量的“拐杖”（CPU 卸载、更高的 ZeRO 阶段、激活检查点）——所以重新调优之后，<em>实际</em>加速比甚至可能超过裸 FLOPS 之比。但“装不下”很少是一堵硬墙：几乎总是可以靠更多并行（更多 GPU + <a href="../../training/model-parallelism/index.html">ZeRO/TP/CP/SP/PP/EP</a>）在旧 GPU 上把模型塞进去，所以这通常是<em>成本/效率</em>的权衡，只有当为了装下所需的额外 GPU/并行带来的开销或拖慢，超过用新硬件的代价时，天平才会倒向“直接升级”。（在极端情况下——当你负担得起的任何并行方式都装不下时——显存就真的成了一种硬性能力差距，就像新数据类型一样。）</li>
+<li><strong>更高的 HBM 带宽</strong>（8.0 vs 4.8TBps，约 1.67 倍）决定了带宽受限工作（norm、逐元素运算、优化器、KV 缓存流量）的上限以及解码受限的推理延迟；收益取决于你的负载实际上有多受带宽限制。</li>
+<li><strong>更快的互联</strong>（更新的 NVLink/NVSwitch/NVLink-C2C）抬高了 ZeRO/TP/CP/SP/PP/EP 通信、各种主机内存卸载策略以及多节点扩展的上限；收益取决于你有多受通信限制。</li>
+</ul>
+</li>
+<li><strong>计算 $/词元（或 $/step），而不只是 TFLOPS/step。</strong> 2 倍的加速配上 2 倍的价格，在成本上就是打平的，真正决定胜负的是 (a) 墙钟时间（wall-clock time，即实际经过的时间）和 (b) 显存余量。</li>
+<li><strong>留意那些会让实验室数字虚高或虚低的现实因素</strong>——打包与未打包的序列、beta 质量的内核、软件栈不一致。具体例子见<a href="#caveats">后文注意事项</a>。</li>
+</ol>
+<p>本文余下内容会以 H200→B200 的例子，端到端地把这些步骤完整走一遍。</p>
+<h2 id="worked-example-meta-llamallama-31-8b-training-step-fa3-vs-fa4">完整示例：meta-llama/Llama-3.1-8B 训练步，FA3 对比 FA4<a class="headerlink" href="#worked-example-meta-llamallama-31-8b-training-step-fa3-vs-fa4" title="Permanent link">&para;</a></h2>
+<p>设置：meta-llama/Llama-3.1-8B，真实权重，bf16，8 块 GPU，DeepSpeed，mbs=1，前向+反向+优化器 step。注意力使用 HF 原生的 <code>attn_implementation</code>，按 GPU 自动选择：<strong>H200 → FA3，B200 → FA4</strong>。</p>
+<h3 id="results-speedup-grows-with-sequence-length">结果：加速比随序列长度增长<a class="headerlink" href="#results-speedup-grows-with-sequence-length" title="Permanent link">&para;</a></h3>
+<p>两块 GPU 使用相同配置（ZeRO-3 + 激活检查点 + CPU 卸载 + Liger-Kernel），测量稳态 TFLOPS/GPU：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">序列长度</th>
+<th style="text-align: right;">全注意力<br>占整步比例</th>
+<th style="text-align: right;">H200<br>TFLOPS</th>
+<th style="text-align: right;">H200<br>MFU</th>
+<th style="text-align: right;">B200<br>TFLOPS</th>
+<th style="text-align: right;">B200<br>MFU</th>
+<th style="text-align: right;">加速比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">8K</td>
+<td style="text-align: right;">~13%</td>
+<td style="text-align: right;">141</td>
+<td style="text-align: right;">14%</td>
+<td style="text-align: right;">167</td>
+<td style="text-align: right;">7%</td>
+<td style="text-align: right;"><strong>1.19×</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">32K</td>
+<td style="text-align: right;">~36%</td>
+<td style="text-align: right;">324</td>
+<td style="text-align: right;">33%</td>
+<td style="text-align: right;">524</td>
+<td style="text-align: right;">23%</td>
+<td style="text-align: right;"><strong>1.62×</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">64K</td>
+<td style="text-align: right;">~53%</td>
+<td style="text-align: right;">391</td>
+<td style="text-align: right;">40%</td>
+<td style="text-align: right;">719</td>
+<td style="text-align: right;">32%</td>
+<td style="text-align: right;"><strong>1.84×</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">128K</td>
+<td style="text-align: right;">~70%</td>
+<td style="text-align: right;">420</td>
+<td style="text-align: right;">42%</td>
+<td style="text-align: right;">836</td>
+<td style="text-align: right;">37%</td>
+<td style="text-align: right;"><strong>1.99×</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">192K</td>
+<td style="text-align: right;">~77%</td>
+<td style="text-align: right;">422</td>
+<td style="text-align: right;">43%</td>
+<td style="text-align: right;">852</td>
+<td style="text-align: right;">38%</td>
+<td style="text-align: right;"><strong>2.02×</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">256K</td>
+<td style="text-align: right;">~82%</td>
+<td style="text-align: right;">419</td>
+<td style="text-align: right;">42%</td>
+<td style="text-align: right;">852</td>
+<td style="text-align: right;">38%</td>
+<td style="text-align: right;"><strong>2.03×</strong></td>
+</tr>
+</tbody>
+</table>
+<p><img alt="性能、加速比与注意力占比随序列长度的变化" src="results_plot.png" /></p>
+<p><strong>为什么加速比会随序列长度增长（注意力与稠密占比的实际作用）：</strong> 因果注意力每步的代价是 <code>6·s²·d·h·L</code>（O(s²)）；稠密路径的代价是 <code>6·N·tok</code>（O(s)）。更长的序列会把注意力在整个训练步中的占比推高，而注意力恰恰是 FA4/Blackwell 优势集中的地方——只提升约 1.7 倍的稠密路径（在这个尺寸下受带宽限制，加上还很“年轻”的 sm_100 cuBLAS）则缩小到只剩舍入误差的水平。恒等式 <code>speedup ≈ 2.28 × MFU_ratio</code> 全程成立——与 2.28 倍之间剩下的差距来自 FA4-beta 的开销，它即使在纯注意力上也没有达到完整的硬件倍率。</p>
+<p><strong>FLOPs 计数约定：</strong> 这些 TFLOPS/MFU 数字是<em>模型</em> FLOPs（<a href="../../training/performance/index.html#mfu-vs-hfu">MFU</a>），注意力按<strong>因果</strong>方式计数（<code>6·s²·…</code>，即 FlashAttention 实际计算的下三角部分——非因果的 <code>12·s²</code> 会把注意力多算一倍，在长上下文下虚增 MFU）。激活检查点的重计算<em>不计入</em>——计入的话就成了 HFU（会高约 1.3 倍）。两种约定在 B200/H200 的加速比比值中都会相互抵消，所以只有绝对的 MFU/TFLOPS 取决于这一选择，报告的主要加速比不受影响。</p>
+<p><strong>8k 的注意事项：</strong> 这个重型配置（ZeRO-3 + 激活检查点 + CPU 卸载）是为了跑到 256k 才这样设置的，所以在 8k 时它只有纯粹的开销，没有足够的计算量来掩盖 → B200 的 MFU 只有一位数，加速比只有 1.19×。一个针对 8k 合理配置的运行（ZeRO-2，不开激活检查点/卸载）在远高于此的 MFU 下可以达到约 1.69×——见<a href="#where-the-dense-path-deficit-comes-from-why-not-the-full-228">后文“稠密路径的差距从何而来”</a>。<strong>教训：不要把长上下文配置放在短上下文下跑基准测试，然后声称结果有代表性。</strong></p>
+<h3 id="does-the-bigger-gpu-unlock-configs-the-old-one-cant-run">更大的 GPU 能解锁旧 GPU 跑不了的配置吗？<a class="headerlink" href="#does-the-bigger-gpu-unlock-configs-the-old-one-cant-run" title="Permanent link">&para;</a></h3>
+<p>配置：ZeRO-3、Liger-Kernel、开启激活检查点、开启 AdamW 优化器状态的 CPU 卸载，mbs=1。在激活检查点 + 融合 CE 的条件下，<a href="../../training/performance/index.html#anatomy-of-models-memory-usage">激活显存</a>很小且呈线性：<strong>峰值 ≈ 12.6GiB + 0.00043GiB/词元</strong>（12.6GiB 的下限来自 ZeRO-3 的参数/梯度分片；AdamW 状态存放在 CPU 上）。</p>
+<p>峰值显存（<code>max_memory_reserved</code>，取最差的 rank，即所有训练进程中显存占用最高的那个）在<strong>同一序列长度下，H200 与 B200 完全相同</strong>——它由模型 + ZeRO-3 分片 + 激活决定，而不是 GPU 架构——所以能装进其中一块 GPU 的序列长度也能装进另一块，直到各 GPU 自身的上限为止：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">序列长度</th>
+<th style="text-align: right;">H200 峰值（GiB）</th>
+<th style="text-align: right;">B200 峰值（GiB）</th>
+<th style="text-align: right;">H200 TFLOPS</th>
+<th style="text-align: right;">B200 TFLOPS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">8K</td>
+<td style="text-align: right;">16.3</td>
+<td style="text-align: right;">16.3</td>
+<td style="text-align: right;">141</td>
+<td style="text-align: right;">167</td>
+</tr>
+<tr>
+<td style="text-align: right;">32K</td>
+<td style="text-align: right;">25.8</td>
+<td style="text-align: right;">25.9</td>
+<td style="text-align: right;">324</td>
+<td style="text-align: right;">524</td>
+</tr>
+<tr>
+<td style="text-align: right;">64K</td>
+<td style="text-align: right;">37.5</td>
+<td style="text-align: right;">37.6</td>
+<td style="text-align: right;">391</td>
+<td style="text-align: right;">719</td>
+</tr>
+<tr>
+<td style="text-align: right;">128K</td>
+<td style="text-align: right;">66.5</td>
+<td style="text-align: right;">66.7</td>
+<td style="text-align: right;">420</td>
+<td style="text-align: right;">836</td>
+</tr>
+<tr>
+<td style="text-align: right;">192K</td>
+<td style="text-align: right;">95.7</td>
+<td style="text-align: right;">95.7</td>
+<td style="text-align: right;">422</td>
+<td style="text-align: right;">852</td>
+</tr>
+<tr>
+<td style="text-align: right;"><strong>256K</strong></td>
+<td style="text-align: right;"><strong>124.5</strong></td>
+<td style="text-align: right;"><strong>124.6</strong></td>
+<td style="text-align: right;"><strong>419</strong></td>
+<td style="text-align: right;"><strong>852</strong></td>
+</tr>
+</tbody>
+</table>
+<p>在 H200 约 130GiB 的可用显存预算下，最长可到<strong>峰值约 125GiB 的 256k 词元</strong>，在两台机器上都得到了验证（峰值显存吻合在约 0.2GiB 以内）。B200 更大的 HBM（180 vs 141GiB）可以推过约 350k 词元——这种序列长度 H200 <strong>花多少钱都装不下</strong>——而这恰恰是 B200 加速比最大的区间。这就是<a href="#decision-framework-part-2--is-it-worth-it-on-performance">第二部分</a>中“更多显存”优势的极端形态：超过 256k 之后，比较不再是“B200 更快”，而是“H200 干不了这个活”。</p>
+<h3 id="caveats">注意事项<a class="headerlink" href="#caveats" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p>未打包序列与打包序列</p>
+<p>上面的每次运行都只输入<strong>一条完整连续的序列</strong> → 这是真正完整的全 O(s²) 注意力，正是这一点使注意力在 256K 时占到约 82% 的 FLOPs（即加速比表格中的<a href="#results-speedup-grows-with-sequence-length">“全注意力占整步比例”列</a>），也带来了 ≥2 倍的加速。真实训练常常会用文档掩码（document mask）把短样本<strong>打包（pack）</strong>进序列，使注意力代价变成 <code>Σ lenᵢ²</code> 而不是 <code>(Σ lenᵢ)²</code>。例如，把每个约 8k 词元的样本打包进一条 256k 的序列 → 注意力只在每个样本<em>内部</em>计算，所以它的 FLOPs 下降约 32 倍（总注意力计算量从 <code>256k²</code> 降到 <code>Σ lenᵢ² = 256k·8k</code>，倍数为 <code>256k ÷ 8k = 32</code>；下降倍数 = 打包后的序列长度 ÷ <em>平均样本长度</em>，由每个样本有<strong>多短</strong>决定，而不由你打包了<strong>多少条</strong>决定）。这把注意力占比打回到了真正的 8k 序列时的约 13%（即<a href="#results-speedup-grows-with-sequence-length">上文的 8K 行</a>），于是加速比又退回到我们在那里直接测过的稠密计算受限状态——<strong>约 1.7×</strong>（参见<a href="#where-the-dense-path-deficit-comes-from-why-not-the-full-228">后文“稠密路径的差距从何而来”</a>），而不是真正长上下文的约 2×。≥2 倍的结果只适用于<em>单篇</em>文档确实很长的情况——在假定这个吸引眼球的数字适用于你的场景之前，先确认你的负载实际处于哪种状态。</p>
+</li>
+<li>
+<p>在完全相同的软件栈上比较</p>
+<p>我在写这份指南时起初没有留意这一点，拿运行 torch <strong>2.10.0/cu129</strong> 的 H200 与运行 torch <strong>2.13.0/cu130</strong> 的 B200 做了比较，得到了非常不同的结果，B200 占了极大的便宜。我怀疑是 CUDA 版本的问题，于是只在 H200 上重新跑了整个扫描，覆盖 torch 2.10.0–2.13.0，并同时用 cu129 和 cu130——结果发现 CUDA 几乎无关紧要。真正的推手是 <strong>PyTorch 本身</strong>：2.12.0 及更高版本明显快于 2.11.0 及更早版本，与 CUDA 版本无关。在 8k、相同 GPU/模型/配置下，分别独立扫描 torch 和 CUDA：</p>
+</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>H200 @ 8k，TFLOPS/GPU</th>
+<th>torch 2.10.0</th>
+<th>2.11.0</th>
+<th>2.12.0</th>
+<th>2.13.0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>cu129</strong></td>
+<td>113.8</td>
+<td>–</td>
+<td>–</td>
+<td>140.4</td>
+</tr>
+<tr>
+<td><strong>cu130</strong></td>
+<td>117.8</td>
+<td>120.5</td>
+<td>140.1</td>
+<td><strong>140.2</strong></td>
+</tr>
+</tbody>
+</table>
+<p>在 H200 上把 torch 从 2.10.0 一路升到 2.13.0，固定 cu130 时是 <strong>+19%</strong>（117.8 → 140.2TFLOPS），而且几乎所有增益集中在一处——仅 torch 2.11.0 → 2.12.0 这一跳就有 <strong>+16%</strong>（120.5 → 140.1）。相比之下，CUDA 最多贡献约 3.5%（在 torch 2.10.0 下 113.8 → 117.8），到 torch 2.13.0 时几乎为零（140.4 vs 140.2）。所以，最初引发这项调查的 2.10.0/cu129 → 2.13.0/cu130 比较（113.8 → 140.4，<strong>+23.4%</strong>）几乎完全是一个 <strong>PyTorch 版本造成的假象，不是硬件差异，甚至也不是 CUDA</strong>。本文的所有结果都在两台机器上使用完全相同的软件栈（torch 2.13.0/cu130，deepspeed 0.19.2）。<strong>如果你跳过这一步检查，就会系统性地高估那台恰好在更新的 PyTorch 版本上做基准测试的 GPU。</strong></p>
+<h3 id="is-b200-worth-2-the-h200-cost">价格约为 H200 两倍的 B200 值得吗？<a class="headerlink" href="#is-b200-worth-2-the-h200-cost" title="Permanent link">&para;</a></h3>
+<p>为简单起见，我们假设成本差距是 2 倍——新一代 GPU 家族刚开始上市时通常就是如此。Blackwell 自 2026 年年中起已经出货了一段时间，所以实际的成本差距已经低于 2 倍。</p>
+<p>在你实际的计算中，请使用你拿到的报价，而不是网上查到的信息。</p>
+<p>那我们就按 2 倍价格差的假设来算这笔账：</p>
+<ul>
+<li><strong>长的未打包上下文（128k–256k）：</strong> 约 2.0 倍的吞吐量对应约 2 倍的成本 → $/词元打平，之后还有两项带来净收益：(1) <strong>墙钟时间减半</strong>；(2) <strong>更多显存</strong>解锁了 H200 完全装不下的上下文长度（≥256k）——而那恰恰是 B200 加速比最高的地方，两者相互叠加。</li>
+<li><strong>短上下文/打包短样本（稠密计算受限）：</strong> 约 1.7 倍对应 2 倍成本 → 就 $/词元而言今天是<strong>亏</strong>的。在这个批次大小下，稠密路径受带宽限制而非计算能力限制（参见<a href="#where-the-dense-path-deficit-comes-from-why-not-the-full-228">后文“稠密路径的差距从何而来”</a>），所以不要指望仅靠 cuBLAS 在 sm_100 上成熟起来就能补上到 2.28 倍的差距——它收敛的是 <strong>约 1.67× 的 HBM 带宽上限</strong>。要在这里更接近 2.28 倍，需要更大的批次/更大的 GEMM，让稠密路径重新变成计算受限。</li>
+</ul>
+<p><strong>$/词元之外——时间维度。</strong> 只看单位成本的性能可能是错误的指标，因为它把便宜但慢的方案和贵但快的方案当成等价的——只要它们每个词元的成本相同——却忽略了<em>拿到结果的墙钟时间</em>。</p>
+<ul>
+<li>对训练来说，一次运行多花一倍时间，可能意味着输掉率先上市的竞争，这不是任何 $/词元 的节省能够弥补的。<ul>
+<li>对推理来说，慢 2 倍的性能会直接损害用户体验——更高的 TTFT（首词元时间，time to first token）和 TPOT（每输出词元时间，time per output token）——无论每个词元的账算起来多有吸引力，都可能让你失去用户。</li>
+<li>原则上，你可以往问题上投入约 2 倍数量的较便宜 GPU，把速度“买”回来，但这通常意味着<em>更多</em>的跨 GPU（而且往往是跨节点）通信，这会增加开销，蚕食——甚至超过——你本来想追回的那部分加速，对通信受限的负载尤其如此。所以要把原始的速度优势当作一个独立的维度来权衡，而不只是 $/词元 比值中的一项。</li>
+</ul>
+</li>
+</ul>
+<p><strong>本例的结论：</strong> 值得——如果确实是长上下文的训练，就升级；对短上下文/打包类负载则先等一等，因为那里的稠密路径受带宽限制而非计算能力限制（参见<a href="#where-the-dense-path-deficit-comes-from-why-not-the-full-228">后文“稠密路径的差距从何而来”</a>），在这个批次大小下达不到完整的 2.28 倍硬件比率。</p>
+<h3 id="where-the-dense-path-deficit-comes-from-why-not-the-full-228">稠密路径的差距从何而来（为什么不是完整的 2.28×？）<a class="headerlink" href="#where-the-dense-path-deficit-comes-from-why-not-the-full-228" title="Permanent link">&para;</a></h3>
+<p>对 8k 训练步的深入分析（ZeRO-2、不开激活检查点、按短上下文合理配置），解释稠密路径<em>为什么</em>会把加速比压在硬件倍率之下。下面三个分桶共用<strong>同一个时钟</strong>——即实测的墙钟步时，按各分桶在计算流内核时间中的占比来划分（注意力 = FlashAttention 内核；NCCL 梯度通信与反向传播重叠，被隐藏在墙钟时间里）——因此各分桶与合计天然就能对得上。可用 <a href="bench_decompose.py"><code>bench_decompose.py</code></a> 复现。</p>
+<p><strong>8k 训练步分解</strong>（注意力约占 FLOPs 的 13%、步时的 12%；稠密路径是其余部分）：</p>
+<table>
+<thead>
+<tr>
+<th>分桶</th>
+<th style="text-align: right;">H200<br>TFLOPS</th>
+<th style="text-align: right;">H200<br>MFU</th>
+<th style="text-align: right;">B200<br>TFLOPS</th>
+<th style="text-align: right;">B200<br>MFU</th>
+<th style="text-align: right;">倍率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>注意力（FA）</td>
+<td style="text-align: right;">447</td>
+<td style="text-align: right;">45%</td>
+<td style="text-align: right;">834</td>
+<td style="text-align: right;">37%</td>
+<td style="text-align: right;">1.87×</td>
+</tr>
+<tr>
+<td>其余部分</td>
+<td style="text-align: right;">463</td>
+<td style="text-align: right;">47%</td>
+<td style="text-align: right;">771</td>
+<td style="text-align: right;">34%</td>
+<td style="text-align: right;">1.67×</td>
+</tr>
+<tr>
+<td><strong>合计</strong></td>
+<td style="text-align: right;">461</td>
+<td style="text-align: right;">47%</td>
+<td style="text-align: right;">778</td>
+<td style="text-align: right;">35%</td>
+<td style="text-align: right;"><strong>1.69×</strong></td>
+</tr>
+</tbody>
+</table>
+<p>有两点值得注意：</p>
+<ul>
+<li><strong>注意力（FA4 对比 FA3）达到 1.87 倍</strong>，这是在<em>整步之内</em>实测的，与孤立的微基准测试一致（<a href="bench_flash_attn.py"><code>bench_flash_attn.py</code></a>，FA4 对比 FA3，8B 注意力形状，因果模式：前向+反向 <strong>1.88× @ 8k → 1.95× @ 32k</strong>）。注意力已经接近 2.28 倍的上限，<em>不是</em>瓶颈。</li>
+<li><strong>真正的上限是稠密的“其余部分”分桶，只有 1.67 倍</strong>——几乎正好等于 <strong>HBM 带宽比</strong>（8 vs 4.8TBps = 1.67×）。在 mbs=1 × 8k 下，每块 GPU 上的 GEMM 很小，稠密路径受带宽/开销限制（norm/RoPE/SwiGLU/CE 的逐元素运算 + NCCL 通信 + 瘦长的 GEMM），所以 Blackwell 的 2.28 倍<em>计算</em>优势基本闲置，这个分桶转而跟着内存带宽走。这使混合后的总倍率被拖低到 <strong>1.69×</strong>。</li>
+</ul>
+<p><strong>Liger-Kernel</strong>（融合的 RMSNorm/RoPE/SwiGLU/CE）在 8k 下是<strong>显存上的收益，不是速度上的收益</strong>：它把峰值显存降低约 20%（<strong>99 → 80GiB</strong>，两块 GPU 上相同），而步时变化在噪声范围内（两台机器上都 ≤1.5%），整体倍率也基本不变（约 1.66×）。在这里，融合那些带宽受限的逐元素运算并不能提高吞吐量，因为稠密路径的限制因素是 GEMM 尺寸和通信，而不是这些运算——这与该分桶跟随 HBM 带宽的现象一致。sm_100 的 cuBLAS 比 Hopper 的 cuBLAS 更“年轻”，且取这些数字时 FA4 还处于 beta 阶段（后来已作为 <code>flash-attn-4</code> 包正式发售），所以稠密路径的这个差距应该会随时间缩小——请定期重跑这个基准测试，不要把今天的数字当成永久结论。</p>
+<h3 id="environment-used-for-these-experiments">这些实验所用的环境<a class="headerlink" href="#environment-used-for-these-experiments" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>B200</th>
+<th>H200</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPU</td>
+<td>NVIDIA B200</td>
+<td>NVIDIA H200</td>
+</tr>
+<tr>
+<td>注意力</td>
+<td>flash-attn-4 4.0.0b22（beta 版）</td>
+<td>flash-attn-3 3.0.0</td>
+</tr>
+<tr>
+<td>PyTorch / CUDA</td>
+<td>2.13.0 / cu130</td>
+<td>2.13.0 / cu130</td>
+</tr>
+<tr>
+<td>deepspeed</td>
+<td>0.19.2</td>
+<td>0.19.2</td>
+</tr>
+<tr>
+<td>python / transformers / Liger-Kernel</td>
+<td>3.12.12 / 5.14.1 / 0.8.0</td>
+<td>（相同）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="software-support-the-cost-of-switching-too-early">软件支持：过早切换的代价<a class="headerlink" href="#software-support-the-cost-of-switching-too-early" title="Permanent link">&para;</a></h2>
+<p>新芯片几乎总是先于能充分利用它的软件栈推出。“GPU 买到了”和“GPU 能以标称性能<em>用于</em>你的负载”之间可能相隔数月——而且这种差距可能因模型架构而异，不只是因 GPU 而异。它会表现为两种具体的形式，在这份基准测试里都能直接看到：</p>
+<ol>
+<li><strong>优化内核本身可能仍是 beta 版。</strong> 这里 B200 的注意力路径用的是 <code>flash-attn-4 4.0.0b22</code>——一个 beta 发布版，不是正式版（GA）。beta 内核在 1.0 之前可能有正确性缺陷、缺失的功能和破坏兼容性的 API 变更；要锁定确切的版本，每次升级版本都重新测试，并去查项目的 issue 跟踪页，而不是想当然地认为“PyPI 上有包”就等于可用于生产。</li>
+<li><strong>即使主角内核没问题，栈的其余部分也可能落后。</strong> 这里孤立的注意力（FA4 对比 FA3）已经能达到约 1.9 倍，接近 2.28 倍的硬件倍率（见前文<a href="#where-the-dense-path-deficit-comes-from-why-not-the-full-228">“稠密路径的差距从何而来”</a>）——但<em>稠密</em>路径只到约 1.7×（它跟着 HBM 带宽比走，在这个尺寸下受带宽/开销限制；而且 Blackwell 在新 <code>sm_100</code> 架构上的 cuBLAS 比 Hopper 的更“年轻”，后者已经用多年时间成熟起来了）。最终效果就是：你可能已经在用目前最好的注意力内核，看到的却仍只是理论加速比的一小部分，因为软件栈中不那么光鲜的一环——没人愿意写进幻灯片的那部分——还没有跟上。</li>
+</ol>
+<p><strong>在把预算投入到新架构之前，请先过一遍这份实用检查清单：</strong></p>
+<!---->
+
+<ul>
+<li>在内核库的 issue 跟踪页中，搜索你所用 GPU 的确切计算能力（例如 <code>sm_100</code>）以及你的模型所用注意力/MoE 机制的名称——README 里写着“支持”，并不意味着已达到正式版质量，甚至不代表有预编译的 wheel 包可用。</li>
+<li>确认你的训练框架（DeepSpeed、Megatron-LM、TorchTitan 等）有一个<em>已发布的</em>、针对新计算能力验证过的版本——“应该能用，反正都是 CUDA”和“经过测试”是两码事。</li>
+<li>如果你的模型使用非标准算子（线性注意力、MoE 路由、稀疏注意力、融合的自定义 CUDA 扩展），要核实确实有人在新架构上把它构建出来<em>并跑过基准测试</em>。不要因为 GPU 更快，就想当然认为它会自动继承 GPU 的加速。</li>
+<li>定期重新测量，不要相信一次性的结论。beta 内核和稚嫩的 GEMM 库都进步飞快；<a href="#where-the-dense-path-deficit-comes-from-why-not-the-full-228">cuBLAS 成熟度差距</a>正是这种不断变化的目标，几个发布周期内就可能把“还不值得”翻转成“值得”——如果出现倒退，也会朝反方向翻转。</li>
+</ul>
+<h2 id="rent-the-new-target-hardware">先租用新的目标硬件<a class="headerlink" href="#rent-the-new-target-hardware" title="Permanent link">&para;</a></h2>
+<p>虽然你也许可以依靠别人替你做的分析工作（比如这份指南），但典型情况是各人的负载不同，最好还是用你自己的确切负载跑基准测试。</p>
+<p>因此，我建议先租下至少一个你所考虑的目标 GPU 的节点，在上面跑基准测试。</p>
+<p>如果你的负载涉及多节点，可以先试着把负载缩减到单个节点，在那里做性能比较。例如缩减模型的层数，让它小得多——机器学习模型架构通常就是一摞完全相同的重复层，所以<a href="../../debug/pytorch.html#reducing-the-number-of-layers-for-large-models">把 48 层的模型裁到 1-2 层</a>只消耗很少的 GPU 显存，应当能轻松放进单个节点，同时每一层的计算/内存行为仍具有代表性。</p>
+<p>如果负载涉及多节点，你最终肯定还是要对完整的“最小副本”配置跑一次基准测试，但可以把这一步推迟到确认单节点比较的结果支持升级 GPU 之后再去做。如果结果不支持，你就省下了租用额外节点所需的时间和钱。</p>
+<h2 id="applying-this-framework-to-your-own-upgrade-decision">把这套框架应用到你自己的升级决策上<a class="headerlink" href="#applying-this-framework-to-your-own-upgrade-decision" title="Permanent link">&para;</a></h2>
+<p>换成你自己的模型、GPU 和价格，然后走完这个由两部分组成的决策框架——先<a href="#decision-framework-part-1--do-you-need-a-new-dtype">第一部分</a>，再<a href="#decision-framework-part-2--is-it-worth-it-on-performance">第二部分</a>——先做功能检查，如果功能还不足以决定，再走性能步骤：</p>
+<ol>
+<li>在两块 GPU 上锁定完全相同的软件栈（见前文<a href="#caveats">“在完全相同的软件栈上比较”</a>）——否则你测的不是硬件，而是软件栈。</li>
+<li>沿着会改变注意力/稠密（或其他“被加速/未被加速”）比例的维度做扫描——对 LLM 训练来说是序列长度；对其他负载则可能是批次大小、分辨率，或者完全不同的东西。</li>
+<li>在旧 GPU 上把受显存限制的配置一路推上去，直到 OOM，并查看新 GPU 还能额外装下什么。</li>
+<li>拿到新旧 GPU 各自实际的 $/GPU 小时价格，并在扫描的每一个取值点（而不仅是扫描的最高端）计算 $/词元或 $/step。</li>
+<li>排查会让比较失效的隐患：beta 内核、打包与未打包的数据、热降频、同一节点上不同 GPU 之间的“体质”差异（silicon lottery，见<a href="../../compute/accelerator/index.html#not-all-accelerators-are-created-equal">并非所有加速卡都一样</a>）。</li>
+</ol>
+<p>如果你用 <a href="../../training/model-parallelism/index.html">FSDP</a> 来做扩展——它的性能与 DeepSpeed ZeRO 应当大致相当——你可能需要对配置稍作调整以匹配你的确切环境，但当然，理想情况下应当直接对你实际使用的软件跑基准测试。</p>
+<h2 id="same-generation-upgrades">同代升级<a class="headerlink" href="#same-generation-upgrades" title="Permanent link">&para;</a></h2>
+<p>上文比较的都是两个<em>代际</em>之间的差异（Hopper → Blackwell）。而同一代际内的刷新——比如 B200 → <strong>B300</strong>（"Blackwell Ultra"）——则是另一种通常要小得多的决策。同样的两部分决策框架依然适用——<a href="#decision-framework-part-1--do-you-need-a-new-dtype">第 1 部分（你需要新的 dtype 吗？）</a>和<a href="#decision-framework-part-2--is-it-worth-it-on-performance">第 2 部分（从性能上看值得吗？）</a>——只是答案会沿着可预期的方向变化。</p>
+<table>
+<thead>
+<tr>
+<th>规格</th>
+<th style="text-align: right;">B200 SXM</th>
+<th style="text-align: right;">B300 SXM</th>
+<th style="text-align: right;">倍率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bf16 / fp8 TFLOPS（理论值）</td>
+<td style="text-align: right;">2250 / 4500</td>
+<td style="text-align: right;">2250 / 4500</td>
+<td style="text-align: right;">1.0×</td>
+</tr>
+<tr>
+<td>mxfp4 / nvfp4 TFLOPS（理论值）</td>
+<td style="text-align: right;">9000 / 9000</td>
+<td style="text-align: right;">13500 / 13500</td>
+<td style="text-align: right;">1.5×</td>
+</tr>
+<tr>
+<td>bf16 MAMF（可达值）</td>
+<td style="text-align: right;">1745</td>
+<td style="text-align: right;">1769</td>
+<td style="text-align: right;">~1.01×</td>
+</tr>
+<tr>
+<td>HBM（可用）</td>
+<td style="text-align: right;">~180GiB</td>
+<td style="text-align: right;">~288GiB</td>
+<td style="text-align: right;"><strong>1.6×</strong></td>
+</tr>
+<tr>
+<td>HBM 带宽</td>
+<td style="text-align: right;">8.0TBps</td>
+<td style="text-align: right;">8.0TBps</td>
+<td style="text-align: right;">1.0×</td>
+</tr>
+<tr>
+<td>TDP</td>
+<td style="text-align: right;">1000W</td>
+<td style="text-align: right;">1300W</td>
+<td style="text-align: right;">1.3×</td>
+</tr>
+</tbody>
+</table>
+<p>这对"是否该升级"的决策框架意味着什么：</p>
+<ul>
+<li><strong><a href="#decision-framework-part-1--do-you-need-a-new-dtype">第 1 部分</a>（你需要新的 dtype 吗？）很少触发。</strong> B300 没有引入任何 B200 缺少的 dtype。唯一<em>可能</em>起到第 1 部分那种能力差距作用的东西是<strong>显存</strong>：288 对 180GiB（1.6×）是很大的跨度，因此一个即便用并行切分也塞不进 B200 节点的模型/配置，也许可以直接塞进 B300 节点。</li>
+<li><strong><a href="#decision-framework-part-2--is-it-worth-it-on-performance">第 2 部分</a>（从性能上看值得吗？）：唯一实打实的算力提升在 fp4（1.5×）</strong>——bf16/fp8 没有任何变化，所以 B300 的收益主要来自低精度推理/训练，以及多出来的显存。</li>
+<li><strong>软件成熟度风险很低。</strong> 同一架构家族（<code>sm_100</code>）、同一套 FA4/内核栈——完全不存在跨代升级情形里那种"过早切换"的代价。</li>
+</ul>
+<h2 id="reproduce-this-benchmark">复现本基准测试<a class="headerlink" href="#reproduce-this-benchmark" title="Permanent link">&para;</a></h2>
+<p>本指南中的每一个数字都来自这个文件夹里的脚本。没有任何数字是手工录入的——下面准确说明哪个脚本产出哪张表/哪幅图，你可以据此重新生成它们（也可以在你自己的 GPU/模型上重跑）。所有脚本都会<strong>自动检测 GPU</strong>（Hopper→FA3，Blackwell→FA4），并在输出头部打印解析出的后端和完整环境变量，因此两台机器上跑的<em>是同一组命令</em>。</p>
+<h3 id="files-at-a-glance">文件一览<a class="headerlink" href="#files-at-a-glance" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>用途</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>install.sh</code></td>
+<td>一次性安装：锁定版本相互匹配的 torch/CUDA/依赖，安装 FA3（Hopper）或 FA4（Blackwell），并把模型预置到本地磁盘</td>
+<td>两台机器上完全相同软件栈的环境（即"在相同软件栈上比较"这条注意事项）</td>
+</tr>
+<tr>
+<td><code>benchmark.py</code></td>
+<td>训练循环（fwd+bwd+step），使用真实权重，逐步打印 JSON（<code>tflops</code>、<code>peak_mem_gib</code>）；配置块在脚本开头，可用环境变量覆盖（<code>SEQ_LEN</code>、<code>STEPS</code>、<code>WARMUP_STEPS</code>、<code>ZERO_STAGE</code>、<code>OFFLOAD_OPTIMIZER</code>、<code>GRAD_CHECKPOINT</code>、<code>USE_LIGER</code>、<code>MEM_DEBUG</code>）</td>
+<td>加速比表和显存表中的一行</td>
+</tr>
+<tr>
+<td><code>run_sweep.sh</code></td>
+<td>驱动 <code>benchmark.py</code> 依次跑一组序列长度，日志写入 <code>results_&lt;gpu&gt;_&lt;ts&gt;.log</code></td>
+<td><strong>加速比—序列长度</strong>表和<strong>最大序列长度/显存</strong>表</td>
+</tr>
+<tr>
+<td><code>bench_flash_attn.py</code></td>
+<td>独立的 FA3/FA4 注意力内核微基准测试（跨各序列长度的 fwd + fwd/bwd TFLOPS）</td>
+<td>"稠密路径的差距从何而来"一节中的<strong>独立注意力</strong>数字</td>
+</tr>
+<tr>
+<td><code>bench_decompose.py</code></td>
+<td>剖析一个训练步，在同一时钟下把实测墙钟时间（wall time）拆成注意力（FlashAttention 内核）与其他所有部分两类桶（bucket）（可用环境变量覆盖：<code>SEQ_LEN</code>、<code>ZERO_STAGE</code>、<code>GRAD_CHECKPOINT</code>、<code>OFFLOAD_OPTIMIZER</code>、<code>USE_LIGER</code>）</td>
+<td>"稠密路径的差距从何而来"一节中的<strong>步分解</strong>表</td>
+</tr>
+<tr>
+<td><code>plot_results.py</code></td>
+<td>用扫描（sweep）数字绘制 matplotlib 图（数据硬编码在脚本开头）</td>
+<td><code>results_plot.png</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="step-1--set-up-an-identical-stack-on-each-gpu-once-per-node">步骤 1——在每台 GPU 上搭建完全相同的软件栈（每个节点一次）<a class="headerlink" href="#step-1--set-up-an-identical-stack-on-each-gpu-once-per-node" title="Permanent link">&para;</a></h3>
+<p>在 H200 和 B200 两台机器上运行同一个安装脚本。它会锁定完全相同的 torch/CUDA/依赖版本，使唯一预期中的差异只剩下注意力后端，然后在 Hopper 上自动安装 FA3、在 Blackwell 上自动安装 FA4，并把模型预置到本地磁盘：</p>
+<div class="highlight"><pre><span></span><code>./install.sh<span class="w">  </span><span class="c1"># H200 -&gt; FA3，B200 -&gt; FA4（自动检测）；可用 --force fa3|fa4 覆盖</span>
+</code></pre></div>
+<p><code>HF_HOME</code> 默认指向 <code>~/.cache/huggingface</code>；模型（<code>meta-llama/Llama-3.1-8B</code>）必须已经存在于那里（比如先运行 <code>hf download meta-llama/Llama-3.1-8B</code>）。安装脚本的最后一步会校验整个软件栈，并发起一次很小的 FA 调用，以捕捉 ABI 不匹配的问题。</p>
+<h3 id="step-2--run-the-sequence-length-sweep-on-each-gpu-speedup--memory-tables">步骤 2——在一台 GPU 上运行序列长度扫描（加速比 + 显存表）<a class="headerlink" href="#step-2--run-the-sequence-length-sweep-on-each-gpu-speedup--memory-tables" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nv">SEQLENS</span><span class="o">=</span><span class="s2">"8192 32768 65536 131072 196608 262144"</span><span class="w"> </span><span class="nv">GPUS</span><span class="o">=</span><span class="m">8</span><span class="w"> </span>./run_sweep.sh<span class="w"> </span><span class="c1"># -&gt; results_&lt;gpu&gt;_&lt;ts&gt;.log</span>
+</code></pre></div>
+<p>两台机器上都要运行。每个训练步会打印一行类似 <code>{"step": 5, "warmup": false, "exec_time_ms": ..., "tflops": ..., "peak_mem_gib": ...}</code> 的 JSON；取稳态（非预热）的 <code>tflops</code> 用于吞吐量/加速比表，取 <code>peak_mem_gib</code> 用于显存表。B200/H200 的加速比就是两台机器在每个序列长度上 <code>tflops</code> 的比值。（如果省略环境变量，默认值为：单一序列长度 196608、8 块 GPU、10 个训练步 + 2 个预热步。）定义这次运行的全部配置——ZeRO-3、激活检查点、把 AdamW 卸载到 CPU、Liger-Kernel、mbs=1——都在 <code>benchmark.py</code> 的配置块里，并且会在每次运行的头部打印出来。</p>
+<h3 id="step-3--isolated-attention-micro-benchmark-dense-path-deep-dive">步骤 3——独立的注意力微基准测试（稠密路径深入分析）<a class="headerlink" href="#step-3--isolated-attention-micro-benchmark-dense-path-deep-dive" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>bench_flash_attn.py<span class="w">   </span><span class="c1"># 打印 FA3 或 FA4 在每个序列长度上的 fwd / fwd+bwd TFLOPS</span>
+</code></pre></div>
+<p>两台机器上都要运行；每个序列长度上 <code>fwd_bwd_tflops</code> 的 FA4/FA3 比值就是"独立注意力"的结果，它表明注意力本身就能扩展到约 1.9×——也就是说，限制端到端加速比上限的不是 FA，而是稠密路径。</p>
+<h3 id="step-4--step-decomposition-attention-vs-everything-else-buckets">步骤 4——步分解（注意力 vs 其他所有部分的桶）<a class="headerlink" href="#step-4--step-decomposition-attention-vs-everything-else-buckets" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span>L<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="nv">USE_LIGER</span><span class="o">=</span><span class="nv">$L</span><span class="w"> </span>deepspeed<span class="w"> </span>--num_gpus<span class="o">=</span><span class="m">8</span><span class="w"> </span>bench_decompose.py<span class="p">;</span><span class="w"> </span><span class="k">done</span><span class="w">  </span><span class="c1"># L=0 为基线，L=1 为 Liger</span>
+</code></pre></div>
+<p>两台机器上都要运行。它先测量训练步的墙钟时间（剖析器关闭），然后剖析一个窗口，按各部分占计算流内核时间的比例，把这段实测时间拆成一个注意力桶（FlashAttention 内核）和一个其他所有部分的桶（NCCL 通信与反向传播重叠，被视为已被掩盖而排除在外）。由于两个桶都是从<em>同一个</em>实测步中切分出来的，按构造它们与总时间必然严格吻合——这就是<strong>步分解</strong>表。每个桶的 B200/H200 比值就是该桶的加速比（注意力约 1.87×，稠密路径约 1.67×）。</p>
+<h3 id="step-5--the-memory-usage-investigation-optional">步骤 5——显存占用调查（可选）<a class="headerlink" href="#step-5--the-memory-usage-investigation-optional" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nv">MEM_DEBUG</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">SEQ_LEN</span><span class="o">=</span><span class="m">32768</span><span class="w"> </span>deepspeed<span class="w"> </span>--num_gpus<span class="o">=</span><span class="m">8</span><span class="w"> </span>benchmark.py
+</code></pre></div>
+<p><code>MEM_DEBUG=1</code> 会在 fwd/bwd/step 前后加入分阶段的 allocated/reserved 显存探针，并在 rank 0 上转储一份 <code>torch.cuda.memory._record_memory_history</code> 快照——这对<a href="../../training/performance/index.html#memory-profiler-tools">诊断显存占用</a>很有用。</p>
+<h3 id="step-6--regenerate-the-plot">步骤 6——重新生成结果图<a class="headerlink" href="#step-6--regenerate-the-plot" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>plot_results.py<span class="w">       </span><span class="c1"># -&gt; results_plot.png</span>
+</code></pre></div>
+<p>注意：<code>plot_results.py</code> 把扫描得到的数字<strong>硬编码在脚本开头</strong>（它不会解析 <code>.log</code> 文件）。如果你重跑扫描后得到了不同的数字，请相应更新 <code>plot_results.py</code> 中的数组和上文各表格，使二者一致，然后重新生成。</p>
+<h2 id="further-reading">延伸阅读<a class="headerlink" href="#further-reading" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../compute/accelerator/index.html">加速卡</a>——完整规格表（所有厂商、所有 dtype）、MAMF 方法论、显存/功耗/频率参考资料、芯片体质（silicon lottery）与散热方面的说明。</li>
+</ul>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:unlocks">
+<p>各数据类型的峰值 TFLOPS（理论值），H200 → B200：bf16 989→2250，fp8 1979→4500，另外还有 Hopper 完全无法执行的格式——fp6 →4500，mxfp4 和 nvfp4 →9000。FP4 的吞吐量约为 fp8 的两倍，量化张量占用的显存/带宽则减半。让 4 位精度真正<em>可用</em>的，是 Blackwell 的<strong>第二代 Transformer Engine 及其微缩放（microscaling）</strong>：FP4 只有约 16 个可表示的值，所以整个张量共用一个缩放因子无法覆盖它的动态范围（小值会被归零，大值会饱和）。微缩放（MX / NVFP4）改为对每个小块（例如每 16–32 个值）使用单独的缩放因子，由张量核心在硬件中直接施加，不损失吞吐量——于是你在获得 FP4 约 2 倍速度和一半显存占用的同时，精度仍能保持在接近 fp8/bf16 的水平，而朴素的按张量 FP4 做不到这一点。（Hopper 的第一代 TE 已通过按张量缩放因子对 fp8 做了类似处理；Blackwell 的第二代把它扩展到了按块缩放的 fp4/fp6。）&#160;<a class="footnote-backref" href="#fnref:unlocks" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:linear-attn">
+<p>随着更新的模型转向<strong>线性/混合注意力</strong>（Gated DeltaNet、Mamba 风格的 SSM（状态空间模型）、滑动窗口注意力，以及把少数全注意力层穿插在许多线性注意力层之间的 MoE 混合架构），驱动这种长上下文优势的 O(s²) 全注意力占比正在不断缩小。线性注意力是 O(s) 的，所以它的行为更像稠密路径而不像全注意力——让新 GPU 在长上下文上大放异彩的那个二次项，在这些模型中所占的比例<em>比</em>在经典全注意力 transformer 中小得多。如果你的目标模型是混合/线性注意力架构，不要用 Llama-3 模型家族这类全注意力模型的加速比去外推；要针对那个具体架构跑基准测试（它的内核也更“年轻”——参见<a href="#software-support-the-cost-of-switching-too-early">后文软件支持部分</a>）。&#160;<a class="footnote-backref" href="#fnref:linear-attn" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../how-to-choose-cloud-provider.html" class="md-footer__link md-footer__link--prev" aria-label="上一页: 如何挑选云服务商">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                如何挑选云服务商
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../compute/index.html" class="md-footer__link md-footer__link--next" aria-label="下一页: 计算">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                计算
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

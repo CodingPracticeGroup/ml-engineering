@@ -1,0 +1,4660 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="《Machine Learning Engineering》(Stas Bekman) 简体中文翻译，面向计算机专业本科低年级读者">
+      
+      
+      
+        <link rel="canonical" href="https://codingpracticegroup.github.io/ml-engineering/orchestration/slurm/users.html">
+      
+      
+        <link rel="prev" href="admin.html">
+      
+      
+        <link rel="next" href="performance.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>面向用户的 SLURM - 机器学习工程（ML Engineering）· 简体中文版</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#slurm-for-users" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../index.html" title="机器学习工程（ML Engineering）· 简体中文版" class="md-header__button md-logo" aria-label="机器学习工程（ML Engineering）· 简体中文版" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器学习工程（ML Engineering）· 简体中文版
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              面向用户的 SLURM
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="切换浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CodingPracticeGroup/ml-engineering" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../index.html" title="机器学习工程（ML Engineering）· 简体中文版" class="md-nav__button md-logo" aria-label="机器学习工程（ML Engineering）· 简体中文版" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器学习工程（ML Engineering）· 简体中文版
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CodingPracticeGroup/ml-engineering" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Machine Learning Engineering 开放书籍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    洞见：算力与云服务
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    洞见：算力与云服务
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../insights/ai-battlefield.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 战场上的工程实践——你需要了解的事
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../insights/how-to-choose-cloud-provider.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何挑选云服务商
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../insights/when-to-upgrade-gpus/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    升级 GPU 什么时候才值得？
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    计算硬件
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    计算硬件
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    计算
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    加速器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/benchmarks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    加速器基准测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/nvidia/debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排查 NVIDIA GPU 问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/amd/debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排查 AMD GPU 问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/amd/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AMD GPU 性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/cpu/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CPU
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/cpu-memory/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CPU 内存
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    存储
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    存储
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../storage/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    存储：文件系统与 IO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    网络
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    节点间与节点内网络硬件
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/comms.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通信模式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/debug/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络调试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/benchmarks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络基准测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编排与调度
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    编排与调度
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编排
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    在 SLURM 环境中工作
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="admin.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLURM 管理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面向用户的 SLURM
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="users.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面向用户的 SLURM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        快速开始
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#slurm-partitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SLURM 分区
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wait-time-for-resource-granting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        等待资源分配的时间
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-allocation-via-dependency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        通过依赖关系申请资源分配
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#make-allocations-at-a-scheduled-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        在计划的时间进行资源分配
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preallocated-node-without-time-60min-limit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        无 60 分钟时间限制的预分配节点
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hyper-threads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        超线程
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reuse-allocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        复用资源分配
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#specific-nodes-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        选择特定节点
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signal-the-running-jobs-to-finish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        通知正在运行的作业结束
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-job-info" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        作业详细信息
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        显示作业
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-information-about-the-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        获取作业的信息
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        环境变量
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convert-compact-node-list-to-expanded-node-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        把紧凑节点列表转换为展开节点列表
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convert-slurm_job_nodelist-into-a-hostfile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        把 SLURM_JOB_NODELIST 转换为 hostfile
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        别名
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zombies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        僵尸进程
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-access-to-slurm-accounting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        深入查看 SLURM 记账
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        队列
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="队列">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cancel-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        取消作业
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        提示
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        日志
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-the-state-of-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        查看节点状态
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="查看节点状态">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sinfo-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sinfo 状态
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#node-state-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        节点状态代码
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#job-state-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        作业状态代码
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#drained-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        被排空的节点
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#job-arrays" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        作业数组
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#job-array-trains-and-their-suspend-and-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        作业数组列车及其挂起与恢复
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-keep-an-salloc-allocation-alive-while-exiting-its-shell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        退出 shell 时让 salloc 分配保持存活
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-rejoin-the-allocated-node-interactively" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何以交互方式重新接入已分配的节点
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        问题排查
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="问题排查">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#slurm_procid-early-interpolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SLURM_PROCID 的提前插值
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mismatching-nodes-number" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        节点数不匹配
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#find-faulty-nodes-and-exclude-them" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        找到有故障的节点并把它们排除
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#broken-nccl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL 故障
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpu-memory-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPU 显存检查
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#broken-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        网络故障
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-py-spy-or-any-other-monitor-program-across-all-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        在所有节点上运行 py-spy 或其他监控程序
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crontab-emulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crontab 模拟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Crontab 模拟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-a-self-perpetuating-scheduler-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 自我延续的调度作业
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-daily-and-hourly-cronjobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 每日与每小时的定时作业
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 清理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nuances" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        注意事项
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#self-perpetuating-slurm-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自我延续的 SLURM 作业
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overcoming-the-lack-of-group-slurm-job-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        克服 SLURM 作业缺少组所有权的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-gracefully-exit-on-slurm-job-preemption" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何在 SLURM 作业被抢占时优雅退出
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-many-gpus-a-job-uses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个作业用了多少块 GPU
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-long-did-the-job-take-to-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        作业运行了多长时间
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fairshare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FairShare
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLURM 性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="launchers/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用 SLURM 的单节点与多节点启动器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kubernetes/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kubernetes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    训练
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../model-parallelism/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型并行
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/model-parallelism/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型并行
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/performance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    软件调优以获得最佳性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/fault-tolerance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    故障容错
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/reproducibility/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    可复现性
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/instabilities/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    不稳定的避免、恢复与理解
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/instabilities/training-loss-patterns.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    理解训练损失模式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/checkpoints/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    检查点
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/hparams.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    选择训练超参数与模型初始化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/dtype.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    张量精度 / 数据类型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/emulate-multi-node.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    只用单个节点模拟多节点环境
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/re-train-hub-models.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用微调示例从头重新训练 HF Hub 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/datasets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    处理数据集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../inference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试与排障
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    调试与排障
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试与故障排查
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/pytorch.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试 PyTorch 程序
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/tools.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试工具
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/nccl-performance-debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NCCL：调试与性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/torch-distributed-hanging-solutions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    诊断多节点多 GPU Python 程序中的挂起与死锁
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/underflow_overflow.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    下溢与上溢检测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/make-tiny-models-tokenizers-datasets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用小型模型、分词器与数据集加快调试和开发速度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/tiny-scripts/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    脚本备份
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    测试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    测试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编写与运行测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    资源汇总
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    资源汇总
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resources/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    资源
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献者
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    贡献者
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributors.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献者
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程：设计并运行一次大模型训练
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程：设计并运行一次大模型训练
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../courses/lesson-learned/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练大语言模型的经验教训（一门课程）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录：本书的构建方式
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    附录：本书的构建方式
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../build/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图书构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        快速开始
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#slurm-partitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SLURM 分区
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wait-time-for-resource-granting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        等待资源分配的时间
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-allocation-via-dependency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        通过依赖关系申请资源分配
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#make-allocations-at-a-scheduled-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        在计划的时间进行资源分配
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preallocated-node-without-time-60min-limit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        无 60 分钟时间限制的预分配节点
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hyper-threads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        超线程
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reuse-allocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        复用资源分配
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#specific-nodes-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        选择特定节点
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signal-the-running-jobs-to-finish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        通知正在运行的作业结束
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-job-info" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        作业详细信息
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        显示作业
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-information-about-the-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        获取作业的信息
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        环境变量
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convert-compact-node-list-to-expanded-node-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        把紧凑节点列表转换为展开节点列表
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#convert-slurm_job_nodelist-into-a-hostfile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        把 SLURM_JOB_NODELIST 转换为 hostfile
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        别名
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zombies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        僵尸进程
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-access-to-slurm-accounting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        深入查看 SLURM 记账
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        队列
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="队列">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cancel-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        取消作业
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        提示
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        日志
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#show-the-state-of-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        查看节点状态
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="查看节点状态">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sinfo-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sinfo 状态
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#node-state-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        节点状态代码
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#job-state-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        作业状态代码
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#drained-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        被排空的节点
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#job-arrays" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        作业数组
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#job-array-trains-and-their-suspend-and-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        作业数组列车及其挂起与恢复
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-keep-an-salloc-allocation-alive-while-exiting-its-shell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        退出 shell 时让 salloc 分配保持存活
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-rejoin-the-allocated-node-interactively" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何以交互方式重新接入已分配的节点
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        问题排查
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="问题排查">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#slurm_procid-early-interpolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SLURM_PROCID 的提前插值
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mismatching-nodes-number" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        节点数不匹配
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#find-faulty-nodes-and-exclude-them" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        找到有故障的节点并把它们排除
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#broken-nccl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NCCL 故障
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpu-memory-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPU 显存检查
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#broken-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        网络故障
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-py-spy-or-any-other-monitor-program-across-all-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        在所有节点上运行 py-spy 或其他监控程序
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crontab-emulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crontab 模拟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Crontab 模拟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-a-self-perpetuating-scheduler-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 自我延续的调度作业
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-daily-and-hourly-cronjobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 每日与每小时的定时作业
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 清理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nuances" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        注意事项
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#self-perpetuating-slurm-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自我延续的 SLURM 作业
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overcoming-the-lack-of-group-slurm-job-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        克服 SLURM 作业缺少组所有权的问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-gracefully-exit-on-slurm-job-preemption" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何在 SLURM 作业被抢占时优雅退出
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-many-gpus-a-job-uses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一个作业用了多少块 GPU
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-long-did-the-job-take-to-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        作业运行了多长时间
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fairshare" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FairShare
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<p class="en-origin-link">📄 <a href="https://github.com/CodingPracticeGroup/ml-engineering/blob/master/orchestration/slurm/users.md" target="_blank" rel="noopener">本页英文原文（GitHub master）</a></p><h1 id="slurm-for-users">面向用户的 SLURM<a class="headerlink" href="#slurm-for-users" title="Permanent link">&para;</a></h1>
+<h2 id="quick-start">快速开始<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<p>只需复制这个 <a href="example.slurm">example.slurm</a>，并按你的需要进行调整。</p>
+<h2 id="slurm-partitions">SLURM 分区<a class="headerlink" href="#slurm-partitions" title="Permanent link">&para;</a></h2>
+<p>在本文中，我们会使用一个示例配置，其中包含这 2 个集群名称：</p>
+<ul>
+<li><code>dev</code></li>
+<li><code>prod</code></li>
+</ul>
+<p>要查明节点的主机名及其可用性，使用：</p>
+<div class="highlight"><pre><span></span><code>sinfo<span class="w"> </span>-p<span class="w"> </span>dev
+sinfo<span class="w"> </span>-p<span class="w"> </span>prod
+</code></pre></div>
+<p><code>slurm.conf</code> 的路径因站点而异（通常位于 <code>/etc/slurm/</code> 或 <code>/opt/slurm/etc/</code> 下）；要查看这个集群是从哪里加载它的：</p>
+<div class="highlight"><pre><span></span><code>scontrol<span class="w"> </span>show<span class="w"> </span>config<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>slurmconf
+</code></pre></div>
+<p>要查看所有分区的配置：</p>
+<div class="highlight"><pre><span></span><code>scontrol<span class="w"> </span>show<span class="w"> </span>partition
+</code></pre></div>
+<h2 id="wait-time-for-resource-granting">等待资源分配的时间<a class="headerlink" href="#wait-time-for-resource-granting" title="Permanent link">&para;</a></h2>
+<p><div class="highlight"><pre><span></span><code>squeue<span class="w"> </span>-u<span class="w"> </span><span class="sb">`</span>whoami<span class="sb">`</span><span class="w"> </span>--start
+</code></pre></div>
+它会显示任何挂起（pending）的作业预计何时开始运行。</p>
+<p>如果其他人在预留结束之前就取消了自己的预留，你的作业也可能提前开始。</p>
+<h2 id="request-allocation-via-dependency">通过依赖关系申请资源分配<a class="headerlink" href="#request-allocation-via-dependency" title="Permanent link">&para;</a></h2>
+<p>想要在当前的某个已排队作业结束时（无论它仍在运行还是尚未开始）就排上新作业，可以使用依赖机制：告诉 <code>sbatch</code>，等当前正在运行的作业成功结束后再启动新作业，用法如下：</p>
+<div class="highlight"><pre><span></span><code>sbatch<span class="w"> </span>--dependency<span class="o">=</span>CURRENTLY_RUNNING_JOB_ID<span class="w"> </span>tr1-13B-round1.slurm
+</code></pre></div>
+<p>使用 <code>--dependency</code> 的等待时间可能比使用 <code>--begin</code> 更短，因为如果传给 <code>--begin</code> 的时间相对于最后一个作业停止的时间哪怕只留了几分钟的余量，调度器都可能已经先启动了一些其他作业，即使它们的优先级比我们的作业低。这是因为调度器在指定时间到来之前会忽略任何带 <code>--begin</code> 的作业。</p>
+<h2 id="make-allocations-at-a-scheduled-time">在计划的时间进行资源分配<a class="headerlink" href="#make-allocations-at-a-scheduled-time" title="Permanent link">&para;</a></h2>
+<p>要把资源分配推迟到给定时间，使用：
+<div class="highlight"><pre><span></span><code>salloc<span class="w"> </span>--begin<span class="o">=</span>YYYY-MM-DDTHH:MM:SS
+</code></pre></div></p>
+<p><code>sbatch</code> 同理。</p>
+<p>它只是会在请求的时间点把作业放入队列，就像你恰好在的那个时间执行了这条命令一样。如果那时资源可用，分配会立即给出；否则会排队等待。</p>
+<p>有时使用相对的开始时间很有用，而且可以使用其他格式。示例：</p>
+<div class="highlight"><pre><span></span><code>--begin now+2hours
+--begin=16:00
+--begin=now+1hour
+--begin=now+60  # 默认单位是秒
+--begin=2010-01-20T12:34:00
+</code></pre></div>
+<p>时间单位可以是 <code>seconds</code>（默认）、<code>minutes</code>、<code>hours</code>、<code>days</code> 或 <code>weeks</code>。</p>
+<h2 id="preallocated-node-without-time-60min-limit">无 60 分钟时间限制的预分配节点<a class="headerlink" href="#preallocated-node-without-time-60min-limit" title="Permanent link">&para;</a></h2>
+<p>这对反复进行的交互式实验非常有用——这样就不必每次为了推进工作而等待资源分配。因此策略是：一次性为较长的时间段申请资源，然后利用这份分配运行交互式的 <code>srun</code> 作业。</p>
+<p>把 <code>--time</code> 设置为你想要的时间窗口（例如 6h）：
+<div class="highlight"><pre><span></span><code>salloc<span class="w"> </span>--partition<span class="o">=</span>dev<span class="w"> </span>--nodes<span class="o">=</span><span class="m">1</span><span class="w"> </span>--ntasks-per-node<span class="o">=</span><span class="m">1</span><span class="w"> </span>--cpus-per-task<span class="o">=</span><span class="m">96</span><span class="w"> </span>--gres<span class="o">=</span>gpu:8<span class="w"> </span>--time<span class="o">=</span><span class="m">6</span>:00:00<span class="w"> </span>bash
+salloc:<span class="w"> </span>Pending<span class="w"> </span>job<span class="w"> </span>allocation<span class="w"> </span><span class="m">1732778</span>
+salloc:<span class="w"> </span>job<span class="w"> </span><span class="m">1732778</span><span class="w"> </span>queued<span class="w"> </span>and<span class="w"> </span>waiting<span class="w"> </span><span class="k">for</span><span class="w"> </span>resources
+salloc:<span class="w"> </span>job<span class="w"> </span><span class="m">1732778</span><span class="w"> </span>has<span class="w"> </span>been<span class="w"> </span>allocated<span class="w"> </span>resources
+salloc:<span class="w"> </span>Granted<span class="w"> </span>job<span class="w"> </span>allocation<span class="w"> </span><span class="m">1732778</span>
+</code></pre></div>
+接下来，通过传入 <code>salloc</code> 的作业 id，用这台预留的节点多次运行作业：
+<div class="highlight"><pre><span></span><code>srun<span class="w"> </span>--jobid<span class="w"> </span><span class="nv">$SLURM_JOBID</span><span class="w"> </span>--pty<span class="w"> </span>bash
+</code></pre></div>
+如果是在 <code>salloc</code> 启动的 <code>bash</code> 里面运行，可以直接这样执行。但也可以从另一个 shell 启动，只是那时需要显式设置 <code>--jobid</code>。</p>
+<p>如果这个 <code>srun</code> 作业超时或被手动退出，你可以在这同一台预留节点上重新启动它。</p>
+<p>当然，<code>srun</code> 可以直接调用真正的训练命令，而不仅仅是 <code>bash</code>。</p>
+<p>重要：分配单个节点时，分配到的 shell 并不在节点上（从来都不是）。你必须先弄清楚该节点的主机名（分配获批时会报告，也可以通过 <code>squeue</code> 查看），然后 <code>ssh</code> 登录到它。</p>
+<p>结束后，要释放资源，退出 <code>salloc</code> 启动的 shell，或者执行 <code>scancel JOBID</code>。</p>
+<p>这台预留节点在整个分配期间都会被计入小时用量，所以用完请尽快释放。</p>
+<p>其实，如果只是一台节点，更省事的做法是一开始就不使用 <code>salloc</code>，而直接使用 <code>srun</code>，它既会完成分配，又会给你一个可用的 shell：
+<div class="highlight"><pre><span></span><code>srun<span class="w"> </span>--pty<span class="w"> </span>--partition<span class="o">=</span>dev<span class="w"> </span>--nodes<span class="o">=</span><span class="m">1</span><span class="w"> </span>--ntasks<span class="o">=</span><span class="m">1</span><span class="w"> </span>--cpus-per-task<span class="o">=</span><span class="m">96</span><span class="w"> </span>--gres<span class="o">=</span>gpu:8<span class="w"> </span>--time<span class="o">=</span><span class="m">60</span><span class="w"> </span>bash
+</code></pre></div></p>
+<h2 id="hyper-threads">超线程<a class="headerlink" href="#hyper-threads" title="Permanent link">&para;</a></h2>
+<p>默认情况下，如果 CPU 启用了<a href="https://en.wikipedia.org/wiki/Hyper-threading">超线程</a>（Hyper-Threads，HT），SLURM 就会使用它。如果你不想使用 HT，必须指定 <code>--hint=nomultithread</code>。</p>
+<p>脚注：HT 是 Intel 专有的叫法，通用概念是同时多线程（simultaneous multithreading，SMT）</p>
+<p>例如，对于一个每节点 2 个 CPU、每个 CPU 24 个核心、每核心 2 个超线程的集群，节点上一共有 96 个超线程或 48 个 CPU 物理核心可用。因此，要充分利用这台节点，你需要配置下面二者之一：</p>
+<p><div class="highlight"><pre><span></span><code>#SBATCH --cpus-per-task=96
+</code></pre></div>
+或者，如果你不想用 HT：
+<div class="highlight"><pre><span></span><code>#SBATCH --cpus-per-task=48
+#SBATCH --hint=nomultithread
+</code></pre></div></p>
+<p>最后这种方式会为每个核心分配一个线程，在这种模式下只有 48 个 CPU 核心可用。</p>
+<p>注意，取决于你的应用，这 2 种模式之间可能存在相当大的性能差异。因此请两种都试一下，看看哪种效果更好。</p>
+<p>在 AWS 等某些环境上，使用 <code>--hint=nomultithread</code> 时 all-reduce 吞吐量会急剧下降！而在某些其他环境上情况正好相反——不开 HT 吞吐量反而更差！</p>
+<p>要检查你的实例是否启用了 HT，运行：</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>lscpu<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>Thread
+Thread<span class="o">(</span>s<span class="o">)</span><span class="w"> </span>per<span class="w"> </span>core:<span class="w"> </span><span class="m">2</span>
+</code></pre></div>
+<p>如果是 <code>2</code> 就表示启用了 HT，如果是 <code>1</code> 则表示没有启用。</p>
+<h2 id="reuse-allocation">复用资源分配<a class="headerlink" href="#reuse-allocation" title="Permanent link">&para;</a></h2>
+<p>例如，当你想在完全相同的节点分配上运行各种作业时。</p>
+<p>在一个 shell 中：
+<div class="highlight"><pre><span></span><code>salloc<span class="w"> </span>--partition<span class="o">=</span>prod<span class="w"> </span>--nodes<span class="o">=</span><span class="m">16</span><span class="w"> </span>--ntasks<span class="o">=</span><span class="m">16</span><span class="w"> </span>--cpus-per-task<span class="o">=</span><span class="m">96</span><span class="w"> </span>--gres<span class="o">=</span>gpu:8<span class="w"> </span>--time<span class="o">=</span><span class="m">3</span>:00:00<span class="w"> </span>bash
+<span class="nb">echo</span><span class="w"> </span><span class="nv">$SLURM_JOBID</span>
+</code></pre></div></p>
+<p>在另一个 shell 中：
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">SLURM_JOBID</span><span class="o">=</span>&lt;JOB<span class="w"> </span>ID<span class="w"> </span>FROM<span class="w"> </span>ABOVE&gt;
+srun<span class="w"> </span>--jobid<span class="o">=</span><span class="nv">$SLURM_JOBID</span><span class="w"> </span>...
+</code></pre></div></p>
+<p>在节点上运行某些诊断作业时，你可能需要设置 <code>--gres=gpu:0</code>。例如，我们来检查所有主机的共享内存：
+<div class="highlight"><pre><span></span><code>srun<span class="w"> </span>--jobid<span class="w"> </span><span class="m">631078</span><span class="w"> </span>--gres<span class="o">=</span>gpu:0<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">'echo $(hostname) $(df -h | grep shm)'</span>
+</code></pre></div></p>
+<h2 id="specific-nodes-selection">选择特定节点<a class="headerlink" href="#specific-nodes-selection" title="Permanent link">&para;</a></h2>
+<p>要排除特定节点（当你明知某些节点坏了、但状态仍是 IDLE 时很有用）：</p>
+<p><div class="highlight"><pre><span></span><code>sbatch<span class="w"> </span>--exclude<span class="w"> </span>nodeA,nodeB
+</code></pre></div>
+或者通过：<code>#SBATCH --exclude ...</code></p>
+<p>要使用特定节点：</p>
+<p><div class="highlight"><pre><span></span><code>sbatch<span class="w"> </span>--nodelist<span class="o">=</span>nodeA,nodeB
+</code></pre></div>
+也可以用短选项 <code>-w</code> 代替 <code>--nodelist</code></p>
+<p>管理员还可以在 <code>slurm.conf</code> 中定义一个 <code>feature=example</code>，这样用户就可以通过 <code>--constraint=example</code> 请求这组节点。</p>
+<h2 id="signal-the-running-jobs-to-finish">通知正在运行的作业结束<a class="headerlink" href="#signal-the-running-jobs-to-finish" title="Permanent link">&para;</a></h2>
+<p>由于每个 SLURM 作业的运行时间有限，可以这样配置：在分配的时间结束前一段期望的时长，向程序发送一个自选的信号。
+<div class="highlight"><pre><span></span><code>--signal=[[R][B]:]&lt;sig_num&gt;[@&lt;sig_time&gt;]
+</code></pre></div>
+至于实际可用的模式——在墙钟时限前几分钟捕获 <code>SIGUSR1</code>（或类似的信号），完成当前步骤，保存检查点，然后不再开始新一轮就退出——参见故障容错章节中的<a href="../../training/fault-tolerance/index.html#approach-b1-sending-a-custom-signal-x-minutes-before-the-end">在结束前 X 分钟发送自定义信号</a>。</p>
+<h2 id="detailed-job-info">作业详细信息<a class="headerlink" href="#detailed-job-info" title="Permanent link">&para;</a></h2>
+<p>虽然大多数有用的信息都存在于各种 <code>SLURM_*</code> 环境变量中，但有时仍会缺少某些信息。遇到这种情况时使用：
+<div class="highlight"><pre><span></span><code>scontrol<span class="w"> </span>show<span class="w"> </span>-d<span class="w"> </span>job<span class="w"> </span><span class="nv">$SLURM_JOB_ID</span>
+</code></pre></div>
+然后解析出需要的内容。</p>
+<p>对于已经运行结束的作业，使用：
+<div class="highlight"><pre><span></span><code>sacct<span class="w"> </span>-j<span class="w"> </span>JOBID
+</code></pre></div></p>
+<p>这条命令还有助于发现该分配上是否已有 <code>srun</code> 作业在运行（包括已结束或已取消的那些）。例如，你可能想通过 <code>scancel &lt;jobid&gt;.&lt;step-id&gt;</code> 杀掉某个失控的 <code>srun</code> 步骤（step），而上述命令正是用来找到那个 <code>&lt;step-id&gt;</code> 的。即使你取消了全部步骤作业，只要主作业是交互式作业，它仍会继续运行。</p>
+<p>要查看更多细节：
+<div class="highlight"><pre><span></span><code>sacct<span class="w"> </span>--format<span class="o">=</span>jobid,start,end,state,exitcode,nodelist%300<span class="w"> </span>-j<span class="w"> </span>JOBID
+sacct<span class="w"> </span>-j<span class="w"> </span>JOBID<span class="w"> </span>--long
+</code></pre></div></p>
+<p>或者，把所有作业连同其子步骤一起列出，但只限定某个特定分区、且只针对你自己的用户：</p>
+<div class="highlight"><pre><span></span><code>sacct<span class="w"> </span>-u<span class="w"> </span><span class="sb">`</span>whoami<span class="sb">`</span><span class="w"> </span>--partition<span class="o">=</span>dev<span class="w">  </span>--format<span class="o">=</span>jobid,start,end,state,exitcode,nodelist%300
+sacct<span class="w"> </span>-u<span class="w"> </span><span class="sb">`</span>whoami<span class="sb">`</span><span class="w"> </span>--partition<span class="o">=</span>prod<span class="w"> </span>--format<span class="o">=</span>jobid,start,end,state,exitcode,nodelist%300
+</code></pre></div>
+<p>要查看某个作业是如何启动的，以及它所有 <code>srun</code> 子步骤的命令行：
+<div class="highlight"><pre><span></span><code>sacct<span class="w"> </span>-j<span class="w"> </span>JOBID<span class="w"> </span>-o<span class="w"> </span>submitline<span class="w"> </span>-P
+</code></pre></div></p>
+<h2 id="show-jobs">显示作业<a class="headerlink" href="#show-jobs" title="Permanent link">&para;</a></h2>
+<p>只显示我自己的作业：
+<div class="highlight"><pre><span></span><code>squeue<span class="w"> </span>-u<span class="w"> </span><span class="sb">`</span>whoami<span class="sb">`</span>
+</code></pre></div></p>
+<p>按作业 id 显示作业：
+<div class="highlight"><pre><span></span><code>squeue<span class="w"> </span>-j<span class="w"> </span>JOBID
+</code></pre></div></p>
+<p>显示某个特定分区的作业：
+<div class="highlight"><pre><span></span><code>squeue<span class="w"> </span>--partition<span class="o">=</span>dev
+</code></pre></div></p>
+<h2 id="getting-information-about-the-job">获取作业的信息<a class="headerlink" href="#getting-information-about-the-job" title="Permanent link">&para;</a></h2>
+<p>在 slurm 文件内部，可以获取当前作业分配情况的信息。</p>
+<p>获取已分配节点的主机名，并基于此做一些有用的派生信息：
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">HOSTNAMES</span><span class="o">=</span><span class="k">$(</span>scontrol<span class="w"> </span>show<span class="w"> </span>hostnames<span class="w"> </span><span class="s2">"</span><span class="nv">$SLURM_JOB_NODELIST</span><span class="s2">"</span><span class="k">)</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">NUM_NODES</span><span class="o">=</span><span class="k">$(</span>scontrol<span class="w"> </span>show<span class="w"> </span>hostnames<span class="w"> </span><span class="s2">"</span><span class="nv">$SLURM_JOB_NODELIST</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l<span class="k">)</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">MASTER_ADDR</span><span class="o">=</span><span class="k">$(</span>scontrol<span class="w"> </span>show<span class="w"> </span>hostnames<span class="w"> </span><span class="s2">"</span><span class="nv">$SLURM_JOB_NODELIST</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span>
+</code></pre></div></p>
+<h2 id="environment-variables">环境变量<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h2>
+<p><code>#SBATCH --export=...</code> 控制把<strong>提交 shell</strong> 中的哪些变量复制到作业里。在标准版 Slurm 上默认是 <code>ALL</code>（有些站点会通过 <code>SBATCH_EXPORT</code> / <code>SLURM_EXPORT_ENV</code> 或 cli_filter 覆盖该默认值）。无论哪种模式，<code>SLURM_*</code> 变量始终存在。你在作业脚本内部 <code>export KEY=value</code> 的任何变量，也总是能被启动的程序看到——这与 <code>--export</code> 无关，后者只决定从提交 shell 继承哪些内容。4 种有用的形式：</p>
+<ol>
+<li>
+<p><strong>完整的提交 shell 环境（默认）：</strong></p>
+<p><div class="highlight"><pre><span></span><code>#SBATCH --export=ALL
+</code></pre></div>
+在标准版 Slurm 上，这与省略 <code>--export</code> 相同——单独写这一行在那里没有任何作用。只有在需要撤销站点的默认值 <code>NONE</code> 时，或像（4）那样与附加项组合使用时才需要它。</p>
+</li>
+<li>
+<p><strong>最小环境：</strong></p>
+<p><div class="highlight"><pre><span></span><code>#SBATCH --export=NONE
+</code></pre></div>
+丢弃提交 shell 的环境。当你想要一个可复现、不继承登录 shell 中碰巧导出过的任何变量的作业时，这很有用。</p>
+</li>
+<li>
+<p><strong>只要这些变量（替换列表）：</strong></p>
+<p><div class="highlight"><pre><span></span><code>#SBATCH --export=KEY1,KEY2=value
+</code></pre></div>
+<strong>只</strong>传播列出的变量（这里是：<code>KEY1</code> 的当前值，以及设为 <code>value</code> 的 <code>KEY2</code>）。提交 shell 中的其他内容全部丢弃——这不是在 <code>ALL</code> 基础上的追加。</p>
+</li>
+<li>
+<p><strong>完整环境并设置/覆盖：</strong></p>
+</li>
+</ol>
+<p><div class="highlight"><pre><span></span><code>#SBATCH --export=ALL,KEY=value
+</code></pre></div>
+保留完整的提交 shell 环境，<strong>并且</strong>设置或覆盖 <code>KEY</code>。如果你既想在提交时拥有"全部"环境，又要额外加一个变量，<code>ALL</code> 必须出现在列表中——否则就变成了情况（3）。</p>
+<h2 id="convert-compact-node-list-to-expanded-node-list">把紧凑节点列表转换为展开节点列表<a class="headerlink" href="#convert-compact-node-list-to-expanded-node-list" title="Permanent link">&para;</a></h2>
+<p>有时 SLURM 工具会给你一个这样的字符串：<code>node-[42,49-51]</code>，要把它展开成 <code>node-42,node-49,node-50,node-51</code> 还需要写些代码，不过有一个专门的工具可以处理这个：</p>
+<p><div class="highlight"><pre><span></span><code>$<span class="w"> </span>scontrol<span class="w"> </span>show<span class="w"> </span>hostnames<span class="w"> </span>node-<span class="o">[</span><span class="m">42</span>,49-51<span class="o">]</span>
+node-42
+node-49
+node-50
+node-51
+</code></pre></div>
+搞定！</p>
+<p>案例：例如，你可能想获取因作业退出太慢而被排空（drain）的节点列表，而其实节点本身并没有真正的问题。那么下面这个一行命令就会以展开格式给出这类节点的列表，之后你可以写个脚本遍历这个列表，也许先确认相关进程此时已经消亡，再把它们重新设为可用：
+<div class="highlight"><pre><span></span><code>sinfo<span class="w"> </span>-R<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">"Kill task failed"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>perl<span class="w"> </span>-lne<span class="w"> </span><span class="s1">'/(node-.*[\d\]]+)/ &amp;&amp; print $1'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>-n1<span class="w"> </span>scontrol<span class="w"> </span>show<span class="w"> </span>hostnames
+</code></pre></div></p>
+<h2 id="convert-slurm_job_nodelist-into-a-hostfile">把 SLURM_JOB_NODELIST 转换为 hostfile<a class="headerlink" href="#convert-slurm_job_nodelist-into-a-hostfile" title="Permanent link">&para;</a></h2>
+<p>有些多节点启动器需要一份 <code>hostfile</code>——下面是生成它的方法。展开使用 <code>scontrol show hostnames</code>，与上文<a href="#convert-compact-node-list-to-expanded-node-list">把紧凑节点列表转换为展开节点列表</a>是同一个工具，所以 <code>node-[42,49-51]</code> 这样的混合形式也可以：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 用法：</span>
+<span class="c1"># makehostfile &gt; hostfile</span>
+<span class="c1"># 依赖 SLURM_STEP_GPUS=0,1,2... 来获取每个节点的 gpu 槽位数</span>
+<span class="k">function</span><span class="w"> </span>makehostfile<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<span class="w">  </span><span class="nb">local</span><span class="w"> </span>slots
+<span class="w">  </span><span class="nv">slots</span><span class="o">=</span><span class="k">$(</span>perl<span class="w"> </span>-F,<span class="w"> </span>-lane<span class="w"> </span><span class="s1">'print scalar @F'</span><span class="w"> </span><span class="o">&lt;&lt;&lt;</span><span class="s2">"</span><span class="si">${</span><span class="nv">SLURM_STEP_GPUS</span><span class="k">:-</span><span class="nv">0</span><span class="si">}</span><span class="s2">"</span><span class="k">)</span>
+<span class="w">  </span>scontrol<span class="w"> </span>show<span class="w"> </span>hostnames<span class="w"> </span><span class="s2">"</span><span class="nv">$SLURM_JOB_NODELIST</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>perl<span class="w"> </span>-slne<span class="w"> </span><span class="s1">'print "$_ slots=$s"'</span><span class="w"> </span>--<span class="w"> </span>-s<span class="o">=</span><span class="s2">"</span><span class="nv">$slots</span><span class="s2">"</span>
+<span class="o">}</span>
+</code></pre></div>
+<h2 id="aliases">别名<a class="headerlink" href="#aliases" title="Permanent link">&para;</a></h2>
+<p>一些好用的别名</p>
+<div class="highlight"><pre><span></span><code><span class="nb">alias</span><span class="w"> </span><span class="nv">myjobs</span><span class="o">=</span><span class="s1">'squeue -u `whoami` -o "%.16i %9P %26j %.8T %.10M %.8l %.6D %.20S %R"'</span>
+<span class="nb">alias</span><span class="w"> </span><span class="nv">groupjobs</span><span class="o">=</span><span class="s1">'squeue -u foo,bar,tar -o "%.16i %u %9P %26j %.8T %.10M %.8l %.6D %.20S %R"'</span>
+<span class="nb">alias</span><span class="w"> </span>myjobs-pending<span class="o">=</span><span class="s2">"squeue -u `whoami` --start"</span>
+<span class="nb">alias</span><span class="w"> </span>idle-nodes<span class="o">=</span><span class="s2">"sinfo -p prod -o '%A'"</span>
+</code></pre></div>
+<h2 id="zombies">僵尸进程<a class="headerlink" href="#zombies" title="Permanent link">&para;</a></h2>
+<p>如果各节点上还有遗留的僵尸进程，发一条命令把它们全部杀掉。</p>
+<div class="highlight"><pre><span></span><code>srun<span class="w"> </span>pkill<span class="w"> </span>python
+</code></pre></div>
+<h2 id="detailed-access-to-slurm-accounting">深入查看 SLURM 记账<a class="headerlink" href="#detailed-access-to-slurm-accounting" title="Permanent link">&para;</a></h2>
+<p><code>sacct</code> 显示 SLURM 作业记账日志或 SLURM 数据库中所有作业和作业步骤的记账数据。</p>
+<p>所以这是一个分析历史事件的绝佳工具。</p>
+<p>例如，要查看最近的 gpu 作业是用哪些节点运行的：</p>
+<div class="highlight"><pre><span></span><code>sacct<span class="w"> </span>-u<span class="w"> </span><span class="sb">`</span>whoami<span class="sb">`</span><span class="w"> </span>--partition<span class="o">=</span>dev<span class="w"> </span>--format<span class="o">=</span>jobid,start,end,state,exitcode,nodelist%300
+</code></pre></div>
+<p>这里的 <code>%300</code> 告诉它输出使用 300 个字符的宽度，以免内容被截断。</p>
+<p>更多字段和信息字段请见 <code>man sacct</code>。</p>
+<h2 id="queue">队列<a class="headerlink" href="#queue" title="Permanent link">&para;</a></h2>
+<h3 id="cancel-job">取消作业<a class="headerlink" href="#cancel-job" title="Permanent link">&para;</a></h3>
+<p>要取消一个作业：
+<div class="highlight"><pre><span></span><code>scancel<span class="w"> </span><span class="o">[</span>jobid<span class="o">]</span>
+</code></pre></div></p>
+<p>要取消你的全部作业：
+<div class="highlight"><pre><span></span><code>scancel<span class="w"> </span>-u<span class="w"> </span>&lt;userid&gt;
+</code></pre></div></p>
+<p>要取消你在某个特定分区上的全部作业：
+<div class="highlight"><pre><span></span><code>scancel<span class="w"> </span>-u<span class="w"> </span>&lt;userid&gt;<span class="w"> </span>-p<span class="w"> </span>&lt;partition&gt;
+</code></pre></div></p>
+<h3 id="tips">提示<a class="headerlink" href="#tips" title="Permanent link">&para;</a></h3>
+<ul>
+<li>如果你看到 <code>salloc</code> 的交互式作业被安排到远晚于你需要的时刻才运行，试着取消这个作业，改申请更短的时段——往往更近的时间窗口有可能给更短的时间分配留出空位。</li>
+</ul>
+<h2 id="logging">日志<a class="headerlink" href="#logging" title="Permanent link">&para;</a></h2>
+<p>如果我们需要按节点把日志拆分到不同的日志文件，加入 <code>%N</code>（用于短主机名），写成：</p>
+<div class="highlight"><pre><span></span><code>#SBATCH --output=%x-%j-%N.out
+</code></pre></div>
+<p>这样我们就能判断某个特定节点是否表现异常——例如有一块坏掉的 GPU。当入口点用 <code>@record</code> 包装时，<code>torchrun</code> 能把首次失败归因到某台主机/rank，但未经装饰的脚本仍然只会得到一个裸的堆栈跟踪，而单份汇总并不能取代每个节点一个日志文件。</p>
+<h2 id="show-the-state-of-nodes">查看节点状态<a class="headerlink" href="#show-the-state-of-nodes" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>sinfo<span class="w"> </span>-p<span class="w"> </span>PARTITION
+</code></pre></div>
+<p>非常有用的命令是：
+<div class="highlight"><pre><span></span><code>sinfo<span class="w"> </span>-s
+</code></pre></div></p>
+<p>然后查看主要统计信息，例如：</p>
+<p><div class="highlight"><pre><span></span><code>NODES(A/I/O/T) "allocated/idle/other/total".
+597/0/15/612
+</code></pre></div>
+可见 612 台节点中有 597 台已被分配，0 台空闲，另有 15 台由于其他各种原因不可用。</p>
+<p>要查看某个特定分区：</p>
+<div class="highlight"><pre><span></span><code>sinfo<span class="w"> </span>-p<span class="w"> </span>gpu_p1<span class="w"> </span>-o<span class="w"> </span><span class="s2">"%A"</span>
+</code></pre></div>
+<p>得到：
+<div class="highlight"><pre><span></span><code>NODES(A/I)
+236/24
+</code></pre></div></p>
+<p>这样你就能看到 4x v100-32g 分区（<code>gpu_p1</code>）上是否有节点可用。</p>
+<h3 id="sinfo-states">sinfo 状态<a class="headerlink" href="#sinfo-states" title="Permanent link">&para;</a></h3>
+<ul>
+<li>idle：没有作业在运行</li>
+<li>alloc：节点已分配给当前正在执行的作业</li>
+<li>mix：节点上部分 CPU 已被分配，其余空闲</li>
+<li>drain：由于管理原因，该节点不可用</li>
+<li>drng：该节点正在运行作业，但作业完成后将因管理原因不可用</li>
+</ul>
+<h3 id="node-state-codes">节点状态代码<a class="headerlink" href="#node-state-codes" title="Permanent link">&para;</a></h3>
+<p>节点状态后面可能跟着一个具有特殊含义的单字符。它是以下之一：</p>
+<ul>
+<li><code>*</code>：该节点当前没有响应，不会被分配任何新工作。如果节点持续无响应，它将被置于 DOWN 状态（COMPLETING、DRAINED、DRAINING、FAIL、FAILING 状态的节点除外）。</li>
+<li><code>~</code>：该节点当前处于断电关闭状态。</li>
+<li><code>#</code>：该节点正在加电或配置中。</li>
+<li><code>!</code>：该节点正等待断电。</li>
+<li><code>%</code>：该节点正在断电中。</li>
+<li><code>$</code>：该节点当前处于带有 "maintenance" 标记的预留中。</li>
+<li><code>@</code>：该节点正等待重启。</li>
+<li><code>^</code>：已对该节点发出重启指令。</li>
+<li><code>-</code>：回填调度器已为更高优先级的作业预订了该节点。</li>
+</ul>
+<h3 id="job-state-codes">作业状态代码<a class="headerlink" href="#job-state-codes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>CD</code> | Completed：该作业已成功完成。</li>
+<li><code>CG</code> | Completing：该作业正在结束，但仍有部分进程在活动。</li>
+<li><code>F</code> | Failed：该作业以非零退出码终止，未能执行成功。</li>
+<li><code>PD</code> | Pending：该作业正在等待资源分配。它最终会运行。</li>
+<li><code>PR</code> | Preempted：该作业因被另一个作业抢占而终止。</li>
+<li><code>R</code> | Running：该作业当前已分配到节点并正在运行。</li>
+<li><code>S</code> | Suspended：正在运行的作业被停止，其核心已释放给其他作业。</li>
+<li><code>ST</code> | Stopped：正在运行的作业被停止，但其核心仍被保留。</li>
+</ul>
+<h3 id="drained-nodes">被排空的节点<a class="headerlink" href="#drained-nodes" title="Permanent link">&para;</a></h3>
+<p>要查看所有被排空（drained）的节点以及排空的原因（修改 <code>%50E</code> 可以让原因字段更长/更短）
+<div class="highlight"><pre><span></span><code>% sinfo -R -o "%50E %12U %19H %6t %N"
+</code></pre></div></p>
+<p>或者，如果你想要简短的输出，只使用 <code>-R</code>：</p>
+<div class="highlight"><pre><span></span><code>% sinfo -R
+</code></pre></div>
+<h2 id="job-arrays">作业数组<a class="headerlink" href="#job-arrays" title="Permanent link">&para;</a></h2>
+<p>要运行一系列作业，使当前作业一结束就立刻调度下一个 slurm 作业，我们使用作业数组。</p>
+<p>先从只有 10 个这样的作业开始：</p>
+<div class="highlight"><pre><span></span><code>sbatch<span class="w"> </span>--array<span class="o">=</span><span class="m">1</span>-10%1<span class="w"> </span>array-test.slurm
+</code></pre></div>
+<p><code>%1</code> 把这个作业数组中同时运行的任务数限制为 1。不加它的话，它会尝试一次性运行所有作业，有时我们可能正想要这样（那时去掉 %1 即可），但在训练时我们需要一次只运行一个作业。</p>
+<p>或者，像往常一样，这个参数也可以作为脚本的一部分：
+<div class="highlight"><pre><span></span><code>#SBATCH --array=1-10%1
+</code></pre></div></p>
+<p>下面是一个玩具 slurm 脚本，可以用来看看它是如何工作的：</p>
+<div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH --job-name=array-test</span>
+<span class="c1">#SBATCH --nodes=1</span>
+<span class="c1">#SBATCH --ntasks-per-node=1          # 关键——每个节点每个分布式进程只能有 1 个任务！</span>
+<span class="c1">#SBATCH --cpus-per-task=1            # 每个任务的核数</span>
+<span class="c1">#SBATCH --time 00:02:00              # 最大执行时间（HH:MM:SS）</span>
+<span class="c1">#SBATCH --output=%x-%j.out           # 输出文件名</span>
+<span class="c1">#SBATCH --error=%x-%j.out            # 错误文件名（与输出同名，这样只需查看一个文件）</span>
+<span class="c1">#SBATCH --partition=dev</span>
+
+<span class="nb">echo</span><span class="w"> </span><span class="nv">$SLURM_JOB_ID</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"I am job </span><span class="si">${</span><span class="nv">SLURM_ARRAY_JOB_ID</span><span class="si">}</span><span class="s2">_</span><span class="si">${</span><span class="nv">SLURM_ARRAY_TASK_ID</span><span class="si">}</span><span class="s2">"</span>
+date
+sleep<span class="w"> </span><span class="m">10</span>
+date
+</code></pre></div>
+<p>注意 <code>$SLURM_ARRAY_JOB_ID</code> 与 <code>$SLURM_JOB_ID</code> 相同，而 <code>$SLURM_ARRAY_TASK_ID</code> 是作业的索引。</p>
+<p>要查看正在运行的作业：
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>squeue<span class="w"> </span>-u<span class="w"> </span><span class="sb">`</span>whoami<span class="sb">`</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">"%.10i %9P %26j %.8T %.10M %.6D %.20S %R"</span>
+<span class="w">     </span>JOBID<span class="w"> </span>PARTITION<span class="w">                       </span>NAME<span class="w">    </span>STATE<span class="w">       </span>TIME<span class="w">  </span>NODES<span class="w">           </span>START_TIME<span class="w"> </span>NODELIST<span class="o">(</span>REASON<span class="o">)</span>
+591970_<span class="o">[</span><span class="m">2</span>-<span class="w">   </span>dev<span class="w">             </span>array-test<span class="w">  </span>PENDING<span class="w">       </span><span class="m">0</span>:00<span class="w">      </span><span class="m">1</span><span class="w">  </span><span class="m">2021</span>-07-28T20:01:06<span class="w"> </span><span class="o">(</span>JobArrayTaskLimit<span class="o">)</span>
+</code></pre></div>
+现在正在运行的是 2 号作业。</p>
+<p>要取消整个数组，像平常一样取消作业 id（<code>_</code> 之前的数字）即可：
+<div class="highlight"><pre><span></span><code>scancel<span class="w"> </span><span class="m">591970</span>
+</code></pre></div></p>
+<p>要取消某个特定的作业：
+<div class="highlight"><pre><span></span><code>scancel<span class="w"> </span>591970_2
+</code></pre></div></p>
+<p>如果希望日志文件名中包含数组 id，加上 <code>%A_%a</code>：</p>
+<div class="highlight"><pre><span></span><code>#SBATCH --output=%x-%j.%A_%a.log
+</code></pre></div>
+<p>更多细节见 https://slurm.schedmd.com/job_array.html</p>
+<h2 id="job-array-trains-and-their-suspend-and-release">作业数组列车及其挂起与恢复<a class="headerlink" href="#job-array-trains-and-their-suspend-and-release" title="Permanent link">&para;</a></h2>
+<p>在这个做法中，我们要达成 2 个目标：</p>
+<ol>
+<li>允许修改下一个作业的 slurm 脚本</li>
+<li>允许挂起和恢复作业数组，在还没准备好继续运行作业时也不丢失队列中的排位</li>
+</ol>
+<p>SLURM 是一个非常严苛的环境，一个小错误就可能让你付出几天的等待时间。但有一些策略可以减轻这种严苛。</p>
+<p>SLURM 作业在队列中有"资历（age）"的概念，除了项目优先级之外，它还决定一个作业何时被调度运行。如果你刚提交一个新作业，它没有任何"资历"，与更早进入队列的作业相比，通常会被安排最后运行。当然，如果这个新作业来自高优先级项目，它就会推进得更快。</p>
+<p>那么，当你需要修改正在运行的脚本中的某些东西、或者例如要切换到另一个脚本时，如何保住"资历"而不失去它？方法如下。</p>
+<p>思路是这样的：</p>
+<ol>
+<li>用 <code>sbatch</code> 提交一个长的作业数组，例如 <code>-array=1-50%1</code></li>
+<li>在 slurm 脚本里除了 <code>source another-script.slurm</code> 之外不放任何代码——这样你就可以在下一个作业开始前修改目标脚本，或把它符号链接（symlink）到另一个脚本</li>
+<li>如果你需要停下作业数组这列"列车"——不要取消它，而是让它处于挂起（hold）状态，这样不会丢失你在队列中的排位</li>
+<li>准备好继续时——释放（release）这个作业数组——只有在挂起状态期间的那段时间不计入资历，之前的全部资历都会被保留。</li>
+</ol>
+<p>正在运行的作业的节点数、时间、硬件和分区是不能修改的，但你可以通过 <code>scontrol update jobid=&lt;desired_job_id&gt; numnodes=&lt;new number&gt; partition=&lt;new partition&gt;</code> 来修改作业数组中处于挂起状态的作业。</p>
+<p>如果你有 <code>sudo</code> 权限，那么也可以修改当前作业的时长。</p>
+<p>下面是一个例子：</p>
+<p>创建一个作业脚本：</p>
+<p><div class="highlight"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span>train-64n.slurm
+<span class="c1">#!/bin/bash</span>
+<span class="c1">#SBATCH --job-name=tr8-104B</span>
+<span class="c1">#SBATCH --nodes=64</span>
+<span class="c1">#SBATCH --ntasks-per-node=1          # 关键——每个节点每个分布式进程只能有 1 个任务！</span>
+<span class="c1">#SBATCH --cpus-per-task=96           # 每个任务的核数</span>
+<span class="c1">#SBATCH --gres=gpu:8                 # GPU 数量</span>
+<span class="c1">#SBATCH --time 20:00:00              # 最大执行时间（HH:MM:SS）</span>
+<span class="c1">#SBATCH --output=%x-%j.out           # 输出文件名</span>
+<span class="c1">#SBATCH --partition=dev</span>
+
+<span class="nb">source</span><span class="w"> </span>tr8-104B-64.slurm
+</code></pre></div>
+像这样启动它：
+<div class="highlight"><pre><span></span><code>sbatch<span class="w"> </span>--array<span class="o">=</span><span class="m">1</span>-50%1<span class="w"> </span>train-64.slurm
+</code></pre></div></p>
+<p>现在，你可以在下一个作业运行前轻松编辑 <code>tr8-104B-64.slurm</code>，然后既可以让当前作业自然跑完（如果你希望如此），也可以在需要中止它时直接杀掉当前正在运行的作业，例如 <code>1557903_5</code>（而不是作业数组 <code>1557903</code>），让列车接着上次停下的地方继续，只是使用编辑后的脚本。</p>
+<p>好处在于，这不需要修改原始脚本（本例中是 <code>tr8-104B-64.slurm</code>），而且后者仍然可以单独启动。</p>
+<p>那么，如果出了问题、你需要 10 分钟或 10 个小时来修复，该怎么办？这种情况下，我们用下面的命令让列车挂起：</p>
+<div class="highlight"><pre><span></span><code>scontrol<span class="w"> </span>hold<span class="w"> </span>&lt;jobid&gt;
+</code></pre></div>
+<p>其中 <jobid> 可以是"普通"作业、作业数组的 id，或作业数组某个步骤的 id</p>
+<p>然后，准备继续时释放该作业：</p>
+<div class="highlight"><pre><span></span><code>scontrol<span class="w"> </span>release<span class="w"> </span>&lt;jobid&gt;
+</code></pre></div>
+<h2 id="how-to-keep-an-salloc-allocation-alive-while-exiting-its-shell">退出 shell 时让 salloc 分配保持存活<a class="headerlink" href="#how-to-keep-an-salloc-allocation-alive-while-exiting-its-shell" title="Permanent link">&para;</a></h2>
+<p>如果你像这样分配了一台节点：</p>
+<p><div class="highlight"><pre><span></span><code>salloc<span class="w"> </span>--partition<span class="o">=</span>dev<span class="w"> </span>--nodes<span class="o">=</span><span class="m">1</span><span class="w"> </span>--ntasks-per-node<span class="o">=</span><span class="m">1</span><span class="w"> </span>--time<span class="o">=</span><span class="m">1</span>:00:00<span class="w"> </span>bash
+</code></pre></div>
+而你退出了 shell，或者你的 ssh 连接断开了，这份分配就会丢失。</p>
+<p>如果你想建立一个在退出 shell 后仍能存活的分配，使用 <code>--no-shell</code>，并且不要带 <code>bash</code>，像这样：</p>
+<p><div class="highlight"><pre><span></span><code>salloc<span class="w"> </span>--no-shell<span class="w"> </span>--partition<span class="o">=</span>dev<span class="w"> </span>--nodes<span class="o">=</span><span class="m">1</span><span class="w"> </span>--ntasks-per-node<span class="o">=</span><span class="m">1</span><span class="w"> </span>--time<span class="o">=</span><span class="m">1</span>:00:00
+</code></pre></div>
+现在如果你需要加入这个会话，见<a href="#how-to-rejoin-the-allocated-node-interactively">如何以交互方式重新接入已分配的节点</a>。</p>
+<p>但要注意，如果你 <code>ssh</code> 到已分配的节点，以常规方式启动了某个东西，然后又关闭连接，那个作业就会丢失，因为发起连接的 shell 会向它的子进程发送 <code>SIGHUP</code>。要避免这一点并让作业继续运行，请使用 <code>nohup</code>，同时把程序放到后台进程中。示例：</p>
+<div class="highlight"><pre><span></span><code>nohup my-program &amp;
+</code></pre></div>
+<p><code>nohup</code> 会忽略 <code>SIGHUP</code>，会把 stderr 重定向到 stdout，并把 stdout 追加写入一个特殊文件 <code>nohup.out</code>。如果你想控制标准流写到什么位置，就使用普通的 stdout 重定向 <code>&gt;</code> 或 <code>&gt;&gt;</code>，例如：
+<div class="highlight"><pre><span></span><code>nohup my-program &gt;&gt; some-file.txt &amp;
+</code></pre></div></p>
+<p>如前所述，程序也是通过 <code>&amp;</code> 被放到后台的。</p>
+<p>现在你可以放心断开连接，等你回来时程序仍在运行。</p>
+<p>这个方案能防止程序退出，但由于标准流已被重定向，你再次连接时将无法与它正常交互。当然，你仍然可以通过 pid 杀掉该程序、改变它的 <code>nice</code> 状态等，就像对其他任何进程做的那样。</p>
+<p>但如果你希望断开后重连还能继续使用程序，就得使用<a href="https://en.wikipedia.org/wiki/Terminal_multiplexer">终端复用器</a>程序，例如 <a href="https://github.com/tmux/tmux"><code>tmux</code></a> 或 GNU <a href="https://www.gnu.org/software/screen/"><code>screen</code></a>，它们在节点上运行一个守护进程（daemon），让你重新连接时重新获得对程序的正常控制权。此外还有 <a href="https://github.com/mobile-shell/mosh"><code>mosh</code></a> 和其他类似工具，可以进一步帮助这一过程。</p>
+<h2 id="how-to-rejoin-the-allocated-node-interactively">如何以交互方式重新接入已分配的节点<a class="headerlink" href="#how-to-rejoin-the-allocated-node-interactively" title="Permanent link">&para;</a></h2>
+<p>要想在同一个作业中拥有多个交互式 shell，应当使用 <code>--overlap</code>。</p>
+<p>例如，在控制台 A 中，我们先分配一台单节点：
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>salloc<span class="w"> </span>--partition<span class="o">=</span>dev<span class="w"> </span>--nodes<span class="o">=</span><span class="m">1</span><span class="w"> </span>--ntasks-per-node<span class="o">=</span><span class="m">1</span><span class="w"> </span>--cpus-per-task<span class="o">=</span><span class="m">26</span><span class="w"> </span>--gres<span class="o">=</span>gpu:1<span class="w"> </span>--time<span class="o">=</span><span class="m">2</span>:00:00<span class="w"> </span>bash
+salloc:<span class="w"> </span>Granted<span class="w"> </span>job<span class="w"> </span>allocation<span class="w"> </span><span class="m">1916</span>
+salloc:<span class="w"> </span>Nodes<span class="w"> </span>my-node-1<span class="w"> </span>are<span class="w"> </span>ready<span class="w"> </span><span class="k">for</span><span class="w"> </span>job
+</code></pre></div></p>
+<p>在控制台 B 中：
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>srun<span class="w"> </span>--overlap<span class="w"> </span>--pty<span class="w"> </span>--jobid<span class="w"> </span><span class="m">1916</span><span class="w"> </span>bash
+</code></pre></div>
+上面这一步可以在任意多个控制台中重复。</p>
+<p>如果是第一个伪终端 shell，你甚至不需要 <code>--overlap</code>，但对额外的 shell 就需要它了。</p>
+<p>如果你最初是通过 <code>srun --pty</code> 分配的节点，做法相同：
+<div class="highlight"><pre><span></span><code>srun<span class="w"> </span>--pty<span class="w"> </span>-p<span class="w"> </span>dev<span class="w"> </span>--gpus<span class="w"> </span><span class="m">8</span><span class="w"> </span>--time<span class="o">=</span><span class="m">2</span>:00:00<span class="w"> </span>bash
+</code></pre></div></p>
+<p>当然，你也可以通过 <code>ssh</code> 访问该节点，但如果你的 SLURM 被配置成了各种虚拟化方式（例如每个用户只分配少量 GPU，或把 <code>/tmp/</code> 或 <code>/scratch</code> 虚拟化并在退出时自动清理），那么从 <code>ssh</code> 看到的景象就不一样。例如，如果一个作业分配了 2 块 GPU，ssh 的 shell 会显示出全部 GPU 而不只是那 2 块——所以如果你和别人共享这台节点，这样就不太合适。</p>
+<p>这对多节点分配同样有效，默认你会得到该分配中第一台节点上的交互式 shell。如果你想进入某台特定节点，用 <code>-w</code> 指定它。例如，假设你分配到了 <code>node-[1-4]</code>，而你想进入 <code>node-3</code>，那就指定：
+<div class="highlight"><pre><span></span><code>srun<span class="w"> </span>--pty<span class="w"> </span>-p<span class="w"> </span>dev<span class="w"> </span>--gpus<span class="w"> </span><span class="m">8</span><span class="w"> </span>--time<span class="o">=</span><span class="m">2</span>:00:00<span class="w"> </span>-w<span class="w"> </span>node-3<span class="w"> </span>bash
+</code></pre></div>
+如果它报错：
+<div class="highlight"><pre><span></span><code>srun:<span class="w"> </span>error:<span class="w"> </span>Unable<span class="w"> </span>to<span class="w"> </span>create<span class="w"> </span>step<span class="w"> </span><span class="k">for</span><span class="w"> </span>job<span class="w"> </span><span class="m">1930</span>:<span class="w"> </span>Invalid<span class="w"> </span>generic<span class="w"> </span>resource<span class="w"> </span><span class="o">(</span>gres<span class="o">)</span><span class="w"> </span>specification
+</code></pre></div>
+把 <code>--gres=gpu:8</code> 设置加回来即可。如果你最初的分配命令已经使用了这个标志，就不必这样做。</p>
+<h2 id="troubleshooting">问题排查<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="slurm_procid-early-interpolation"><code>SLURM_PROCID</code> 的提前插值<a class="headerlink" href="#slurm_procid-early-interpolation" title="Permanent link">&para;</a></h3>
+<p>在多节点配置下使用 SLURM 时，把这一点设置正确至关重要：
+<div class="highlight"><pre><span></span><code>"--machine_rank \$SLURM_PROCID"
+</code></pre></div>
+它不能被提前插值，因为如果写成 <code>"--machine_rank $SLURM_PROCID"</code>，启动器就会挂起（hang）。</p>
+<p>最好把启动器与程序隔离开，像这样：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">MASTER_ADDR</span><span class="o">=</span><span class="k">$(</span>scontrol<span class="w"> </span>show<span class="w"> </span>hostnames<span class="w"> </span><span class="nv">$SLURM_JOB_NODELIST</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">MASTER_PORT</span><span class="o">=</span><span class="m">3333</span>
+<span class="nv">ACCELERATE_CONFIG_FILE</span><span class="o">=</span>path/to/accelerate.config.yaml<span class="w"> </span><span class="c1"># 修改我</span>
+<span class="nv">LAUNCHER</span><span class="o">=</span><span class="s2">"python -u -m accelerate.commands.launch \</span>
+<span class="s2">    --rdzv_conf "</span><span class="nv">rdzv_backend</span><span class="o">=</span>c10d,rdzv_endpoint<span class="o">=</span><span class="nv">$MASTER_ADDR</span>:<span class="nv">$MASTER_PORT</span><span class="s2">" \</span>
+<span class="s2">    --config_file </span><span class="nv">$ACCELERATE_CONFIG_FILE</span><span class="s2"> \</span>
+<span class="s2">    --main_process_ip </span><span class="nv">$MASTER_ADDR</span><span class="s2"> \</span>
+<span class="s2">    --main_process_port </span><span class="nv">$MASTER_PORT</span><span class="s2"> \</span>
+<span class="s2">    --machine_rank \$SLURM_PROCID \</span>
+<span class="s2">    --role \$(hostname -s|tr -dc '0-9'): --tee 3 \</span>
+<span class="s2">    "</span>
+<span class="nv">PROGRAM</span><span class="o">=</span><span class="s2">"myprogram.py"</span>
+
+<span class="nv">CMD</span><span class="o">=</span><span class="s2">"</span><span class="nv">$LAUNCHER</span><span class="s2"> </span><span class="nv">$PROGRAM</span><span class="s2">"</span>
+
+<span class="nv">SRUN_ARGS</span><span class="o">=</span><span class="s2">" \</span>
+<span class="s2">    --wait=60 \</span>
+<span class="s2">    --kill-on-bad-exit=1 \</span>
+<span class="s2">    --unbuffered \</span>
+<span class="s2">    --jobid </span><span class="nv">$SLURM_JOBID</span><span class="s2"> \</span>
+<span class="s2">    "</span>
+
+srun<span class="w"> </span><span class="nv">$SRUN_ARGS</span><span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span><span class="nv">$CMD</span><span class="s2">"</span><span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>main_log.txt
+</code></pre></div>
+<p>这样启动器就总能正常工作，用户只需要调整 <code>PROGRAM</code> 变量。</p>
+<p>使用 <code>torchrun</code> 时：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">GPUS_PER_NODE</span><span class="o">=</span><span class="m">8</span>
+<span class="nv">NNODES</span><span class="o">=</span><span class="nv">$SLURM_NNODES</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">MASTER_ADDR</span><span class="o">=</span><span class="k">$(</span>scontrol<span class="w"> </span>show<span class="w"> </span>hostnames<span class="w"> </span><span class="nv">$SLURM_JOB_NODELIST</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">MASTER_PORT</span><span class="o">=</span><span class="m">3333</span>
+<span class="c1"># 注意 `\$SLURM_PROCID` 和 `\$(hostname ...)`——在 `srun` 时才插值，而不是在这里</span>
+<span class="nv">LAUNCHER</span><span class="o">=</span><span class="s2">"python -u -m torch.distributed.run \</span>
+<span class="s2">    --nproc_per_node </span><span class="nv">$GPUS_PER_NODE</span><span class="s2"> \</span>
+<span class="s2">    --nnodes </span><span class="nv">$NNODES</span><span class="s2"> \</span>
+<span class="s2">    --node_rank \$SLURM_PROCID \</span>
+<span class="s2">    --rdzv_endpoint </span><span class="nv">$MASTER_ADDR</span><span class="s2">:</span><span class="nv">$MASTER_PORT</span><span class="s2"> \</span>
+<span class="s2">    --rdzv_backend c10d \</span>
+<span class="s2">    --max_restarts 0 \</span>
+<span class="s2">    --role \$(hostname -s|tr -dc '0-9'): \</span>
+<span class="s2">    --tee 3 \</span>
+<span class="s2">    "</span>
+</code></pre></div>
+<p>完整可用的示例见<a href="launchers/index.html">使用 SLURM 的单节点与多节点启动器</a>。</p>
+<h3 id="mismatching-nodes-number">节点数不匹配<a class="headerlink" href="#mismatching-nodes-number" title="Permanent link">&para;</a></h3>
+<p>如果 pytorch 启动器失败，往往意味着 SLURM 的节点数和启动器的节点数不匹配，例如：</p>
+<div class="highlight"><pre><span></span><code>grep<span class="w"> </span>-ir<span class="w"> </span><span class="nv">nodes</span><span class="o">=</span><span class="w"> </span>tr123-test.slurm
+<span class="c1">#SBATCH --nodes=40</span>
+<span class="nv">NNODES</span><span class="o">=</span><span class="m">64</span>
+</code></pre></div>
+<p>这样是不行的，二者必须匹配。</p>
+<p>你可以在脚本里加一个合理性检查：</p>
+<div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH --job-name=test-mismatch</span>
+<span class="c1">#SBATCH --nodes=2</span>
+<span class="c1">#SBATCH --ntasks-per-node=1          # 关键——每个节点每个分布式进程只能有 1 个任务！</span>
+<span class="c1">#SBATCH --cpus-per-task=96           # 每个任务的核数</span>
+<span class="c1">#SBATCH --gres=gpu:8                 # GPU 数量</span>
+<span class="c1">#SBATCH --time 0:05:00               # 最大执行时间（HH:MM:SS）</span>
+<span class="c1">#SBATCH --output=%x-%j.out           # 输出文件名</span>
+<span class="c1">#SBATCH --partition=prod</span>
+
+<span class="o">[</span>...<span class="o">]</span>
+
+<span class="nv">NNODES</span><span class="o">=</span><span class="m">2</span>
+
+<span class="c1"># 合理性检查：确保 NNODES 与 `#SBATCH --nodes` 一致，前提是你使用了 NNODES 变量</span>
+<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">"</span><span class="nv">$NNODES</span><span class="s2">"</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s2">"</span><span class="nv">$SLURM_NNODES</span><span class="s2">"</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"Misconfigured script: NNODES=</span><span class="nv">$NNODES</span><span class="s2"> != SLURM_NNODES=</span><span class="nv">$SLURM_NNODES</span><span class="s2">"</span>
+<span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<span class="k">fi</span>
+
+<span class="o">[</span>...<span class="o">]</span>
+</code></pre></div>
+<p>或者你也可以直接这样：</p>
+<div class="highlight"><pre><span></span><code><span class="c1">#SBATCH --nodes=2</span>
+<span class="o">[</span>...<span class="o">]</span>
+<span class="nv">NNODES</span><span class="o">=</span><span class="nv">$SLURM_NNODES</span>
+</code></pre></div>
+<p>这样它就永远是正确的</p>
+<h3 id="find-faulty-nodes-and-exclude-them">找到有故障的节点并把它们排除<a class="headerlink" href="#find-faulty-nodes-and-exclude-them" title="Permanent link">&para;</a></h3>
+<p>有时候某个节点是坏的，这会导致无法进行训练，尤其是因为重启作业往往会再次分配到同一批节点。所以需要能够把坏节点隔离出来，并在 <code>sbatch</code> 中把它们排除掉。</p>
+<p>要找到有故障的节点，写一个小脚本来报告所需检查项的状态即可。</p>
+<p>例如，测试 cuda 是否在所有节点上都可用：
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-c<span class="w"> </span><span class="s1">'import torch, socket; print(f"{socket.gethostname()}: {torch.cuda.is_available()}")'</span>
+</code></pre></div></p>
+<p>以及只报告那些失败的节点：
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-c<span class="w"> </span><span class="s1">'import torch, socket; torch.cuda.is_available() or print(f"Broken node: {socket.gethostname()}") '</span>
+</code></pre></div></p>
+<p>当然，问题可能是别的——例如 GPU 无法分配显存，那就把测试脚本改成在 cuda 上做一次小规模分配。下面给出一种做法：</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import torch; torch.ones(1000,1000).cuda()"</span>
+</code></pre></div>
+<p>但由于我们需要在所有节点上运行这个测试脚本，而不只是在第一个节点上，slurm 脚本需要通过 <code>srun</code> 来运行它。因此我们的第一个诊断脚本可以写成：</p>
+<div class="highlight"><pre><span></span><code>srun<span class="w"> </span>--jobid<span class="w"> </span><span class="nv">$SLURM_JOBID</span><span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">'python -c "import torch, socket; print(socket.gethostname(), torch.cuda.is_available())"'</span>
+</code></pre></div>
+<p>因为存在引号方面的问题，我对它做了些微改动。</p>
+<p>你随时可以把这个单行命令改写成一个真正的脚本，那样就没有引号问题了。</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span><span class="s">&lt;&lt; EOT &gt;&gt; test-nodes.py</span>
+<span class="s">#!/usr/bin/env python</span>
+<span class="s">import torch, socket</span>
+<span class="s">print(socket.gethostname(), torch.cuda.is_available())</span>
+<span class="s">EOT</span>
+$<span class="w"> </span>chmod<span class="w"> </span>a+x<span class="w"> </span>./test-nodes.py
+</code></pre></div>
+<p>现在来创建一个驱动用的 slurm 脚本。这个测试只用几分钟的时间限额，这样 SLURM 会更快地让出资源：
+<div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH --job-name=test-nodes</span>
+<span class="c1">#SBATCH --nodes=4</span>
+<span class="c1">#SBATCH --ntasks-per-node=1          # 关键——每个节点每个分布式只运行 1 个任务！</span>
+<span class="c1">#SBATCH --cpus-per-task=96           # 每个任务的核数</span>
+<span class="c1">#SBATCH --gres=gpu:8                 # GPU 数量</span>
+<span class="c1">#SBATCH --time 0:05:00               # 最大执行时间 (HH:MM:SS)</span>
+<span class="c1">#SBATCH --output=%x-%j.out           # 输出文件名</span>
+<span class="c1">#SBATCH --partition=prod</span>
+
+<span class="nb">source</span><span class="w"> </span><span class="nv">$six_ALL_CCFRWORK</span>/start-prod<span class="w">   </span><span class="c1"># 请修改——特定站点的环境设置</span>
+srun<span class="w"> </span>--jobid<span class="w"> </span><span class="nv">$SLURM_JOBID</span><span class="w"> </span>./test-nodes.py
+</code></pre></div>
+运行之后检查日志，看看是否有节点报告了 <code>False</code>，那些就是你要排除的节点。</p>
+<p>现在既然找到了有故障的节点，就把它交给 <code>sbatch</code>：
+<div class="highlight"><pre><span></span><code>sbatch<span class="w"> </span>--exclude<span class="o">=</span>hostname1,hostname2<span class="w"> </span>...
+</code></pre></div>
+<code>sbatch</code> 就会在资源分配时排除这些坏节点。</p>
+<p>下面再介绍几种情况，以及在那些情况下如何找到坏节点：</p>
+<h3 id="broken-nccl">NCCL 故障<a class="headerlink" href="#broken-nccl" title="Permanent link">&para;</a></h3>
+<p>如果你要测试的东西需要分布式环境，事情就会更复杂一些。这里有一个测试 NCCL 能否工作的 slurm 脚本。它会设置好 NCCL 并检查 barrier（同步屏障）是否可用：</p>
+<p><div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH --job-name=test-nodes-nccl</span>
+<span class="c1">#SBATCH --nodes=2</span>
+<span class="c1">#SBATCH --ntasks-per-node=1          # 关键——每个节点每个分布式只运行 1 个任务！</span>
+<span class="c1">#SBATCH --cpus-per-task=96           # 每个任务的核数</span>
+<span class="c1">#SBATCH --gres=gpu:8                 # GPU 数量</span>
+<span class="c1">#SBATCH --time 0:05:00               # 最大执行时间 (HH:MM:SS)</span>
+<span class="c1">#SBATCH --output=%x-%j.out           # 输出文件名</span>
+<span class="c1">#SBATCH --partition=prod</span>
+
+<span class="nb">source</span><span class="w"> </span><span class="nv">$six_ALL_CCFRWORK</span>/start-prod<span class="w">   </span><span class="c1"># 请修改——特定站点的环境设置</span>
+
+<span class="nv">NNODES</span><span class="o">=</span><span class="m">2</span>
+
+<span class="nv">GPUS_PER_NODE</span><span class="o">=</span><span class="m">4</span>
+<span class="nv">MASTER_ADDR</span><span class="o">=</span><span class="k">$(</span>scontrol<span class="w"> </span>show<span class="w"> </span>hostnames<span class="w"> </span><span class="nv">$SLURM_JOB_NODELIST</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span>
+<span class="nv">MASTER_PORT</span><span class="o">=</span><span class="m">6000</span>
+
+<span class="nb">export</span><span class="w"> </span><span class="nv">LAUNCHER</span><span class="o">=</span><span class="s2">"python -u -m torch.distributed.run \</span>
+<span class="s2">    --nproc_per_node </span><span class="nv">$GPUS_PER_NODE</span><span class="s2"> \</span>
+<span class="s2">    --nnodes </span><span class="nv">$NNODES</span><span class="s2"> \</span>
+<span class="s2">    --master_addr </span><span class="nv">$MASTER_ADDR</span><span class="s2"> \</span>
+<span class="s2">    --master_port </span><span class="nv">$MASTER_PORT</span><span class="s2"> \</span>
+<span class="s2">    "</span>
+
+<span class="nb">export</span><span class="w"> </span><span class="nv">SCRIPT</span><span class="o">=</span>test-nodes-nccl.py
+
+cat<span class="w"> </span><span class="s">&lt;&lt; EOT &gt; $SCRIPT</span>
+<span class="s">#!/usr/bin/env python</span>
+<span class="s">import torch.distributed as dist</span>
+<span class="s">import torch</span>
+<span class="s">import socket</span>
+<span class="s">import os</span>
+<span class="s">import fcntl</span>
+
+<span class="s">def printflock(*msgs):</span>
+<span class="s">    """ 打印 """</span>
+<span class="s">    with open(__file__, "r") as fh:</span>
+<span class="s">        fcntl.flock(fh, fcntl.LOCK_EX)</span>
+<span class="s">        try:</span>
+<span class="s">            print(*msgs)</span>
+<span class="s">        finally:</span>
+<span class="s">            fcntl.flock(fh, fcntl.LOCK_UN)</span>
+
+<span class="s">local_rank = int(os.environ["LOCAL_RANK"])</span>
+<span class="s">torch.cuda.set_device(local_rank)</span>
+<span class="s">dist.init_process_group("nccl")</span>
+<span class="s">header = f"{socket.gethostname()}-{local_rank}"</span>
+<span class="s">try:</span>
+<span class="s">    dist.barrier()</span>
+<span class="s">    printflock(f"{header}: NCCL {torch.cuda.nccl.version()} is OK")</span>
+<span class="s">except:</span>
+<span class="s">    printflock(f"{header}: NCCL {torch.cuda.nccl.version()} is broken")</span>
+<span class="s">    raise</span>
+<span class="s">EOT</span>
+
+<span class="nb">echo</span><span class="w"> </span><span class="nv">$LAUNCHER</span><span class="w"> </span>--node_rank<span class="w"> </span><span class="nv">$SLURM_PROCID</span><span class="w"> </span><span class="nv">$SCRIPT</span>
+
+srun<span class="w"> </span>--jobid<span class="w"> </span><span class="nv">$SLURM_JOBID</span><span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">'$LAUNCHER --node_rank $SLURM_PROCID $SCRIPT'</span>
+</code></pre></div>
+这个脚本使用了 <code>printflock</code> 来解决多个进程打印输出交错的问题。</p>
+<h3 id="gpu-memory-check">GPU 显存检查<a class="headerlink" href="#gpu-memory-check" title="Permanent link">&para;</a></h3>
+<p>这个测试检查所分配节点上的每块 GPU 能否成功分配 77GiB 显存（例如用于测试 80GB 的 A100）（必须扣掉几 GiB 留给 cuda 内核）。</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
+<span class="n">hostname</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">()</span>
+
+<span class="n">local_rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"LOCAL_RANK"</span><span class="p">]);</span>
+
+<span class="n">gbs</span> <span class="o">=</span> <span class="mi">77</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">gbs</span><span class="o">*</span><span class="mi">2</span><span class="o">**</span><span class="mi">28</span><span class="p">))</span><span class="o">.</span><span class="n">cuda</span><span class="p">(</span><span class="n">local_rank</span><span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span> <span class="c1"># 先在 cpu 上分配，然后移到 gpu</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">local_rank</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">hostname</span><span class="si">}</span><span class="s2"> is OK"</span><span class="p">)</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">local_rank</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">hostname</span><span class="si">}</span><span class="s2"> failed to allocate </span><span class="si">{</span><span class="n">gbs</span><span class="si">}</span><span class="s2">GiB of accelerator memory"</span><span class="p">)</span>
+    <span class="k">pass</span>
+
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="broken-network">网络故障<a class="headerlink" href="#broken-network" title="Permanent link">&para;</a></h3>
+<p>节点的另一种问题是它的网络坏了，其他节点无法与它连接。</p>
+<p>你很可能会遇到类似这样的错误：
+<div class="highlight"><pre><span></span><code>work = default_pg.barrier(opts=opts)
+RuntimeError: NCCL error in: /opt/conda/conda-bld/pytorch_1616554793803/work/torch/lib/c10d/ProcessGroupNCCL.cpp:825, unhandled system error, NCCL version 2.7.8
+ncclSystemError: System call (socket, malloc, munmap, etc) failed.
+</code></pre></div>
+下面是调试这个问题的方法：</p>
+<ol>
+<li>
+<p>添加：
+    <div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">NCCL_DEBUG</span><span class="o">=</span>INFO
+</code></pre></div>
+    在 <code>srun</code> 命令之前加上它，然后重新运行你的 slurm 脚本。</p>
+</li>
+<li>
+<p>现在仔细研究日志。如果你发现：
+<div class="highlight"><pre><span></span><code>r11i6n2:486514:486651 [1] include/socket.h:403 NCCL WARN Connect to 10.148.3.247&lt;56821&gt; failed : Connection refused
+</code></pre></div>
+来看看是哪个节点拒绝接受连接。我们从上面的错误信息中拿到 IP 地址，并把它反向解析为名字：
+<div class="highlight"><pre><span></span><code>nslookup 10.148.3.247
+247.3.148.10.in-addr.arpa       name = r10i6n5.ib0.xa.idris.fr.
+</code></pre></div></p>
+</li>
+</ol>
+<p>在 <code>sbatch</code> 命令中加入 <code>--exclude=r10i6n5</code>，并向集群管理员报告这个有故障的节点。</p>
+<h3 id="run-py-spy-or-any-other-monitor-program-across-all-nodes">在所有节点上运行 py-spy 或其他监控程序<a class="headerlink" href="#run-py-spy-or-any-other-monitor-program-across-all-nodes" title="Permanent link">&para;</a></h3>
+<p>在处理进程挂起的问题时，下面介绍如何为每个进程自动记录 <code>py-spy</code> 跟踪信息。</p>
+<p>当然，同样的过程也可以用来在某个作业的所有节点上运行某条命令。也就是说，它可以用于在正常运行期间执行某些操作——例如通过 <code>nvidia-smi</code> 转储每个进程的显存使用情况，或者运行其他任何需要运行的程序。</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/prod/code/tr8b-104B/bigscience/train/tr11-200B-ml/
+
+salloc<span class="w"> </span>--partition<span class="o">=</span>prod<span class="w"> </span>--nodes<span class="o">=</span><span class="m">40</span><span class="w"> </span>--ntasks-per-node<span class="o">=</span><span class="m">1</span><span class="w"> </span>--cpus-per-task<span class="o">=</span><span class="m">96</span><span class="w"> </span>--gres<span class="o">=</span>gpu:8<span class="w"> </span>--time<span class="w"> </span><span class="m">20</span>:00:00
+
+bash<span class="w"> </span>200B-n40-bf16-mono.slurm
+</code></pre></div>
+<p>在另一个 shell 中获取上面这个 <code>salloc</code> 的 JOBID：
+<div class="highlight"><pre><span></span><code>squeue<span class="w"> </span>-u<span class="w"> </span><span class="sb">`</span>whoami<span class="sb">`</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">"%.16i %9P %26j %.8T %.10M %.8l %.6D %.20S %R"</span>
+</code></pre></div>
+按上面的结果调整 jobid 和节点数量：
+<div class="highlight"><pre><span></span><code>srun<span class="w"> </span>--jobid<span class="o">=</span><span class="m">2180718</span><span class="w"> </span>--gres<span class="o">=</span>gpu:0<span class="w"> </span>--nodes<span class="o">=</span><span class="m">40</span><span class="w"> </span>--tasks-per-node<span class="o">=</span><span class="m">1</span><span class="w"> </span>--output<span class="o">=</span>trace-%N.out<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s1">'ps aux | grep python | egrep -v "grep|srun" | grep `whoami` | awk "{print \$2}" | xargs -I {} py-spy dump --native --pid {}'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"failed"</span>
+</code></pre></div>
+不过 <code>--nodes=40</code> 多半是多余的，因为 <code>salloc</code> 已经知道节点数量了。</p>
+<p>现在所有 <code>py-spy</code> 跟踪信息都会写入 <code>cwd</code> 下的 <code>trace-$nodename.out</code> 文件中。</p>
+<p>关键在于要使用 <code>--gres=gpu:0</code>，否则第二个 <code>srun</code> 会一直阻塞，等待第一个 <code>srun</code> 释放 GPU。</p>
+<p>另外，这里的假设是：某个装有 <code>py-spy</code> 的 conda 环境已经在 <code>~/.bashrc</code> 中被激活了。如果你的环境还没有这样做，就在上面的命令中、<code>py-spy</code> 命令之前，加上加载该环境的指令——否则它会找不到 <code>py-spy</code>。</p>
+<p>别忘了在这个过程结束后手动释放资源分配。</p>
+<h2 id="crontab-emulation">Crontab 模拟<a class="headerlink" href="#crontab-emulation" title="Permanent link">&para;</a></h2>
+<p>crontab 是最重要的 Unix 工具之一，对于调度各种作业必不可少。然而 SLURM 环境中通常没有它，因此必须模拟它的功能。具体做法如下。</p>
+<p>为了这里的演示，我们将把 <code>$WORK/cron/</code> 用作基础目录，假设你已经导出了一个指向文件系统上某个位置的 <code>WORK</code> 环境变量——如果你使用 Bash，可以在 <code>~/.bash_profile</code> 里设置；如果使用的是别的 shell，就在对应的启动配置文件中设置。</p>
+<h3 id="1-a-self-perpetuating-scheduler-job">1. 自我延续的调度作业<a class="headerlink" href="#1-a-self-perpetuating-scheduler-job" title="Permanent link">&para;</a></h3>
+<p>我们将使用 <code>$WORK/cron/scheduler</code> 目录存放调度器作业，<code>$WORK/cron/cron.daily</code> 存放每日作业，<code>$WORK/cron/cron.hourly</code> 存放每小时作业：</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$WORK</span>/cron/scheduler
+$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$WORK</span>/cron/cron.daily
+$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$WORK</span>/cron/cron.hourly
+</code></pre></div>
+<p>现在把这两个 slurm 脚本复制到 <code>$WORK/cron/scheduler</code> 中：</p>
+<ul>
+<li><a href="cron-daily.slurm">cron-daily.slurm</a></li>
+<li><a href="cron-hourly.slurm">cron-hourly.slurm</a></li>
+</ul>
+<p>前提是先编辑好这两个脚本，使其符合你所在环境的账户和分区信息。</p>
+<p>现在你可以启动 crontab 调度作业了：</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span><span class="nv">$WORK</span>/cron/scheduler
+$<span class="w"> </span>sbatch<span class="w"> </span>cron-hourly.slurm
+$<span class="w"> </span>sbatch<span class="w"> </span>cron-daily.slurm
+</code></pre></div>
+<p>就这样，这些作业此后会自我延续（self-perpetuate），通常你不需要再管它们，除非发生了使 SLURM 丢失所有作业的事件。</p>
+<h3 id="2-daily-and-hourly-cronjobs">2. 每日与每小时的定时作业<a class="headerlink" href="#2-daily-and-hourly-cronjobs" title="Permanent link">&para;</a></h3>
+<p>现在，只要你想让某个作业每天运行一次，只需创建一个 slurm 作业并把它放进 <code>$WORK/cron/cron.daily</code> 目录即可。</p>
+<p>下面是一个示例作业，它每天运行一次，用 <code>updatedb</code> 重建 <code>$WORK</code> 的文件索引（在当前发行版上，这通常是 <code>plocate</code> 的 <code>updatedb</code>；较旧的系统用的是 <code>mlocate</code>）：
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span><span class="nv">$WORK</span>/cron/cron.daily/mlocate-update.slurm
+<span class="c1">#!/bin/bash</span>
+<span class="c1">#SBATCH --job-name=mlocate-update    # 作业名</span>
+<span class="c1">#SBATCH --ntasks=1                   # MP 任务数量</span>
+<span class="c1">#SBATCH --nodes=1</span>
+<span class="c1">#SBATCH --hint=nomultithread         # 我们得到的是物理核心而非逻辑核心</span>
+<span class="c1">#SBATCH --time=1:00:00               # 最大执行时间 (HH:MM:SS)</span>
+<span class="c1">#SBATCH --output=%x-%j.out           # 输出文件名</span>
+<span class="c1">#SBATCH --partition=PARTITION     # 请修改</span>
+<span class="c1">#SBATCH --account=GROUP@PARTITION # 请修改</span>
+
+<span class="nb">set</span><span class="w"> </span>-e
+date
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"updating file index db"</span>
+/usr/bin/updatedb<span class="w"> </span>-o<span class="w"> </span><span class="nv">$WORK</span>/lib/mlocate/work.db<span class="w"> </span>-U<span class="w"> </span><span class="nv">$WORK</span><span class="w"> </span>--require-visibility<span class="w"> </span><span class="m">0</span>
+</code></pre></div></p>
+<p>这会为 <code>$WORK</code> 下的文件建立索引，之后你可以用下面的命令快速查询：
+<div class="highlight"><pre><span></span><code>/usr/bin/locate -d $WORK/lib/mlocate/work.db pattern
+</code></pre></div></p>
+<p>要停止运行这个作业，只需把它移出 <code>$WORK/cron/cron.daily</code> 目录。</p>
+<p>同样的原则适用于放进 <code>$WORK/cron/cron.hourly</code> 目录的作业。它们适合用来每小时运行某些任务。</p>
+<p>请注意，这套 crontab 实现在时间精度上是近似的：由于 SLURM 调度中的各种延迟，它们只会大约每小时、每天运行一次。如果有必要，你可以重新改写这些脚本，要求 SLURM 在更精确的时间启动任务，但大多数时候，刚才介绍的方法就足够好了。</p>
+<p>此外，你还可以自己编写变体，以满足项目的特定需求，例如每 30 分钟或每 12 小时运行一次的作业。</p>
+<h3 id="3-cleanup">3. 清理<a class="headerlink" href="#3-cleanup" title="Permanent link">&para;</a></h3>
+<p>最后，由于每个 cron 启动作业都会留下一个日志文件（如果由于某种原因出了问题，这些日志反而很有用），你会想创建一个定时作业来清理这些日志。否则你可能会耗尽 inode——这些日志文件很小，但数量可能有几万个。</p>
+<p>你可以在每日作业中使用类似这样的命令。</p>
+<p><div class="highlight"><pre><span></span><code>find<span class="w"> </span><span class="nv">$WORK</span>/cron<span class="w"> </span>-name<span class="w"> </span><span class="s2">"*.out"</span><span class="w"> </span>-mtime<span class="w"> </span>+7<span class="w"> </span>-exec<span class="w"> </span>rm<span class="w"> </span>-f<span class="w"> </span><span class="o">{}</span><span class="w"> </span>+
+</code></pre></div>
+请注意，它被设置为只删除早于 7 天的文件，以防你需要用最新的日志做诊断。</p>
+<h3 id="nuances">注意事项<a class="headerlink" href="#nuances" title="Permanent link">&para;</a></h3>
+<p>调度器以启动 SLURM cron 调度作业的用户的 Unix 权限运行，该 cron 作业启动的所有其他 SLURM 脚本也是如此。</p>
+<h2 id="self-perpetuating-slurm-jobs">自我延续的 SLURM 作业<a class="headerlink" href="#self-perpetuating-slurm-jobs" title="Permanent link">&para;</a></h2>
+<p><a href="#1-a-self-perpetuating-scheduler-job">构建调度器</a>一节中用到的同一套做法，也可以用来创建独立运行的自我延续作业。</p>
+<p>例如：</p>
+<p><div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH --job-name=watchdog          # 作业名</span>
+<span class="c1">#SBATCH --ntasks=1                   # MP 任务数量</span>
+<span class="c1">#SBATCH --nodes=1</span>
+<span class="c1">#SBATCH --time=0:30:00               # 最大执行时间 (HH:MM:SS)</span>
+<span class="c1">#SBATCH --output=%x-%j.out           # 输出文件名</span>
+<span class="c1">#SBATCH --partition=PARTITION        # 请修改</span>
+
+<span class="c1"># 先确保在 1 小时后重启自身</span>
+<span class="nv">RUN_FREQUENCY_IN_HOURS</span><span class="o">=</span><span class="m">1</span>
+sbatch<span class="w"> </span>--begin<span class="o">=</span>now+<span class="si">${</span><span class="nv">RUN_FREQUENCY_IN_HOURS</span><span class="si">}</span>hour<span class="w"> </span>watchdog.slurm
+
+...<span class="w"> </span>在这里执行看门狗的工作<span class="w"> </span>...
+</code></pre></div>
+然后只启动它一次：
+<div class="highlight"><pre><span></span><code>sbatch<span class="w"> </span>watchdog.slurm
+</code></pre></div>
+这个作业随后会立刻把自己安排到启动时间之后 1 小时运行，然后执行正常的作业工作。无论作业的其余部分成功还是失败，它都会继续以大约每小时一次的频率重新调度自己。由于调度器启动作业的开销以及节点可用性问题，这个时间并不精确。但只要至少有一个空闲节点可用，并且作业本身能很快完成，那么以近似频率运行的要求就应该是够用的。</p>
+<p>由于大多数 SLURM 环境除了昂贵的 GPU 节点之外，还提供便宜得多的纯 CPU 节点，对于不需要 GPU 的作业，你应该选择纯 CPU 的 SLURM 分区。</p>
+<h2 id="overcoming-the-lack-of-group-slurm-job-ownership">克服 SLURM 作业缺少组所有权的问题<a class="headerlink" href="#overcoming-the-lack-of-group-slurm-job-ownership" title="Permanent link">&para;</a></h2>
+<p>SLURM 运行在 Unix 上，但令人意外的是，它的设计者没有把组所有权这一概念应用到 SLURM 作业上。所以，如果你的团队中某位成员启动了一个包含 10 个作业、每个运行 20 小时的作业数组，然后就度假去了——万一出了问题，除非你有 <code>sudo</code> 权限，否则现在你对这些作业无能为力，没法把它们停掉。</p>
+<p>我至今没有弄清楚为什么会这样，但到目前为止我们一直在使用一种终止开关（kill switch）的变通方案。你需要把它实现到自己的框架里。例如，可以看看它在 <a href="https://github.com/bigscience-workshop/Megatron-DeepSpeed/blob/e52bdabbde3c6895aceb76c1bced295c2646121f/megatron/training.py#L104">Megatron-DeepSpeed</a>（Meg-DS）中是如何实现的。程序会轮询一个在启动时就已配置好的文件系统路径，如果在其中发现了文件，就退出。</p>
+<p>因此，如果我们用 <code>--kill-switch-path $WORK/tmp/training17-kill-switch</code> 启动 Meg-DS，之后任何时候需要杀掉这个 SLURM 作业，只需简单地执行：</p>
+<p><div class="highlight"><pre><span></span><code>touch<span class="w"> </span><span class="nv">$WORK</span>/tmp/training17-kill-switch
+</code></pre></div>
+下一次程序检查这个文件时，它就会检测到这一事件并主动退出。如果你有一个作业数组，那就得等到每个作业都启动、检测到终止开关并退出为止。</p>
+<p>当然，在把作业都停下来之后，别忘了把这个文件删掉。
+<div class="highlight"><pre><span></span><code>rm<span class="w"> </span><span class="nv">$WORK</span>/tmp/training17-kill-switch
+</code></pre></div></p>
+<p>不过，这并不总能奏效。如果作业挂起了，它就永远不会走到检查终止开关的那一步，此时唯一的解决办法是联系系统管理员帮你杀掉这个作业。有时候，如果只是简单的挂起，pytorch 的分布式设置通常会在预设的 10 分钟超时时间之后自动退出，但这并不总是管用。</p>
+<h2 id="how-to-gracefully-exit-on-slurm-job-preemption">如何在 SLURM 作业被抢占时优雅退出<a class="headerlink" href="#how-to-gracefully-exit-on-slurm-job-preemption" title="Permanent link">&para;</a></h2>
+<p>优雅处理基于时间和基于 QoS 的 SLURM 抢占有好几种方法，这些方法在<a href="../../training/fault-tolerance/index.html#dealing-with-forced-job-preemption">处理强制作业抢占</a>一节中有详细讲解。</p>
+<h2 id="how-many-gpus-a-job-uses">一个作业用了多少块 GPU<a class="headerlink" href="#how-many-gpus-a-job-uses" title="Permanent link">&para;</a></h2>
+<p>要弄清一个已在运行的作业使用了多少块 GPU，可以解析 <code>show job -d</code> 输出中的 <code>JOB_GRES=gpu:</code> 条目。例如，如果作业是用下面的命令启动的：</p>
+<p><div class="highlight"><pre><span></span><code>srun<span class="w"> </span>--pty<span class="w"> </span>--partition<span class="o">=</span>dev<span class="w"> </span>--nodes<span class="o">=</span><span class="m">2</span><span class="w"> </span>--ntasks-per-node<span class="o">=</span><span class="m">1</span><span class="w"> </span>--gres<span class="o">=</span>gpu:8<span class="w"> </span>--time<span class="o">=</span><span class="m">8</span>:00:00<span class="w"> </span>bash
+</code></pre></div>
+也就是说我们分配了 16 块 GPU，现在可以通过下面的方式以编程方式把这个数字取回来：</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span><span class="nv">TOTAL_JOB_GPUS</span><span class="o">=</span><span class="k">$(</span>scontrol<span class="w"> </span>show<span class="w"> </span>job<span class="w"> </span>-d<span class="w"> </span><span class="nv">$SLURM_JOBID</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>perl<span class="w"> </span>-ne<span class="w"> </span><span class="s1">'m|JOB_GRES=gpu:(\d+)| &amp;&amp; print $1'</span><span class="k">)</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="nv">$TOTAL_JOB_GPUS</span>
+<span class="m">16</span>
+</code></pre></div>
+<p>如果运行命令的 shell 中没有设置 <code>$SLURM_JOBID</code>，就把它替换成 SLURM 作业 id（见 <a href="#show-jobs"><code>squeue</code></a>）。</p>
+<h2 id="how-long-did-the-job-take-to-run">作业运行了多长时间<a class="headerlink" href="#how-long-did-the-job-take-to-run" title="Permanent link">&para;</a></h2>
+<p>通常 <code>squeue</code> 会显示当前正在运行的作业已经运行了多久；而要查看一个作业结束时总共运行了多长时间，你需要知道它的作业 id，然后可以像这样查询：</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>sacct<span class="w"> </span>-j<span class="w"> </span><span class="m">22171</span><span class="w"> </span>--format<span class="o">=</span>JobID,JobName,State,Elapsed
+JobID<span class="w">           </span>JobName<span class="w">      </span>State<span class="w">    </span>Elapsed
+------------<span class="w"> </span>----------<span class="w"> </span>----------<span class="w"> </span>----------
+<span class="m">22171</span><span class="w">          </span>example<span class="w">   </span>COMPLETED<span class="w">   </span><span class="m">00</span>:01:49
+</code></pre></div>
+<p>由此我们知道这个作业在不到 2 分钟内就跑完了。</p>
+<h2 id="fairshare">FairShare<a class="headerlink" href="#fairshare" title="Permanent link">&para;</a></h2>
+<p>许多 SLURM 集群使用 FairShare 机制：某人使用集群越多，其运行作业获得的优先级就越低；如果集群启用了抢占，他们的作业也更可能被抢占。</p>
+<p>要查看你的 FairShare 分数，运行：
+<div class="highlight"><pre><span></span><code>sshare
+</code></pre></div></p>
+<p>示例：</p>
+<div class="highlight"><pre><span></span><code>Account                    User  RawShares  NormShares    RawUsage  EffectvUsage  FairShare
+-------------------- ---------- ---------- ----------- ----------- ------------- ----------
+root                                          0.000000   711506073      1.000000
+  all                                     1    0.500000   711506073      1.000000
+   all                      stas          1    0.022727    14106989      0.019827   0.288889
+</code></pre></div>
+<p>如果你的 FairShare 分数高于 0.5，说明你使用集群的量低于分配给你的份额；如果低于 0.5，说明你使用的量超过了分配给你的份额。</p>
+<p>随着时间的推移，这个分数会被衰减。所以如果你之前的分数很低，并且此后一直很少使用集群，那么你的分数会随时间上升。</p>
+<p>要查看某个特定用户的分数：
+<div class="highlight"><pre><span></span><code>sshare<span class="w"> </span>-u<span class="w"> </span>username
+</code></pre></div></p>
+<p>要查看所有人的分数，并按 FairShare 排序：
+<div class="highlight"><pre><span></span><code>sshare<span class="w"> </span>--all<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-nk7<span class="w"> </span>-r
+</code></pre></div></p>
+<p>这才是最重要的输出，因为只看你自己的分数本身并没有意义，重要的是你的分数相对于所有其他用户的高低。任何分数比你高的人，其作业都有更大的机会最先被调度到资源，其作业被抢占的可能性也更小。</p>
+<p>除了 FairShare，优先级通常基于多个指标的组合来配置，一般包括作业在队列中等待的时间、作业规模、服务质量（QOS）设置、分区的具体配置等。具体细节取决于你的系统管理员如何配置 slurm。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="admin.html" class="md-footer__link md-footer__link--prev" aria-label="上一页: SLURM 管理">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                SLURM 管理
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="performance.html" class="md-footer__link md-footer__link--next" aria-label="下一页: SLURM 性能">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                SLURM 性能
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

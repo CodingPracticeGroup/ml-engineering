@@ -1,0 +1,3408 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="《Machine Learning Engineering》(Stas Bekman) 简体中文翻译，面向计算机专业本科低年级读者">
+      
+      
+      
+        <link rel="canonical" href="https://codingpracticegroup.github.io/ml-engineering/courses/lesson-learned/index.html">
+      
+      
+        <link rel="prev" href="../../contributors.html">
+      
+      
+        <link rel="next" href="../../build/index.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>训练大语言模型的经验教训（一门课程） - 机器学习工程（ML Engineering）· 简体中文版</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#lessons-learned-from-training-llms-a-course" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../index.html" title="机器学习工程（ML Engineering）· 简体中文版" class="md-header__button md-logo" aria-label="机器学习工程（ML Engineering）· 简体中文版" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器学习工程（ML Engineering）· 简体中文版
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              训练大语言模型的经验教训（一门课程）
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="切换浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CodingPracticeGroup/ml-engineering" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../index.html" title="机器学习工程（ML Engineering）· 简体中文版" class="md-nav__button md-logo" aria-label="机器学习工程（ML Engineering）· 简体中文版" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器学习工程（ML Engineering）· 简体中文版
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CodingPracticeGroup/ml-engineering" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Machine Learning Engineering 开放书籍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    洞见：算力与云服务
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    洞见：算力与云服务
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../insights/ai-battlefield.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 战场上的工程实践——你需要了解的事
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../insights/how-to-choose-cloud-provider.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何挑选云服务商
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../insights/when-to-upgrade-gpus/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    升级 GPU 什么时候才值得？
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    计算硬件
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    计算硬件
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    计算
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    加速器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/benchmarks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    加速器基准测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/nvidia/debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排查 NVIDIA GPU 问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/amd/debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排查 AMD GPU 问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/accelerator/amd/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AMD GPU 性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/cpu/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CPU
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/cpu-memory/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CPU 内存
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    存储
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    存储
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../storage/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    存储：文件系统与 IO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    网络
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    节点间与节点内网络硬件
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/comms.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通信模式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/debug/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络调试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../network/benchmarks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络基准测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编排与调度
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    编排与调度
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编排
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    在 SLURM 环境中工作
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/admin.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLURM 管理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/users.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面向用户的 SLURM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLURM 性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/slurm/launchers/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用 SLURM 的单节点与多节点启动器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../orchestration/kubernetes/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kubernetes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    训练
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../model-parallelism/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型并行
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/model-parallelism/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型并行
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/performance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    软件调优以获得最佳性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/fault-tolerance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    故障容错
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/reproducibility/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    可复现性
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/instabilities/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    不稳定的避免、恢复与理解
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/instabilities/training-loss-patterns.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    理解训练损失模式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/checkpoints/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    检查点
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/hparams.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    选择训练超参数与模型初始化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/dtype.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    张量精度 / 数据类型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/emulate-multi-node.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    只用单个节点模拟多节点环境
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/re-train-hub-models.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用微调示例从头重新训练 HF Hub 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../training/datasets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    处理数据集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../inference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试与排障
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    调试与排障
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试与故障排查
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/pytorch.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试 PyTorch 程序
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/tools.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试工具
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/nccl-performance-debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NCCL：调试与性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/torch-distributed-hanging-solutions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    诊断多节点多 GPU Python 程序中的挂起与死锁
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/underflow_overflow.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    下溢与上溢检测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/make-tiny-models-tokenizers-datasets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用小型模型、分词器与数据集加快调试和开发速度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debug/tiny-scripts/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    脚本备份
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    测试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    测试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编写与运行测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    资源汇总
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    资源汇总
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resources/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    资源
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献者
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    贡献者
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributors.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献者
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程：设计并运行一次大模型训练
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程：设计并运行一次大模型训练
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练大语言模型的经验教训（一门课程）
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="index.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练大语言模型的经验教训（一门课程）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        章节
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-storage-and-file-systems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 存储与文件系统
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-network-and-interconnects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 网络与互联
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-compute-accelerators-and-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 计算、加速器与内存
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-training-performance-and-throughput" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 训练性能与吞吐量
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-dataloaders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 数据加载器
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-fault-tolerance-and-reliability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 故障容错与可靠性
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-training-stability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 训练稳定性
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-cloud-providers-and-procurement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 云服务商与采购
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-debugging-methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 调试方法论
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录：本书的构建方式
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    附录：本书的构建方式
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../build/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图书构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        章节
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-storage-and-file-systems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 存储与文件系统
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-network-and-interconnects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 网络与互联
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-compute-accelerators-and-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 计算、加速器与内存
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-training-performance-and-throughput" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 训练性能与吞吐量
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-dataloaders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 数据加载器
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-fault-tolerance-and-reliability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 故障容错与可靠性
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-training-stability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 训练稳定性
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-cloud-providers-and-procurement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 云服务商与采购
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-debugging-methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 调试方法论
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<p class="en-origin-link">📄 <a href="https://github.com/CodingPracticeGroup/ml-engineering/blob/master/courses/lesson-learned/README.md" target="_blank" rel="noopener">本页英文原文（GitHub master）</a></p><h1 id="lessons-learned-from-training-llms-a-course">训练大语言模型的经验教训（一门课程）<a class="headerlink" href="#lessons-learned-from-training-llms-a-course" title="Permanent link">&para;</a></h1>
+<p><img alt="机器学习工程——训练大语言模型的经验教训" src="lesson-learned-cover.png" /></p>
+<p>一份精心整理的真实“实战故事”及其解决办法的合集，基于 Stas Bekman 的两本开源书籍：</p>
+<ul>
+<li><a href="../../index.html">Machine Learning Engineering (MLE)</a></li>
+<li><a href="https://github.com/stas00/the-art-of-debugging">The Art of Debugging (AoD)</a></li>
+</ul>
+<p>下面每一条都是在实际大规模训练和运行大语言模型/图像模型过程中换来的、来之不易的经验教训，以及随之而来的硬件、存储、网络和调试方面的种种意外：</p>
+<ul>
+<li>BLOOM-176B（2022）</li>
+<li>IDEFICS-80B（2023）</li>
+<li>在 Contextual.AI 的生产级 RAG/RL 系统（2024）</li>
+<li>在 Snowflake 开展的各种 Arctic Training 开源工作（2025-2026）</li>
+</ul>
+<p>每条经验的加粗标题是入口，其下的支撑事实被拆分成便于快速扫读的要点列表，而不是连贯的段落，这样你可以迅速浏览“是什么/为什么/怎么做”，想深入了解时再点开链接看完整故事。</p>
+<p>这份材料是作为一门课程来设计的：读标题来定位自己感兴趣的领域，略读子要点了解背后的推理，如果还想要更多细节，顺着“延伸阅读”链接深入查看细节、脚本和基准测试。</p>
+<p>你可以把它当作自学课程，也可以自己拿去教别人！</p>
+<h2 id="chapters">章节<a class="headerlink" href="#chapters" title="Permanent link">&para;</a></h2>
+<!-- no toc -->
+<ol>
+<li><a href="#1-storage-and-file-systems">存储与文件系统</a></li>
+<li><a href="#2-network-and-interconnects">网络与互联</a></li>
+<li><a href="#3-compute-accelerators-and-memory">计算、加速器与内存</a></li>
+<li><a href="#4-training-performance-and-throughput">训练性能与吞吐量</a></li>
+<li><a href="#5-dataloaders">数据加载器</a></li>
+<li><a href="#6-fault-tolerance-and-reliability">故障容错与可靠性</a></li>
+<li><a href="#7-training-stability">训练稳定性</a></li>
+<li><a href="#8-cloud-providers-and-procurement">云服务商与采购</a></li>
+<li><a href="#9-debugging-methodology">调试方法论</a></li>
+</ol>
+<h2 id="1-storage-and-file-systems">1. 存储与文件系统<a class="headerlink" href="#1-storage-and-file-systems" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>1.1. <strong>快速并行存储是快速保存模型检查点（checkpoint）的决定性因素。</strong></p>
+<ul>
+<li>GPFS、WekaIO 这类分布式并行文件系统，允许数百到数千个客户端同时访问同一存储而不产生热点——这带来的差别是巨大的。</li>
+<li><strong>实例：</strong> 在 JeanZay HPC（2021 年），一次 2.3TB 的检查点由 384 个进程并行写入，仅耗时 40 秒，因为该集群在 NVMe 盘上运行 GPFS。</li>
+<li>“NVMe 上的 GPFS”与“普通云上的 NFS 挂载”之间的差距，按实际耗时（wall-clock time）计可以达到数倍之多。</li>
+<li>
+<p><strong>要点：</strong> 针对你自己的具体负载给你的具体文件系统跑基准测试，弄清其中的开销。</p>
+<p>📖 <a href="../../storage/index.html#which-file-system-to-choose">该选哪种文件系统</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>1.2. <strong>慢速共享存储会在不知不觉中扼杀开发者的生产力，而不仅仅是训练吞吐量。</strong></p>
+<ul>
+<li>在 GCP 的 Zonal FileStore（基于 NFS）上，一句简单的 <code>python -c "import torch"</code> 在无缓存时要花 20 秒（有缓存时约 2 秒），安装一个只含少量预编译软件包的 conda 环境可能要花 20-30 分钟。</li>
+<li>这种拖慢根本不会出现在训练吞吐量基准测试里，但它日复一日地消磨着每一位开发者，再乘以整个团队。</li>
+<li><strong>解决办法：</strong> 在对任何存储方案做出承诺之前，先跑一个“感知基准测试”（给 <code>import torch</code>、<code>conda create</code>、<code>git status</code>、<code>pytest --collect-only</code> 计时），并与本地 NVMe 基线对比。</li>
+<li>如果候选的共享文件系统只比你现有的快 2 倍，多半不值得切换——要争取达到比现状快 5-10 倍、接近本地 NVMe 速度的水平，它才能不再成为日常的烦恼来源。</li>
+<li>
+<p>开始使用 <code>uv</code>——比 <code>pip install</code> 快 5-50 倍。</p>
+<p>📖 <a href="../../storage/index.html#which-file-system-to-choose">该选哪种文件系统</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>1.3. <strong>Python 产生的数以万计的小文件，会在真正的磁盘空间耗尽之前先把 inode（索引节点）耗尽。</strong></p>
+<ul>
+<li>如果一个文件系统分区使用很大的块大小（例如 16MiB，为大文件优化的 GPFS 分区常见如此），而你的文件平均只有 16KiB，那么每个文件最多会浪费 1,024 倍的空间——更重要的是，消耗的是 inode 配额而不是字节配额。</li>
+<li>JeanZay HPC 上发生的正是这种情况：conda 每安装一个环境就会产生数万个约 4KiB 的小文件，于是团队在普通 GPFS 分区上不断耗尽 inode，最后不得不申请一个专门存放 conda 环境的分区。</li>
+<li><strong>解决办法：</strong> 至少保留两个调优方向不同的分区——一个用小的（4-8KiB）块大小，存放数百万个小文件（venv、包缓存）；另一个用大的（2-16MiB）块大小，存放少数巨型文件（检查点、数据集）。现代 GPFS 的子块（sub-block）机制通过把小文件打包在一起，也能起到帮助。</li>
+<li>
+<p>查看 <code>df -h</code> 时总要顺带检查 <code>df -i</code>，因为分区可能报告仍有大量剩余空间，实际上却已完全耗尽了可用的 inode。</p>
+<p>📖 <a href="../../storage/index.html#file-block-size">文件块大小</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>1.4. <strong>训练期间直接从云存储加载数据是痛苦的，应尽一切可能避免。</strong></p>
+<ul>
+<li>IDEFICS-80B 训练期间，本地磁盘空间放不下数 TB 的多模态数据集，团队不得不从云存储流式读取——为此花了好几周想让这个方案变得可靠，却始终没能真正做到。</li>
+<li><strong>核心问题：</strong> 当时的流式数据加载器（DataLoader）在恢复训练时不会保留 <code>DataSampler</code> 的随机数生成器（RNG）状态，于是每一轮崩溃-恢复要么跳过数据、要么重复数据——整个训练没有得到过一个完全干净、数据真正唯一的 epoch。</li>
+<li><strong>经验：</strong> 优先准备足够的本地磁盘用于数据加载，只把检查点异步卸载到云端（通过 crontab 或 SLURM 作业），并始终在本地保留最近几个检查点以便快速恢复。</li>
+<li>
+<p>如果必须从云端流式读取，要确保你的具体方案能够精确恢复——不丢失、不重复数据，也不需要在本机启动数量庞大的数据加载器工作进程。</p>
+<p>📖 <a href="../../storage/index.html#local-storage-beats-cloud-storage">本地存储优于云存储</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="2-network-and-interconnects">2. 网络与互联<a class="headerlink" href="#2-network-and-interconnects" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>2.1. <strong>在拿一个带宽数字与实测值比较之前，务必先确认它是单向还是双向（双工）的。</strong></p>
+<ul>
+<li>大多数基准测试工具报告的是单向带宽，而厂商宣传几乎总是倾向于给出双工数字，因为它大约大一倍，看起来更漂亮。</li>
+<li><strong>经验法则：</strong> 如果你的实测带宽约为标称规格的 40%，那个标称值很可能是双工的——把它折半，你的真实效率就是常见的 ~80%。</li>
+<li><strong>例子：</strong> 一台标称节点内 600GBps 的 A100 节点，实测 235GBps 看起来只有令人失望的 40% 效率，直到与正确的 300GBps 单向规格比较，才确认约为 ~80%。</li>
+<li>
+<p>同样的情况今天在 H200 上再次重演：NVLink 标称 900GBps（双工），而一次 all-reduce 基准测试达到 ~376GBps，对照 450GBps 的单向规格正好吻合。</p>
+<p>📖 <a href="../../network/index.html#unidirectional-vs-bidirectional-duplex">单向与双向（双工）</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>2.2. <strong>缓慢的节点间网络可能左右你整个训练框架的选择，而不仅仅是限制吞吐量上限。</strong></p>
+<ul>
+<li>在 JeanZay HPC，Omni-Path 互联只有 135Gbps。</li>
+<li>仅凭这一点，BLOOM-176B 团队就被迫选择 Megatron-DeepSpeed（张量并行 + 流水线并行，通过网络传输的数据少得多），而不是简单得多的 DeepSpeed ZeRO（后者要对优化器状态和梯度做分片，需要高得多的带宽）。</li>
+<li>一旦持续数月的训练已经开始，这类决定几乎不可能回头修改——必须在项目一开始就了解网络速度，并将其纳入并行策略的考量。</li>
+<li>
+<p>如果你被迫使用缓慢的节点间网络，优先选择只交换激活的并行策略（流水线/张量并行），而不是交换完整梯度和优化器状态的策略（ZeRO-DP/FSDP）。</p>
+<p>📖 <a href="../../network/index.html#omni-path">Omni-Path</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>2.3. <strong>有时 all-reduce 基准测试报告的数字似乎超出了物理链路的理论上限，而这并不是测量错误——是 SHARP 在起作用。</strong></p>
+<ul>
+<li>在一台 H100 节点上，节点内 NVLink 4.0 的 all-reduce 对 4GiB 负载报告了 480GBps——而单向规格“只有” 450GBps。</li>
+<li><strong>解释：</strong> NVIDIA 的 SHARP 协议让 NCCL 可以直接在网络交换机硬件上完成归约。一旦 NCCL 检测到 InfiniBand/NVSwitch 的 SHARP 支持，就会切换到 <code>NVLS</code> 算法，它只需要 <code>N+1</code> 次发送，而不是通常的 <code>2N</code> 次。</li>
+<li>这也意味着，标准的 <code>busbw</code> 计算（假设 <code>2N</code> 模型）在 <code>NVLS</code>/SHARP 启用后会低估真实效率——看起来“好得离谱”的数字是更聪明的算法在起作用，而不是测量出了错。</li>
+<li>要获得这种加速，参与集合通信（collective）的 GPU 需要超过 4 块，并且环境变量 <code>NCCL_NVLS_ENABLE</code> 未被禁用。</li>
+<li>
+<p>SHARP 只适用于 <code>all-reduce</code>。整节点的 <code>all-gather</code> 或 <code>reduce-scatter</code> 仍走环形路径，落在单向规格常规的 ~80% 水平。</p>
+<p>📖 <a href="../../network/index.html#sharp">SHARP</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>2.4. <strong>共享的节点间网络会让性能优化几乎无法进行，因为你分不清变化从何而来——是你自己的代码，还是“吵闹的邻居”（同网络上的其他用户作业）。</strong></p>
+<ul>
+<li>在 JeanZay HPC，BLOOM-176B 开始之前，完全相同的配置每一次运行都会产生明显不同的吞吐量，原因只是其他用户的作业以不可预知的强度共享同一个网络结构（fabric）。</li>
+<li>对认真的调优工作来说这是死胡同：如果两次运行之间环境噪声水平本身就有两位数的波动，你就无法把吞吐量变化归因于自己的改动。</li>
+<li><strong>解决办法：</strong> 在 BLOOM-176B 启动前不久，团队获准在（当时全新的）A100 上使用一个独占、隔离的 SLURM 分区，优化工作从此才变得可行。</li>
+<li>
+<p>如果你在做认真的预训练性能工作，务必在基准测试阶段要求一个专用、隔离的网络分区。</p>
+<p>📖 <a href="../../network/index.html#shared-internode-network">共享的节点间网络</a> + <a href="../../network/benchmarks/index.html#crucial-reproducibility-requirements">至关重要的可复现性要求</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="3-compute-accelerators-and-memory">3. 计算、加速器与内存<a class="headerlink" href="#3-compute-accelerators-and-memory" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>3.1. <strong>一致性（统一）内存硬件的行为确实难以预测，而解决办法是驱动层面的模式切换，不是改代码。</strong></p>
+<ul>
+<li>在 NVIDIA 的一致性内存平台（DGX Station、DGX Spark、GH200、GB300）上，当 CPU 内存耗尽时，Linux 可以透明地向 GPU 的 HBM 借用内存——但不能反向借用——而且 <code>nvidia-smi</code> 甚至可能不会报告这种借用。</li>
+<li>在 DGX Station 上为 Qwen3-32B 的后训练调优最大序列长度时（优化器状态被卸载到 CPU 内存），团队遇到了令人抓狂的 CPU-OOM 与 GPU-OOM 看似随机的交替出现，具体取决于当时恰好在运行哪些后台守护进程。</li>
+<li><strong>解决办法</strong>根本不是改代码，而是一个系统设置：通过 <code>/etc/modprobe.d/nvidia-openrm.conf</code> 并重启，把默认的 NUMA 一致性内存模式切换到 CDMM（“驱动”）模式，此后 CPU 与 GPU 内存就不再悄悄互相借用了。</li>
+<li>
+<p>如果你在一致性内存的 NVIDIA 硬件上看到无法解释、看似非确定性的 OOM，先去检查 <code>CoherentGPUMemoryMode</code> 设置，再去调试你的训练脚本。</p>
+<p>📖 <a href="../../debug/pytorch.html#overcoming-the-coherent-memory-uncertain-behavior">克服一致性内存的不确定行为</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>3.2. <strong>晦涩难懂的异步 CUDA 错误有时需要把“调试”开关永久打开，而这个开关有可能是免费的。</strong></p>
+<ul>
+<li>CUDA 默认是异步的，因此等到错误显现时，程序的上下文早已往前走了——产生的堆栈跟踪指不到任何有用的地方，或者 NCCL 的报错信息干脆拒绝给出堆栈跟踪。</li>
+<li><code>CUDA_LAUNCH_BLOCKING=1</code> 强制同步执行，通常要付出真实的性能代价，但它也意味着出错时你终于能得到一个准确的、贴合上下文的堆栈跟踪。</li>
+<li>BLOOM-176B 的<em>整个</em>训练过程都带着这个开关运行（因为否则训练会因为一个诊断不出原因的原因而挂起），出人意料的是，吞吐量没有受到任何可测量的影响。</li>
+<li>
+<p><strong>经验：</strong> 在没有针对你的具体情况做过测量之前，不要假定调试开关一定会带来性能税——它也可能就是问题的解药。</p>
+<p>📖 <a href="../../debug/pytorch.html#dealing-with-async-cuda-bugs">应对异步 CUDA 错误</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>3.3. <strong>内存剖析器能抓到代码审查中原本几乎看不见的真实内存泄漏。</strong></p>
+<ul>
+<li>在实现一个棘手的自定义 <code>TiledMLP</code> <code>torch.autograd.Function</code> 时，泄漏就藏在这份实现里，只有借 PyTorch 的内存剖析器（<code>torch.cuda.memory._record_memory_history()</code> + <code>_dump_snapshot()</code>，在 pytorch.org/memory_viz 查看）把它可视化之后才一目了然。</li>
+<li>大多数内存分配在图中表现为开始后又释放的条块。泄漏的张量则表现为连续的条块：从某一层的正向计算开始就再也没有结束，并且每一个后续层都如此重复。</li>
+<li>你可以点击任意条块，得到定位到确切分配代码行的 Python 级堆栈跟踪，几分钟内就能把“某处有泄漏”变成“某文件的第 X 行”。</li>
+<li>
+<p>除了找泄漏，同一个工具还非常适合直观比较“同一”算法两种实现随时间使用 GPU 显存方式的差异（例如普通的激活检查点，即激活重计算，与卸载到 CPU 的激活检查点）。</p>
+<p>📖 <a href="../../debug/pytorch.html#pytorch-memory-profiler">PyTorch 内存剖析器</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>3.4. <strong>策略性、精准放置的内存分配追踪也能发现框架的 bug，而不仅是你自己代码中的 bug。</strong></p>
+<ul>
+<li>能够明确控制<em>何时</em>采样 GPU/CPU 内存（在关键位置调用一次“立即采样”，通过一个源自 DeepSpeed <code>see_memory_usage</code> 的辅助函数实现），可以定位出被动剖析器可能漏掉的泄漏。</li>
+<li>借助这一技术，策略性追踪暴露出 PyTorch 自身 <code>all_gather_object</code> 内部的一个真实泄漏（后来已修复，同期还用同样的方法发现了其他几个 PyTorch 内部的泄漏）。</li>
+<li><strong>细节：</strong> 释放一个 Python 变量并不一定立刻释放张量，因为 Python 垃圾回收按自己的节奏运行。采样前先调用 <code>gc.collect()</code>，否则你会看到“仍然占用”的假象数字。</li>
+<li>
+<p>在生产环境中必须关闭这套工具，否则会带来糟糕的性能。</p>
+<p>📖 <a href="../../debug/pytorch.html#strategic-memory-allocation-tracing">策略性内存分配追踪</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>3.5. <strong>在某些硬件上，超线程（Hyper-Threading）可能严重破坏网络吞吐量，而唯一的判断方法就是在你的具体配置上把两种设置都实测一遍。</strong></p>
+<ul>
+<li>在 AWS p4 节点上，开启超线程（通常被视为“免费”的额外 CPU 并行能力）会让网络吞吐量降到关闭超线程时的大约四分之一。</li>
+<li>正是由于这一具体的实测结果，那套环境从此刻意保持超线程关闭，而不是沿用（默认往往开启超线程的）SLURM 配置。</li>
+<li>这件事在两个方向上都不普遍——在某些<em>其他</em>环境上恰恰相反，关闭超线程（<code>--hint=nomultithread</code>）才是拖累吞吐量的原因。</li>
+<li>
+<p><strong>唯一可靠的办法：</strong> 在你的具体硬件上，分别在开启和关闭超线程时对你的真实负载做网络吞吐量基准测试，凭实测结果择优。</p>
+<p>📖 <a href="../../orchestration/slurm/performance.html#to-enable-hyper-threads-or-not">要不要开启超线程</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="4-training-performance-and-throughput">4. 训练性能与吞吐量<a class="headerlink" href="#4-training-performance-and-throughput" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>4.1. <strong>规格表给出的是无法达到的数字——一定要在自己的硬件上对 matmul 跑基准测试。</strong></p>
+<ul>
+<li>理论峰值 TFLOPS 假设矩阵形状完美、没有内存搬运开销、加速时钟频率可以无限维持——这些在真实训练中一个都不会发生。</li>
+<li><strong>例子：</strong> NVIDIA B200 SXM 在 BF16 下可能只能从 2250TFLOPS 的理论规格达到 ~1745.0TFLOPS（约 77.6% 的效率），而这个数字本身还取决于软件栈版本和具体的矩阵形状。</li>
+<li>这正是“最大可达 matmul FLOPS”（Maximum Achievable Matmul FLOPS，MAMF）这一指标独立于理论规格而存在的原因：它用 <code>mamf-finder.py</code> 在你的真实硬件/软件上暴力搜索 matmul 形状得到，为你提供一个可以据此优化的现实上限。</li>
+<li>
+<p>一旦你实测的训练 TFLOPS 接近你自己的 MAMF 数字（而不是理论峰值），就该停止优化、开始训练了。</p>
+<p>📖 <a href="../../compute/accelerator/index.html#maximum-achievable-and-sustainable-matmul-flops-comparison-table">最大可达与可持续 matmul FLOPS 对比表</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>4.2. <strong>吞吐量优化是一段收益递减的旅程，而不是一个可以立刻抵达的固定终点。</strong></p>
+<ul>
+<li>在 BLOOM-176B 的调优阶段，团队起点低于 100TFLOPS，经过几周的努力，到训练启动时提高到 150TFLOPS——没有任何一招制敌的银弹，只是一点点小胜利的累积。</li>
+<li><strong>知道何时收手：</strong> 当相对于当时同类环境所能达到的水平已经没有有意义的提升空间时（2022 年 80GB A100 的上限约为 155TFLOPS），团队就刻意停止优化，开始训练。</li>
+<li>
+<p>在正式启动之前，为这个调优阶段明确预留日历时间——把它当成事后补充，就意味着要么以低效率浪费几个月的算力，要么为了把配置“打磨到完美”而无休止地推迟启动。</p>
+<p>📖 <a href="../../training/performance/index.html#tflops-as-a-performance-metric">把 TFLOPS 作为性能指标</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>4.3. <strong>全局批次大小（Global Batch Size，GBS）的爬坡远比直觉认为的重要，配合流水线并行时尤其如此。</strong></p>
+<ul>
+<li>对 BLOOM-176B 来说，起始值太小是灾难性的：GBS=16 实测只有 8TFLOPS，因为在流水线并行下，小的 GBS 会产生占比很大的“流水线气泡”，即空闲的 GPU 时间。</li>
+<li>团队改为从 GBS=192（73TFLOPS）起步，每处理约 977 万个样本就增加 16，最终达到 GBS=2048、150TFLOPS。</li>
+<li><strong>为什么要爬坡：</strong> 训练早期本质上是随机的，还享受不到大批次、高精炼批次的好处，所以在那个阶段，也没有必要为小批次付出流水线气泡的代价。</li>
+<li>
+<p>如果你使用流水线并行，在确定爬坡计划之前，先在几个候选的起始 GBS 值上实测你能达到的 TFLOPS。</p>
+<p>📖 <a href="../../training/hparams.html#global-batch-size-ramp-up">全局批次大小爬坡</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="5-dataloaders">5. 数据加载器<a class="headerlink" href="#5-dataloaders" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>5.1. <strong>同一进程中的多个数据加载器可能随机挂起，而解决办法也许干脆就是不用其中一个。</strong></p>
+<ul>
+<li>在 BLOOM-176B 期间，训练数据加载器在 <code>num_workers=2</code> 下运行正常，但同时在加一个评估数据加载器后开始出现随机挂起——这是一类已知的、长期未解决的 PyTorch 多 worker 数据加载器 bug。</li>
+<li><strong>解决办法：</strong> 专门把评估加载器的 <code>num_workers</code> 设为 0（由于评估运行的频率低得多，可以接受更慢的阻塞式 IO），并最终完全去掉训练中的评估，改为在已保存的检查点上做异步的 lm-harness 风格评估。</li>
+<li>
+<p><strong>额外收获：</strong> 去掉循环内的评估还让主训练循环变快了，因为它再也不用和第二个数据加载器共享任何资源。</p>
+<p>📖 <a href="../../training/performance/index.html#asynchronous-dataloader">异步数据加载器</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>5.2. <strong>如果每个 worker 的内存占用很高而 CPU 内存有限，流式数据加载器会悄悄成为你的硬性瓶颈。</strong></p>
+<ul>
+<li>在 IDEFICS-80B 训练期间，多模态数据集的流式数据加载器每个 worker 都消耗巨大且不断尖峰的内存，而每台节点只有 ~1TiB CPU 内存，团队无法启动足够多的 worker 来喂饱流水线。</li>
+<li>与 GPU 显存瓶颈（通常会立刻抛出明确错误）不同，供给不足的数据加载器只会悄悄地把吞吐量压在加速卡能力之下，不一定让任何东西崩溃。</li>
+<li>当时没有时间去工程化一个更好的方案，于是团队就接受这个受数据加载器限制的上限，跑完了整个训练。</li>
+<li>
+<p>如果你使用多模态或其他内存需求大的流式流水线，要为数据加载器 worker 仔细规划 CPU 内存余量，就像你为模型仔细规划 GPU 显存一样。</p>
+<p>📖 <a href="../../training/performance/index.html#asynchronous-dataloader">异步数据加载器</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="6-fault-tolerance-and-reliability">6. 故障容错与可靠性<a class="headerlink" href="#6-fault-tolerance-and-reliability" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>6.1. <strong>警惕刚出厂的新 GPU：新一批加速卡常常有 3-10% 的故障率，而对一个全新世代的 GPU 来说，最早出厂的那些更严重。</strong></p>
+<ul>
+<li>这是一个众所周知的规律，因此才有“老化测试（burn-in）”这类做法，在硬件到达客户手中之前把它拦下来：OEM 通常会做 3-4 周的老化测试，云服务商随后再做 2-3 天的验收测试——尽管并非每家服务商都做得严格（或者说明他们是否做过）。</li>
+<li><strong>标准应对措施：</strong> 规划备用/冗余节点（多出 5-10% 不算过分），并确保你的调度器无需人工干预就能自动隔离（drain）并替换故障节点。</li>
+<li>一旦你花了几周时间从坏加速卡中筛出好的，就要坚持要求<strong>固定</strong>分配，让那些好节点在重启后仍归你使用，而不是回到共享池中。</li>
+<li>
+<p>值得明确询问任何云服务商：你具体使用的节点在你接手之前做了多长时间、多严格的老化测试——只说“我们做过老化测试”而不给时长，不是有用的回答。</p>
+<p>📖 <a href="../../training/fault-tolerance/index.html#always-plan-to-have-more-nodes-than-needed">永远要规划比需求更多的节点</a> + <a href="../../insights/how-to-choose-cloud-provider.html#accelerators-need-to-be-burned-in">加速卡需要做老化测试</a> + <a href="../../insights/how-to-choose-cloud-provider.html#ensure-you-keep-your-good-accelerators-on-reboot">确保重启后仍保有你的好加速卡</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>6.2. <strong>检查点开销与你的 IO 速度成反比。</strong></p>
+<ul>
+<li>BLOOM-176B 的保存检查点很快：2.3TB 只要 40 秒，在约 3 个月的训练中每 ~3 小时保存一次——大约 720 个检查点，总共只有 ~8 小时开销，占实际耗时的比例仅为 ~0.37%。</li>
+<li>同样的保存频率，若 IO 慢 5 倍（高级与标准云存储层级之间的常见差距），开销就会膨胀到约占训练总时长的 2%——在大规模训练中这是一笔确实可观的成本。</li>
+<li><strong>算术：</strong> 实测一次保存的耗时，乘以你打算保存的次数，再把总和与预期的训练总时长做比较。</li>
+<li>
+<p>如果必须把检查点从节点卸载到云端，务必在本地保留最近两个检查点以便快速恢复，因为最新的那一个可能因保存中途崩溃而损坏。</p>
+<p>📖 <a href="../../training/fault-tolerance/index.html#frequent-checkpoint-saving">频繁保存检查点</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>6.3. <strong>做一个终止开关（kill-switch），因为 SLURM 没有“作业组所有权”的概念，这在实践中是一个真实的运维问题。</strong></p>
+<ul>
+<li>在 HPC 环境中，如果同事启动了一个长作业（或一个 SLURM 作业数组）就去睡觉了，没有 <code>sudo</code> 权限你根本无法停止或修改它——SLURM 的权限模型按用户划分，而不是按团队。</li>
+<li><strong>BLOOM-176B 的办法：</strong> 一个轮询文件的终止开关。训练循环在每次新的迭代开始前检查一个特定文件是否存在，若存在就保存一个检查点并干净地退出，从而让<em>任何</em>团队成员都能介入。</li>
+<li>在 <code>main()</code> 的最开头再加一次轮询，意味着睡觉同事留下的排队长作业数组可以几乎瞬间被“烧穿”，而不是每个作业都先跑满各自的完整时长。</li>
+<li>
+<p>代码量很小，带来的运行安全性却很大——值得从第一天起就内置到任何共享的多用户训练环境中。</p>
+<p>📖 <a href="../../training/fault-tolerance/index.html#kill-switch">终止开关</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>6.4. <strong>要看着那些“看守”：真正能抓住“训练悄悄停了却没人发现”的，是一个定时运行的作业状态看门狗。</strong></p>
+<ul>
+<li>在 BLOOM-176B 期间，一个 <code>slurm-status.py</code> 脚本大约每小时运行一次（通过 SLURM 上的 crontab 模拟实现，因为那里通常没有真正的 <code>crontab</code>），检查指定作业是在运行、或至少还在队列中。</li>
+<li>如果两个条件都不满足，它就发送告警邮件，并把这次检查写入主训练日志以留下记录。</li>
+<li>运行它的成本几乎为零，却能拦住一整类代价高昂的故障（算力被悄悄闲置几小时或几天），否则这类问题只有人碰巧手动检查时才会暴露。</li>
+<li>
+<p><strong>原则：</strong> 不要只构建训练循环——还要构建看守训练循环的那个东西。</p>
+<p>📖 <a href="../../training/fault-tolerance/index.html#is-job-running-watchdog">作业是否在运行：看门狗</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>6.5. <strong>积极地监控磁盘用量（以及 inode 用量），因为大量写检查点的训练消耗存储的速度远比直觉快。</strong></p>
+<ul>
+<li>BLOOM-176B 保存检查点<em>每天</em>消耗约 18.4TB 磁盘，在还有其他作业也在写数据的共享集群上，这种消耗速度可以很快烧光一份“应该绰绰有余”的配额。</li>
+<li><code>fs-watchdog.py</code> 工具同时监控每个相关分区的原始磁盘使用百分比<em>和</em> inode 用量，因为这是“空间”耗尽的两条彼此独立的途径。</li>
+<li>告警阈值需要按分区分别调优，而不是设成一个一刀切的百分比——重要的是把百分比换算成“按我目前每天的消耗速度还能撑几天”。</li>
+<li>
+<p>这就是把“凌晨 3 点磁盘满了，训练废了”变成“三天前就收到了邮件，及时扩充了存储”的关键。</p>
+<p>📖 <a href="../../training/fault-tolerance/index.html#low-disk-space-alerts">磁盘空间不足告警</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>6.6. <strong>在某些分布式文件系统上，80% 可能就是新的 100%，所以 <code>df</code> 显示还有剩余空间并不是可靠的安全保证。</strong></p>
+<ul>
+<li>分布式存储由许多物理磁盘组成（每块通常只有 0.3-2TB）；如果重平衡做得不够频繁，任何单块磁盘都可能被写满到 100% 并拒绝写入，尽管从汇总的 <code>df</code> 来看使用率还“舒适地”停在 80%。</li>
+<li>IDEFICS-80B 训练期间遇到的正是这种故障模式，在那套文件系统上，80% 真的成了实际的上限。</li>
+<li>这因技术而异：Lustre 已知有这个问题（80% 才算可靠），而 GPFS 服务商声称他们没有。</li>
+<li>
+<p><strong>稳妥做法：</strong> 询问你的存储服务商，他们认为名义容量中可靠可用的百分比是多少，并把这个真实上限纳入资源规划。</p>
+<p>📖 <a href="../../training/fault-tolerance/index.html#low-disk-space-alerts">磁盘空间不足告警</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>6.7. <strong>有时正确的工程决策是绕过泄漏，而不是把它追到根因，尤其是在时间紧迫的时候。</strong></p>
+<ul>
+<li>在 IDEFICS-80B 期间，一个缓慢的 CPU 内存泄漏要花好几天才积累到 OOM 崩溃——这种时间尺度让定位根因的迭代慢得令人痛苦。</li>
+<li>团队没有停下训练去追查源头，而是构建了一个循环内的看门狗，监控常驻内存，一旦越过阈值就主动退出，让下一个排队的作业在内存已回收的状态下恢复。</li>
+<li>
+<p><strong>具体模式：</strong> 每次迭代检查一次 <code>psutil.virtual_memory().percent</code>（或在 <code>gc.collect()</code> + <code>torch.cuda.empty_cache()</code> 之后用 <code>torch.cuda.mem_get_info()</code> 检查 GPU 侧的对应值），越过阈值就提前退出——这是花小钱买保险，不管你当前是否怀疑有泄漏，都值得加上。</p>
+<p>📖 <a href="../../training/fault-tolerance/index.html#dealing-with-slow-memory-leaks">应对缓慢的内存泄漏</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>6.8. <strong>优雅地处理被强制抢占：确切知道你的程序“保存并退出”需要多少时间余量，并把这个数字提前告诉它。</strong></p>
+<ul>
+<li>共享 HPC 集群上的 SLURM 作业有硬性时限（常见的是约 20 小时，尽管 BLOOM-176B 的作业最长跑到 100 小时），如果任由作业被杀掉，就会浪费自上一个检查点以来跑的步数。</li>
+<li><strong>BLOOM-176B 的方案 A</strong>（通过 <code>--exit-duration-in-mins</code>）：在启动时明确告诉程序它还有多少分钟。它启动一个内部计时器，并在每次迭代开始前检查（通过一个在所有 rank 之间由 <code>all_reduce</code> 同步的标志）时间预算是否已超——若已超，就在 SLURM 硬杀之前保存并干净退出。</li>
+<li><strong>预算定多大：</strong> 知道一次迭代耗时多久、保存一次检查点耗时多久，把两者相加再翻倍作为安全余量——提前退出不损失什么，退出晚了则赔掉整个检查点。</li>
+<li>
+<p><strong>方案 B：</strong> 基于信号的方法（<code>--signal=B:USR1@&lt;seconds&gt;</code>，直接捕获信号，或在使用 <code>torchrun</code>/<code>accelerate</code>/<code>deepspeed</code> 时通过启动器转发信号），适用于无法事先干净地算出固定时间预算的情况。</p>
+<p>📖 <a href="../../training/fault-tolerance/index.html#approach-a-tell-the-program-at-launch-time-when-it-should-start-the-exiting-process">方案 A：在启动时告诉程序何时开始退出</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="7-training-stability">7. 训练稳定性<a class="headerlink" href="#7-training-stability" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>7.1. <strong>初始化 std 对稳定性的影响大得惊人，取值不当可能让一个大模型干脆挺不过最初的几千个迭代。</strong></p>
+<ul>
+<li>在 BLOOM 之前的 104B 实验中，团队始终无法突破训练早期阶段，直到他们意识到当时 Megatron-LM 默认的 <code>--init-method-std</code> 0.02 对那个隐藏层尺寸（hidden size）的模型来说大得太多。</li>
+<li>团队考虑了两个已发表的公式：“Transformers without Tears”（<code>sqrt(2/(NHIDDEN*5))</code>）和 530B 论文的公式（<code>sqrt(1/(NHIDDEN*3))</code>）——团队刻意选择更小的那个（530B）取值，因为它更保守。</li>
+<li>对 BLOOM-176B 的 <code>NHIDDEN=14336</code>，该公式给出 <code>std=0.00482</code>——一个微小、容易写错的数字，也正是 176B 训练从未遭受完全发散的关键原因之一。</li>
+<li>
+<p><strong>经验：</strong> 初始化 std 应当按已发表的公式随隐藏层尺寸缩放，而不是作为固定常数从小模型的配置里照抄过来。</p>
+<p>📖 <a href="../../training/instabilities/index.html#std-init">初始化 STD</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>7.2. <strong>从失败的训练中学习，而不是直接放弃它：BLOOM 之前 104B 实验的反复发散，直接催生了让 BLOOM-176B 成功的那套配方。</strong></p>
+<ul>
+<li>那些 104B 的尝试总是在早期就发散，事后分析指向两个嫌疑对象：fp16（动态范围更窄，容易上溢）以及包含大量未经清洗的网页抓取垃圾的训练数据。</li>
+<li>对于 BLOOM-176B，团队一次改了三件事：从 fp16 切换到 bf16、使用干净得多的数据、加入一个嵌入层 LayerNorm（对嵌入输出做层归一化）。这套组合“造成了决定性的差别”，得到一条几乎完全平滑的损失曲线（一次尖峰，200 步内恢复）。</li>
+<li>
+<p>重点不只是“用 bf16”——一次真正失败了数月之久的实验，只要认真分析而不是弃之不顾，就直接产出了下一次更大尝试的修复方案。</p>
+<p>📖 <a href="../../training/instabilities/training-loss-patterns.html#a-very-failed-training">一次极其失败的训练</a></p>
+<h2 id="8-cloud-providers-and-procurement">8. 云服务商与采购<a class="headerlink" href="#8-cloud-providers-and-procurement" title="Permanent link">&para;</a></h2>
+</li>
+</ul>
+</li>
+<li>
+<p>8.1. <strong>一通电话上到场的支持人员数量多，并不等于真正的支持，这一区别值得明确写进合同里谈下来。</strong></p>
+<ul>
+<li>"我们会尽力"这种模式，往往意味着十几个人参加问题升级会议，却都没有真正解决该问题的能力——可能要几周甚至几个月（有私人关系会快一些）才能触达真正关键的两个人：一位产品经理、一位负责该问题的工程师。</li>
+<li>由于客户在法律上有义务持续付费，而且通常无法单方面解除合同，"尽力而为"这种承诺是不对等的——除非合同中针对每个关键组件都规定了具体的、可量化的交付指标。</li>
+<li><strong>最值得谈下来的补救条款：</strong>在约定的问题修复之前暂停付款义务——这是唯一能真正给对方创造动力、优先去修复问题的杠杆。</li>
+<li>
+<p>这一点要在<em>签约之前</em>谈——事后再谈基本没有任何筹码。</p>
+<p>📖 <a href="../../insights/how-to-choose-cloud-provider.html#we-will-do-our-best-clause">"我们会尽力"条款</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>8.2. <strong>出故障的绝大多数是加速卡（accelerator）——集群上约 95% 的硬件故障是加速卡本身造成的，而不是 CPU、存储或网络设备。</strong></p>
+<ul>
+<li>这一数字应当直接影响故障容错（fault tolerance）方面的规划：在存储/网络的韧性上与在 GPU 故障容错上投入同等的工程精力并不划算。</li>
+<li><strong>实际做法：</strong>建立一条快速的、最好是完全自动化的更换通道（通过 API，而不是提交支持工单），并明确询问服务商保留多少备机、承诺多快更换故障设备。</li>
+<li>由于"即时更换"几乎从未真正可得，标准的缓解措施是花钱购买比实际需要多约 10% 的节点，多出来的节点可以用于日常开发工作，并在生产节点出故障时充当即时替补。</li>
+<li>
+<p>这种超量配置（overprovisioning）确实要花钱，但与动辄几百块 GPU 的作业停下来干等一张支持工单相比，这笔开销是便宜的。</p>
+<p>📖 <a href="../../insights/how-to-choose-cloud-provider.html#dealing-with-accelerator-failures">如何应对加速卡故障</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>8.3. <strong>网络软件可能悄悄占用卖给你、你正在付费的那部分加速卡显存，而且事先没有人会告诉你。</strong></p>
+<ul>
+<li>在某个云上，还没等任何用户作业开始，服务商的网络软件就已经占用了<em>每块</em> GPU 显存中的约 5GiB——这是签约之后才发现的，销售阶段并未披露。</li>
+<li>随着加速卡显存越来越大（H200 有 141GiB，B200 可用 180GiB），固定的 5GiB 开销所占比例越来越小，但在 80GiB 的 H100 上，这是一个可观的比例，足以决定某个批次大小是放得下还是会 OOM。</li>
+<li>
+<p><strong>可执行的措施：</strong>在签约之前问清楚服务商的软件栈到底保留了多少 GPU 显存、实际可用的是多少，并让这个数字以书面形式确认。</p>
+<p>📖 <a href="../../insights/how-to-choose-cloud-provider.html#does-the-network-steal-from-the-accelerator-memory">网络会占用加速卡显存吗？</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>8.4. <strong>服务商的软件栈可能把你困在陈旧、不再受支持的操作系统版本上，原因仅仅是他们自己的内部工具还没跟上。</strong></p>
+<ul>
+<li>不止一次，服务商要求的驱动/编排/监控软件栈根本不支持某个较旧版本之后的任何 Ubuntu 版本，导致在一套现代机器学习栈下面被迫运行一个过时的操作系统。</li>
+<li>评估阶段很容易忽略这一点（没有人会演示"我能运行哪个 Ubuntu 版本"），但之后会变成实实在在的阻力：安全补丁、内核特性、驱动程序以及某些机器学习框架的依赖，都可能默认需要更新的基础操作系统。</li>
+<li>
+<p><strong>缓解措施：</strong>在评估阶段（而不是签约之后）就问清楚支持并要求哪些操作系统/软件版本，并让对方承诺多快支持更新的版本。</p>
+<p>📖 <a href="../../insights/how-to-choose-cloud-provider.html#up-to-date-softwareos-versions">最新的软件/操作系统版本</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="9-debugging-methodology">9. 调试方法论<a class="headerlink" href="#9-debugging-methodology" title="Permanent link">&para;</a></h2>
+<p>以下内容引自 <a href="https://github.com/stas00/the-art-of-debugging">The Art of Debugging</a>：</p>
+<ul>
+<li>
+<p>9.1. <strong>把出错的 import 或组件单独抽成一条一行命令，而不是在一个庞大、启动缓慢的程序内部调试它。</strong></p>
+<ul>
+<li>如果一个大程序在启动期间失败（例如 <code>import torch</code> 失败，或加载模型/分词器/配置因为缺少 HF 认证令牌而失败），就恰好把那一步操作抽出来，做成一条独立的一行命令，直接在其中复现问题。</li>
+<li>这一点很重要，因为快速的调试循环和足够小的复现载荷是成功调试最重要的两个前提——每次尝试要等十分钟、试三十次，你会完全记不清自己到底验证过哪些假设。</li>
+<li>一行命令，比如 <code>python -c "import torch"</code>，还具有原子性（可以在 shell 历史中搜索），可以直接复制粘贴到远程机器上运行，也容易整理成一个包含各种可复用变体的文件。</li>
+<li>
+<p>同样的技巧也可以用来在其他开发工作进行的同时预下载/缓存大模型或数据集：<code>python -c 'import sys; from transformers import AutoTokenizer; AutoTokenizer.from_pretrained(sys.argv[1])' t5-small</code></p>
+<p>📖 <a href="https://github.com/stas00/the-art-of-debugging/blob/master/methodology/README.md#the-power-of-one-liner-programs">一行命令的威力</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>9.2. <strong>用二分法（bisect）找出恰好引入问题的那次提交，而不是用眼睛手动翻检几百次提交。</strong></p>
+<ul>
+<li>常见场景：原本锁定在某个已知可用的发布版本上，为了一个新特性升级到最前沿的 <code>main</code> 分支，然后中间几百次提交里的某处出了问题。</li>
+<li><code>git bisect</code> 做的是经典的二分查找：给它一个已知可用的提交和一个已知有问题的提交，测试中间点，标记 <code>good</code>/<code>bad</code>，然后重复——1,024 个候选提交只需大约 10 轮测试就能收敛。</li>
+<li>复杂情况也有标准处理方式：对无法测试的提交使用 <code>git bisect skip</code>；当要找的是修复某问题的提交、而不是引入破坏的提交时，使用自定义术语（<code>--term-new=fixed --term-old=broken</code>）。</li>
+<li>
+<p>一旦收敛，第一个坏提交对应的 GitHub 页面几乎总是链接到引入它的那个 PR——马上就能到一个知情的地方去求助。</p>
+<p>📖 <a href="https://github.com/stas00/the-art-of-debugging/blob/master/methodology/README.md#finding-a-breaking-commit-by-bisecting-revisions">通过二分版本查找引入破坏的提交</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>9.3. <strong>从核心转储文件（core file）中获取栈回溯（backtrace），把一大段毫无用处的跟踪信息变成确切、可操作的代码行。</strong></p>
+<ul>
+<li>当编译型扩展（CUDA 内核、NCCL、任何底层是 C/C++ 的库）发生段错误（segfault）时，Python 根本给不出有意义的异常——你要么什么都拿不到，要么只有一段读不懂的原生转储。</li>
+<li><strong>解决办法：</strong>执行 <code>gdb -c /path/to/core /path/to/program</code>，然后输入 <code>bt</code>，它会遍历崩溃那一刻的调用栈，并给出确切的源代码行。<code>bt full</code> 还会额外显示局部变量的值（例如某个指针显示为 <code>0x0</code>，说明它在未初始化的情况下就被解引用了）。</li>
+<li>对于多线程程序（基本上所有正经的 PyTorch/CUDA 程序都是），<code>thread apply all bt</code> 会显示所有线程的栈，因为真正的根因有时并不在崩溃的那个线程里，而在另一个线程中。</li>
+<li>
+<p>PyTorch 真实崩溃报告的根因定位正是这样做的：把一大段原生转储信息变成一行可操作的信息。</p>
+<p>📖 <a href="https://github.com/stas00/the-art-of-debugging/blob/master/compiled-programs/README.md#get-the-backtrace-from-the-core-file">从核心转储文件获取栈回溯</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>9.4. <strong>直接对活着但已挂起的进程取栈回溯，而不是等它自己崩溃或超时。</strong></p>
+<ul>
+<li>有时问题是死锁而不是段错误——进程还活着，但始终没有任何进展，因此不会发生能触发核心转储的崩溃事件。</li>
+<li><code>gdb --pid=&lt;pid&gt;</code> 会附加到一个已在运行的进程上，而不必重启它，<code>thread apply all bt</code> 会显示每个线程正在做什么——曾经有一起真实的 PyTorch 死锁就是这样诊断出来的。</li>
+<li>如果你想保留现场以便稍后分析（或者立即释放资源），可以用 <code>gcore &lt;pid&gt;</code> 或 <code>kill -ABRT &lt;pid&gt;</code> 强制生成核心转储，不过这两种做法也都会终止该进程。</li>
+<li>这种"实时附加"技巧用于空转或完全挂起的进程；对于已经崩溃的进程，则使用上面介绍的核心转储文件技巧。</li>
+<li>
+<p>如果它是在 Python 内部挂起的，<code>py-spy</code> 就是救命稻草！</p>
+<p>📖 <a href="https://github.com/stas00/the-art-of-debugging/blob/master/compiled-programs/README.md#get-the-backtrace-from-the-still-running-process">从仍在运行的进程获取栈回溯</a> + <a href="https://github.com/stas00/the-art-of-debugging/tree/master/pytorch#py-spy">py-spy</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>9.5. <strong>直接在 gdb 下运行不稳定或会段错误的测试，而不是盲目地设法复现崩溃。</strong></p>
+<ul>
+<li>对一个间歇性发生段错误的 <code>pytest</code> 测试，从一开始就在 gdb 下启动整个调用（<code>gdb -ex r --args python -m pytest -sv tests/test_failing.py</code>），而不是事后另起炉灶设法抓住它。</li>
+<li>当它发生段错误时，gdb 恰好会在那个时刻把你带回它的提示符。<code>bt</code>（或 <code>bt full</code>）的用法与核心转储文件的情况完全相同，之后如果需要，可以用 <code>c</code> 继续执行。</li>
+<li>这完全绕开了"可我自己单独复现的时候它又没崩"这种令人抓狂的局面。</li>
+<li>
+<p>与上面两种栈回溯技巧结合起来，据信足以诊断机器学习代码库中现实世界里约 95% 的原生层崩溃。</p>
+<p>📖 <a href="https://github.com/stas00/the-art-of-debugging/blob/master/compiled-programs/README.md#run-the-program-under-gdb">在 gdb 下运行程序</a></p>
+</li>
+</ul>
+</li>
+<li>
+<p>9.6. <strong>符号缺失往往不是神秘的运行时 bug，而是链接期或库版本的问题——用 <code>nm</code> 就能实际核实里面到底有什么。</strong></p>
+<ul>
+<li>运行时出现 <code>undefined symbol: util_b</code>，尽管这个函数就在你的代码库里，这种情况往往是由加载了错误版本的共享库导致的（例如 <code>LD_LIBRARY_PATH</code> 指向了一个旧的构建产物）。</li>
+<li><code>nm ./your_program | grep symbol_name</code> 能显示某个符号在特定二进制文件或库中是被定义了（<code>T</code>）还是仅被引用而未定义（<code>U</code>），从而把猜测变成可核查的事实。</li>
+<li>再配合 <code>ldd</code>（它能显示一个二进制文件实际解析到了哪些库文件），你可以直接比较两个"同名"库构建的 <code>nm</code> 输出，看出一个含有该符号而另一个没有。</li>
+<li>
+<p>这套组合——用 <code>nm</code> 回答"这个符号在这里存在吗"，用 <code>ldd</code> 回答"实际加载的是哪个文件"——能解决"符号缺失"类运行时错误中的绝大部分。</p>
+<p>📖 <a href="https://github.com/stas00/the-art-of-debugging/blob/master/compiled-programs/README.md#nm">nm</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<hr />
+<p><em>以上所有经验教训均出自 Stas Bekman 所著的 <a href="../../index.html">Machine Learning Engineering</a> 和 <a href="https://github.com/stas00/the-art-of-debugging">The Art of Debugging</a>，基于 <a href="https://github.com/CodingPracticeGroup/ml-engineering/blob/master/LICENSE-CC-BY-SA">CC BY-SA 4.0</a> 协议发布。</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../../contributors.html" class="md-footer__link md-footer__link--prev" aria-label="上一页: 贡献者">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                贡献者
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../build/index.html" class="md-footer__link md-footer__link--next" aria-label="下一页: 图书构建">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                图书构建
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

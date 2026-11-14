@@ -1,0 +1,3831 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="《Machine Learning Engineering》(Stas Bekman) 简体中文翻译，面向计算机专业本科低年级读者">
+      
+      
+      
+        <link rel="canonical" href="https://codingpracticegroup.github.io/ml-engineering/insights/how-to-choose-cloud-provider.html">
+      
+      
+        <link rel="prev" href="ai-battlefield.html">
+      
+      
+        <link rel="next" href="when-to-upgrade-gpus/index.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>如何挑选云服务商 - 机器学习工程（ML Engineering）· 简体中文版</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#how-to-choose-a-cloud-provider" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../index.html" title="机器学习工程（ML Engineering）· 简体中文版" class="md-header__button md-logo" aria-label="机器学习工程（ML Engineering）· 简体中文版" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            机器学习工程（ML Engineering）· 简体中文版
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              如何挑选云服务商
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="切换浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CodingPracticeGroup/ml-engineering" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="机器学习工程（ML Engineering）· 简体中文版" class="md-nav__button md-logo" aria-label="机器学习工程（ML Engineering）· 简体中文版" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    机器学习工程（ML Engineering）· 简体中文版
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CodingPracticeGroup/ml-engineering" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Machine Learning Engineering 开放书籍
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    洞见：算力与云服务
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    洞见：算力与云服务
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ai-battlefield.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI 战场上的工程实践——你需要了解的事
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何挑选云服务商
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="how-to-choose-cloud-provider.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    如何挑选云服务商
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        术语表
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-most-important-questions-to-ask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        最重要的几个问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        合同
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="合同">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#free-trials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        免费试用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#half-baked-solutions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        半生不熟的方案
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#we-will-do-our-best-clause" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "我们尽力而为"条款
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#service-level-agreement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        服务等级协议
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discuss-a-contract-breaking-clause" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        讨论合同终止条款
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#must-have-paid-support-included" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        必须包含付费支持服务
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#support-during-off-hours" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        非工作时间的支持
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#next-generation-accelerator-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一代加速卡迁移
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ensure-all-accelerators-are-at-the-same-region-locale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        确保所有加速卡位于同一区域
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accelerators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        加速卡
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="加速卡">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accelerators-need-to-be-burned-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        加速卡需要做老化测试
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dealing-with-accelerator-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        应对加速卡故障
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ensure-all-your-nodes-are-on-the-same-network-spine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        确保你的所有节点位于同一网络脊层
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ensure-you-keep-your-good-accelerators-on-reboot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        确保重启后仍能保留你状态良好的加速卡
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-you-think-you-will-need-to-expand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        你认为自己将来需要扩容吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        存储
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="存储">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#guaranteed-maximum-capacity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        有保障的最大容量
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#know-your-storage-io-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        了解你的存储 IO 需求
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-happens-when-storage-fails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        存储发生故障时怎么办
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#region-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        区域迁移
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-and-archive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        备份与归档
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        网络
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="网络">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ask-for-the-actual-performance-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        索要实际的性能数据
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-the-network-steal-from-the-accelerator-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        网络会占用加速卡的显存吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#infiniband-or-ethernet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        InfiniBand 还是以太网？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-evaluate-the-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何评估集群
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="如何评估集群">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. 网络
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-compute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. 计算
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. 存储
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        安全
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#miscellaneous" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        杂项
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="杂项">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tier-1-vs-tier-2-clouds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一线（Tier 1）与二线（Tier 2）云服务商
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#orchestration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        编排
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#up-to-date-softwareos-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        最新的软件/操作系统版本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#system-administration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        系统管理
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        结论
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸阅读
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="when-to-upgrade-gpus/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    升级 GPU 什么时候才值得？
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    计算硬件
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    计算硬件
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compute/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    计算
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compute/accelerator/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    加速器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compute/accelerator/benchmarks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    加速器基准测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compute/accelerator/nvidia/debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排查 NVIDIA GPU 问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compute/accelerator/amd/debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排查 AMD GPU 问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compute/accelerator/amd/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AMD GPU 性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compute/cpu/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CPU
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compute/cpu-memory/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CPU 内存
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    存储
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    存储
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../storage/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    存储：文件系统与 IO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    网络
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../network/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    节点间与节点内网络硬件
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../network/comms.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    通信模式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../network/debug/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络调试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../network/benchmarks/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    网络基准测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编排与调度
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    编排与调度
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../orchestration/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编排
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../orchestration/slurm/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    在 SLURM 环境中工作
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../orchestration/slurm/admin.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLURM 管理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../orchestration/slurm/users.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面向用户的 SLURM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../orchestration/slurm/performance.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SLURM 性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../orchestration/slurm/launchers/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用 SLURM 的单节点与多节点启动器
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../orchestration/kubernetes/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kubernetes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    训练
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model-parallelism/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型并行
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/model-parallelism/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型并行
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/performance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    软件调优以获得最佳性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/fault-tolerance/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    故障容错
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/reproducibility/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    可复现性
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/instabilities/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    不稳定的避免、恢复与理解
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/instabilities/training-loss-patterns.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    理解训练损失模式
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/checkpoints/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    检查点
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/hparams.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    选择训练超参数与模型初始化
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/dtype.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    张量精度 / 数据类型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/emulate-multi-node.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    只用单个节点模拟多节点环境
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/re-train-hub-models.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用微调示例从头重新训练 HF Hub 模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/datasets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    处理数据集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    推理
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    推理
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试与排障
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    调试与排障
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试与故障排查
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug/pytorch.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试 PyTorch 程序
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug/tools.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    调试工具
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug/nccl-performance-debug.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    NCCL：调试与性能
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug/torch-distributed-hanging-solutions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    诊断多节点多 GPU Python 程序中的挂起与死锁
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug/underflow_overflow.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    下溢与上溢检测
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug/make-tiny-models-tokenizers-datasets.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    使用小型模型、分词器与数据集加快调试和开发速度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debug/tiny-scripts/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    脚本备份
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    测试
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    测试
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    编写与运行测试
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    资源汇总
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    资源汇总
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resources/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    资源
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献者
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    贡献者
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributors.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    贡献者
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    课程：设计并运行一次大模型训练
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    课程：设计并运行一次大模型训练
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../courses/lesson-learned/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练大语言模型的经验教训（一门课程）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录：本书的构建方式
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    附录：本书的构建方式
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build/index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    图书构建
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        术语表
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-most-important-questions-to-ask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        最重要的几个问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        合同
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="合同">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#free-trials" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        免费试用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#half-baked-solutions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        半生不熟的方案
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#we-will-do-our-best-clause" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "我们尽力而为"条款
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#service-level-agreement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        服务等级协议
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discuss-a-contract-breaking-clause" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        讨论合同终止条款
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#must-have-paid-support-included" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        必须包含付费支持服务
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#support-during-off-hours" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        非工作时间的支持
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#next-generation-accelerator-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一代加速卡迁移
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ensure-all-accelerators-are-at-the-same-region-locale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        确保所有加速卡位于同一区域
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accelerators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        加速卡
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="加速卡">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accelerators-need-to-be-burned-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        加速卡需要做老化测试
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dealing-with-accelerator-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        应对加速卡故障
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ensure-all-your-nodes-are-on-the-same-network-spine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        确保你的所有节点位于同一网络脊层
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ensure-you-keep-your-good-accelerators-on-reboot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        确保重启后仍能保留你状态良好的加速卡
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-you-think-you-will-need-to-expand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        你认为自己将来需要扩容吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        存储
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="存储">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#guaranteed-maximum-capacity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        有保障的最大容量
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#know-your-storage-io-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        了解你的存储 IO 需求
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-happens-when-storage-fails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        存储发生故障时怎么办
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#region-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        区域迁移
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-and-archive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        备份与归档
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        网络
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="网络">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ask-for-the-actual-performance-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        索要实际的性能数据
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#does-the-network-steal-from-the-accelerator-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        网络会占用加速卡的显存吗？
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#infiniband-or-ethernet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        InfiniBand 还是以太网？
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-evaluate-the-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何评估集群
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="如何评估集群">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. 网络
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-compute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. 计算
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-storage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. 存储
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        安全
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#miscellaneous" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        杂项
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="杂项">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tier-1-vs-tier-2-clouds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一线（Tier 1）与二线（Tier 2）云服务商
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#orchestration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        编排
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#up-to-date-softwareos-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        最新的软件/操作系统版本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#system-administration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        系统管理
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        结论
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸阅读
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<p class="en-origin-link">📄 <a href="https://github.com/CodingPracticeGroup/ml-engineering/blob/master/insights/how-to-choose-cloud-provider.md" target="_blank" rel="noopener">本页英文原文（GitHub master）</a></p><h1 id="how-to-choose-a-cloud-provider">如何挑选云服务商<a class="headerlink" href="#how-to-choose-a-cloud-provider" title="Permanent link">&para;</a></h1>
+<p>我在长期和短期的使用中接触过多个算力云，也参加过许多次"售前摸底"电话沟通。这些经历让我认识到：挑选云服务商这件事，务必极其谨慎、全力以赴地去对待。尤其是长期合同——你最后可能陷进一份为期 3 年的锁定合同，支付数百万美元，落得一次糟糕透顶的体验，却完全没办法从合同里脱身。</p>
+<p>为了让你有个概念——一个 64 个节点的集群在 3 年内可能轻松花掉 2000 万到 5000 万美元。这往往比一家创业公司支付的工资总额还要多。</p>
+<p>我再怎么强调也不为过：选错一份 3 年的合同，可能会让你的创业公司无法成功。</p>
+<p>在这篇文章里，我不打算说哪些云应该避开，而是想帮助你具备避免糟糕体验的能力，至少获得一次还过得去的体验，让你的公司有机会走向成功。</p>
+<p>这些笔记假定你已经清楚，针对自己的具体工作负载想要什么样的算力。如果你还不清楚，请快速浏览<a href="../compute/accelerator/index.html">加速卡</a>、<a href="../storage/index.html">存储</a>和<a href="../network/index.html">网络</a>几章，了解市面上都有什么可用。大多数时候，你会想要各家云服务商所能提供的最新产品。</p>
+<h2 id="glossary">术语表<a class="headerlink" href="#glossary" title="Permanent link">&para;</a></h2>
+<ul>
+<li>CSP：Cloud Service Provider（云服务商）</li>
+<li>SLA：Service Level Agreement（服务等级协议）</li>
+<li>SLO：Service Level Objective（服务等级目标）</li>
+<li>TCO：Total Cost of Ownership（总拥有成本）</li>
+</ul>
+<h2 id="the-most-important-questions-to-ask">最重要的几个问题<a class="headerlink" href="#the-most-important-questions-to-ask" title="Permanent link">&para;</a></h2>
+<p>以我有限的经验，有 3 个问题是你绝对必须知道答案的：</p>
+<ol>
+<li>
+<p><strong>你的 GPU 一定会出故障——这一点可以保证。</strong> 关键问题是它们多快能被更换、流程是怎样的——如果每次更换你都得联系一个真人，那将既痛苦又缓慢；最好的云服务商（CSP）会给你一个 API，让你自己动手完成。另外要小心"Humpty Dumpty"式的 GPU：它们会被原样退回给你，实际上并没有被更换，因为技术人员一检测，它们看起来一切正常——可你再次使用时它们还会坏。下面是如何<a href="../compute/accelerator/nvidia/debug.html#how-to-detect-if-you-get-the-same-broken-node-again-and-again">检测你是否拿回了同一批坏掉的 GPU</a>。</p>
+</li>
+<li>
+<p><strong>你会碰到很多问题，主要出在硬件上。</strong> 你需要知道，要多快才能联系上一位能解决问题的工程师。通常你的报告会先转到一位产品经理（PM），由他分诊并试着把你引到对的人那里，但这往往会花上几小时甚至几天，有时还需要向上升级，尤其是当这位 PM 并不是最有经验的人的时候。</p>
+</li>
+<li>
+<p><strong>你需要知道你能否解除合同——多快、代价是什么。</strong> 你的团队可能会经历非常糟糕的日子，但如果你无法抽身而去，那几乎肯定会让你团队中的一人或多人精疲力竭，并可能对你推进工作、带领团队走向成功的能力产生负面影响。</p>
+</li>
+</ol>
+<h2 id="contracts">合同<a class="headerlink" href="#contracts" title="Permanent link">&para;</a></h2>
+<p>如果你按小时付费，就不必担心合同。但这种方式不适合长期，因为你会付出贵得多的价钱，而且不会有一个稳定可靠的加速卡基础。在合适的时机、由一位好的谈判者去谈，一份长期合同可能带来 10 倍的总拥有成本（TCO）节省（还有时间）！</p>
+<h3 id="free-trials">免费试用<a class="headerlink" href="#free-trials" title="Permanent link">&para;</a></h3>
+<p>大多数云服务商（CSP）都有试用计划，让你在几个节点上免费"试驾"几天或几周。</p>
+<p>诚然，它不能告诉你更大的集群扩展性会有多好，但应该足够让你跑相当多的基准测试和实验。</p>
+<p>它还能给你一个很好的机会，去检查这家服务商的客户支持是怎么运作的（当然，前提是免费套餐里确实包含支持服务）。</p>
+<h3 id="half-baked-solutions">半生不熟的方案<a class="headerlink" href="#half-baked-solutions" title="Permanent link">&para;</a></h3>
+<p>由于新一代加速卡大约每 12-18 个月就会推出一次，而客户恨不得"昨天"就拿到这些最新加速卡，以便相对竞争对手取得业务优势——这就让云服务商几乎没有什么时间去集成新一代硬件、测试它、适配他们的软件栈并对这些组件做老化测试（burn-in）。</p>
+<p>所以，如果你想在新的一代刚上市时就用上它，你几乎注定会有一次糟糕的体验，因为，嗯，把事情做对是需要时间的——我们说的是几个月的等待。但客户说了算——于是云服务商就把客户想要的给他们，往往并不太直说客户拿到的东西其实还没准备好。</p>
+<p>我不确定这是否该怪云服务商，因为他们常常是在厂商承诺交付时间之后好几个月才拿到硬件，而到了那时，他们自然已经无法兑现对客户许下的承诺，于是他们还是直接交付了……</p>
+<p>还有些云服务商为了获得更好的利润率，会开发自己的硬件（例如网络栈），结果没能及时完成那些定制方案：最新的加速卡到位了，整个系统却跛着脚运转。提供现成的标准组件时要安全得多，因为那些很可能是经过充分测试、可以正常工作的组件（只是价格可能更高）。</p>
+<p>我认为，客户想尽早拿到硬件这件事本身没问题，只是应当有一份诚实的说明，比如：<em>"听着，我们还需要大约 3 个月才能让一切稳固可靠。如果你现在就想要这些节点，可以给你，但我们什么都保证不了。"</em></p>
+<h3 id="we-will-do-our-best-clause">"我们尽力而为"条款<a class="headerlink" href="#we-will-do-our-best-clause" title="Permanent link">&para;</a></h3>
+<p>很多长期云服务合同很可能包含大量"我们尽力而为"式的条款。</p>
+<p>然而：</p>
+<ol>
+<li>客户不被允许"尽力而为"地去付款，他们在法律上有义务按时支付他们承诺支付的金额。</li>
+<li>客户不被允许在合同期满之前解除合同。</li>
+</ol>
+<p>以我的经验，一线云服务商（Tier-1）对"我们尽力而为"的示范方式，是往与客户的会议上派 10 多个人。其中一些人一头雾水，只是坐在那里，让公司显得很有资源：<em>"看，我们为你们遇到的问题投入了 10 多个人。你们什么都不用担心。"</em> 可实际上，大多数时候这些人解决不了你的问题。</p>
+<p>你需要的其实只是 2 位云服务商的支持人员参加会议——一名产品经理，和一名直接负责解决当前问题的工程师。而以我的经验，这种会议可能要几周甚至几个月才能促成，或者根本不会出现。通常你需要有良好的人脉，才能把问题升级到"高层"。</p>
+<p>对于你所购买套餐中的每一个关键组成部分，你都需要一个可量化的交付指标。例如，如果卖给你的网络本应在那么多节点上做 all-reduce 时跑到 X GBps，而你实测明显低于这个数字，那么合同里就应该有相应规定，写明这种情况发生时云服务商将怎么做。存储、加速卡以及你打算依赖的任何其他关键组成部分，都是如此。</p>
+<p>当然，具体争取什么样的违约后果取决于你的谈判，但最好的一条大概是：在问题解决之前你停止付款。这样，把问题修好就有了动力。</p>
+<p>可惜，不付款确实有用，但用不了算力仍然是一个巨大的问题。而解除合同、迁移到另一家服务商，更是一项不可掉以轻心的浩大工程。但如果你拿不到自己需要的东西，至少还有事可做。</p>
+<p>我还必须说，这几乎从来不是工程师们的问题——他们中很多人往往是非常出色、经验丰富的人——大多数时候，问题出在管理和资源分配上。所以，请尽可能温和地对待与你对接的人，同时坚定地要求给出解决方案。我知道这很难——不止一次，我已经忍无可忍，也没能一直保持冷静。</p>
+<h3 id="service-level-agreement">服务等级协议<a class="headerlink" href="#service-level-agreement" title="Permanent link">&para;</a></h3>
+<p>作为上一节的延续，<a href="https://en.wikipedia.org/wiki/Service-level_agreement">服务等级协议</a>（SLA）是服务提供方与客户之间达成的一种协议，用来规定关于服务质量和可用性的各种保证与期望，以及各种责任。</p>
+<p>另一个术语是服务等级目标（SLO），它把 SLA 量化。例如，SLO 可以把月度正常运行时间百分比定为 99.5%；如果可用率低于 99.5%，服务商就按客户所付费用的某个百分比给客户返还抵扣。例如，可用率在 99%-99.5% 之间赔 10%，在 95%-99% 之间赔 25%，等等。这里是一个 <a href="https://cloud.google.com/ai-platform/training-and-prediction/sla?hl=en">GCP SLA</a> 的例子。</p>
+<p>租用 ML 集群时，最该关心的是加速卡和/或整个节点的故障这一类。如果你付了 64 个节点的钱，却只能用 60 个，那么对你无法使用的那几个节点，你就应该获得退款或抵扣。你的 SLA 应该规定：停机超过多长时间后服务商开始向你赔偿，以及赔偿多少。</p>
+<p>网络和存储同理，尽管它们出故障的频率通常比加速卡低得多，但确实也会出故障。</p>
+<p>总的来说，服务的任何关键部分都应该有一个 SLO，并且当 SLO 未达成时，要有明确定义的后果。</p>
+<p>大多数一线公司应该已经把其标准 SLA 包含在合同里了。理论上，客户应该能够协商修改这些条款以适配自己的需求，尽管这未必总是可行。有时，主动提出支付更多费用也许能换来优于标准的 SLO。</p>
+<h3 id="discuss-a-contract-breaking-clause">讨论合同终止条款<a class="headerlink" href="#discuss-a-contract-breaking-clause" title="Permanent link">&para;</a></h3>
+<p>双方都应当能够实现互利的商业合作体验。</p>
+<p>因此，至关重要的一点是：如果对方未能达到双方商定的期望，导致你的商业体验无利可言，你应当能够合法地退出合同。</p>
+<p>这当然意味着不必去打一场可能花费高昂的官司——一线云服务商有的是钱去聘请最好的律师，所以那可能是一场打不赢的仗。</p>
+<p>在什么条件下可以在合同期结束前干净地退出合同，要由你去谈判确定。</p>
+<h3 id="must-have-paid-support-included">必须包含付费支持服务<a class="headerlink" href="#must-have-paid-support-included" title="Permanent link">&para;</a></h3>
+<p>在我工作过的一家公司里，我们的云合同没有包含付费支持服务，我们唯一能得到的支持是通过一个客户聊天通道。当初为了省钱省掉了付费支持，但天哪，我们最后为此损失了好几天的算力。</p>
+<p>不要在这里想着省钱——到头来你会损失大量的钱、开发者的时间，还会愁掉头发。要确保你有办法提交带优先级标签的工单，并且合同里明确规定了这些工单会在多快时间内得到处理。</p>
+<p>当你试图用客户聊天通道解决一个紧急问题时，对方没有任何义务去做什么，或者至少是及时地做什么。</p>
+<p>如果你打交道的是产品经理，你需要知道：在绕开中间人的情况下，你能多快直接与真正负责处理的终端工程师对话。</p>
+<h3 id="support-during-off-hours">非工作时间的支持<a class="headerlink" href="#support-during-off-hours" title="Permanent link">&para;</a></h3>
+<p>周末/节假日/夜间遇到紧急情况时，你能得到人工支持吗？例如，在我用过的某个 HPC（高性能计算）平台上，人工支持只在周一至周五的 9 点到 5 点提供。</p>
+<p>如果没有这种支持，至少要确保你的团队自己就能完成集群的恢复（resuscitation）——并且做一次演练，确认这件事确实做得到。这意味着你需要有一个 API，可以在没有服务商支持的情况下完成所有这些操作。</p>
+<h3 id="next-generation-accelerator-migration">下一代加速卡迁移<a class="headerlink" href="#next-generation-accelerator-migration" title="Permanent link">&para;</a></h3>
+<p>平均而言，新一代加速卡每 12-18 个月就会出现，而典型的合同一签就是 3 年。这意味着在大约一半的合同期里，你都在使用一个更落后的产品。</p>
+<p>当快得多的版本已经可用时，没人愿意用一块慢 2-5 倍的加速卡，但现在的大多数客户都被老的加速卡绑死了整整 3 年。</p>
+<p>你需要谈下在合同期满前迁移到新一代的能力，而这显然需要为此额外支付一些钱。</p>
+<h3 id="ensure-all-accelerators-are-at-the-same-region-locale">确保所有加速卡位于同一区域<a class="headerlink" href="#ensure-all-accelerators-are-at-the-same-region-locale" title="Permanent link">&para;</a></h3>
+<p>每当新的加速卡问世，很常见的情况是：如果你想尽早用上它们，它们和你现有加速卡所在的区域并不相同。除非你彻底放弃之前的资源分配、整体搬到另一个区域的新分配，否则你将陷入同时维护多份存储副本的噩梦，因为出于性能原因，存储必须和加速卡待在一起。如果做不到，你就会为同步同一存储的多份副本而烦恼，并持续支付可能高得惊人的 egress/ingress（出站/入站）流量费用。所以要为此提前规划，并和云服务商讨论：请他们把你上一代加速卡的资源分配迁到新一代所在的同一区域。当然，这并不总是可行，你可能不得不等到有更多加速卡可用。但这是一条值得讨论的重要条款。</p>
+<h2 id="accelerators">加速卡<a class="headerlink" href="#accelerators" title="Permanent link">&para;</a></h2>
+<p>这一组问题/事项是专门针对加速卡的。</p>
+<h3 id="accelerators-need-to-be-burned-in">加速卡需要做老化测试<a class="headerlink" href="#accelerators-need-to-be-burned-in" title="Permanent link">&para;</a></h3>
+<p>当一批新组件到货后，服务商必须在把它们交给客户之前先做"老化测试"（burn-in）。这是一个通过大量压力测试来检出故障的加速卡和其他故障系统组件的过程。</p>
+<p>如果没做这一步，客户就只能以最艰难的方式——在运行自己的工作负载时——亲自发现那些"害群之马"。这会导致算力和开发者时间的损失。如果工作负载只用几个节点，一块出故障的加速卡大多数时候不是大问题；但如果工作负载要用几十甚至几百个节点，代价就极其高昂。</p>
+<p>发现坏加速卡不应该由客户来负责。虽然没有任何保证说加速卡通过了压力测试之后就绝不会坏——但那种情况应该很少发生。</p>
+<p>否则，新一批加速卡的故障率常常有 3-10%，这是巨大的、对客户来说极其昂贵的！</p>
+<p>所以要问你的服务商：他们对你的加速卡/系统做了多长时间的老化测试——如果他们做了的话。</p>
+<p>我至今还没有找到一个权威的对标参考。不过，例如 <a href="https://newsletter.semianalysis.com/p/ai-neocloud-playbook-and-anatomy#%C2%A7cluster-deployment-and-acceptance-test">SemiAnalysis</a> 建议：OEM 厂商会进行 3-4 周的老化测试，之后云服务商再做 2-3 天的老化/验收测试。既然如此，你要确保系统至少经过了 2-3 天的压力测试。顺便说一句，如果你不介意因为故障而时断时续，完全可以把一次大规模训练本身当作测试——如果它跑通了，你也已经取得了一些进展。当然，你要确保你的训练能以可持续的方式给系统的所有部分施加压力。</p>
+<h3 id="dealing-with-accelerator-failures">应对加速卡故障<a class="headerlink" href="#dealing-with-accelerator-failures" title="Permanent link">&para;</a></h3>
+<p>以我的经验，虽然其他计算组件确实偶尔也会出故障，但 95% 的情况都是加速卡在坏。</p>
+<p>因此，你需要一条非常清晰、非常快捷的加速卡更换路径。</p>
+<p>理想情况下，这个过程需要是自动化的。所以你要问：有没有一个 API，能释放故障节点并取得替换节点。如果你得找人来做这件事，通常效果不会太好。事情越自动化，体验就越高效。</p>
+<p>在服务商侧为你预留的备用池里，有多少可用的加速卡？他们通常会承诺每月提供一定数量的快速更换。</p>
+<p>话虽如此，如果你的工作负载对时间非常在意，你应当总是比实际需要多付大约 10% 的节点的钱，因为大多数时候你无法即刻拿到替换节点。多出来的节点可以用来做开发；如果训练过程中有节点出故障，你可以立刻启用自己多出来的节点。</p>
+<h3 id="ensure-all-your-nodes-are-on-the-same-network-spine">确保你的所有节点位于同一网络脊层<a class="headerlink" href="#ensure-all-your-nodes-are-on-the-same-network-spine" title="Permanent link">&para;</a></h3>
+<p>除非你租的是 1 万块 GPU，否则大多数较小的集群都可以轻松部署在同一个网络脊层（network spine，网络拓扑中的主干交换层）上——这样，从任意节点到任意其他节点的节点间网络流量所花的时间都是相同的。</p>
+<p>要确保任何你不付费、只是用来应对加速卡故障的备用节点，和你付费的节点位于同一网络脊层上。如果不是，而你又要做多节点训练，那你就要倒大霉了——因为那台替换节点到所有其他节点都"更远"，会把整个集合拖慢（链条上最弱的一环）。</p>
+<h3 id="ensure-you-keep-your-good-accelerators-on-reboot">确保重启后仍能保留你状态良好的加速卡<a class="headerlink" href="#ensure-you-keep-your-good-accelerators-on-reboot" title="Permanent link">&para;</a></h3>
+<p>你希望你的集群有一份固定的资源分配。也就是说，如果你需要重新部署节点，特别是如果你打算安排一次停机，其他客户是不会把你这些节点抢走的！</p>
+<p>一旦你花了几周时间把好节点和坏节点区分筛选出来，把那些好节点留给自己、不再重来一遍这种痛苦而昂贵的筛选，就至关重要。</p>
+<h3 id="do-you-think-you-will-need-to-expand">你认为自己将来需要扩容吗？<a class="headerlink" href="#do-you-think-you-will-need-to-expand" title="Permanent link">&para;</a></h3>
+<p>这是个难题，因为很难提前知道：你现在要的节点数量，将来是否需要增长。</p>
+<p>理想情况下，你愿意就此与你的服务商讨论，好让他们能为你即将到来的扩容做好规划。</p>
+<p>因为否则的话，比如说，你想把节点数量翻倍，但要拿到更多节点，它们只能被分配到另一个网络脊层上——这将是个问题，因为它会影响训练速度。</p>
+<p>很有可能，你不得不放弃当前的资源分配，搬到一个更大的资源分配上——如果当地没有容量，甚至可能在另一个区域。而迁移到另一个区域可能是一次非常缓慢且昂贵的经历，因为你必须把你的存储搬到新集群所在的地方。以我的亲身经历——不要把这件事看得太轻。</p>
+<h2 id="storage">存储<a class="headerlink" href="#storage" title="Permanent link">&para;</a></h2>
+<p>大容量、高速的存储对两方面都非常重要——良好的开发者体验，以及快速的训练/微调/推理工作负载——尤其是在加载/保存检查点方面。</p>
+<h3 id="guaranteed-maximum-capacity">有保障的最大容量<a class="headerlink" href="#guaranteed-maximum-capacity" title="Permanent link">&para;</a></h3>
+<p>问清楚：你所付费购买的存储中，有多大比例是有保障的。</p>
+<p>例如，如果使用 Lustre 文件系统，客户需要知道：他们必须超配（over-provision）25%，才能获得自己实际需要的存储容量，因为 Lustre 由于磁盘均衡设计不佳，在总存储容量用到 80% 时就可能无法写入。而那额外 25% 的付费责任在客户身上！</p>
+<p>我接触过的其他大多数文件系统通常都能用到 100% 容量而不发生故障，但对你打算使用的具体文件系统，问一问总是好的。</p>
+<h3 id="know-your-storage-io-requirements">了解你的存储 IO 需求<a class="headerlink" href="#know-your-storage-io-requirements" title="Permanent link">&para;</a></h3>
+<p>我们曾经用过的一家云使用了一个非并行的分布式文件系统，开发体验糟糕透顶。处理大文件还勉强可以接受，小文件的操作则极其缓慢——安装一个基础的 Conda 环境要花 30 分钟，运行 <code>python -c "import torch"</code> 要 2 分钟。这是因为 Python 有数以万计的 4-16 KB 的小文件，如果文件系统没有为处理这类文件做优化、元数据服务器又很弱，那体验就会非常令人抓狂。</p>
+<p>一般来说，一个典型的 Python 团队需要一个能应付以下内容的文件系统：</p>
+<ul>
+<li>数以万计的小文件</li>
+<li>少量巨大的文件</li>
+</ul>
+<p>但，当然，只有你自己最清楚你的工作负载的具体需求。还要考虑本地存储与远端（共享）存储之间的关系，因为有些服务商为了省钱会缩减本地盘的容量和性能。在很多情况下，开发者会从共享文件系统读取可以缓存在本地的数据（代码库、模型、数据集）。教会大家如何使用 <a href="https://linux.die.net/man/1/rsync">rsync</a> 配合本地 NVMe，可以改善开发体验，并减少共享文件系统上的 I/O。</p>
+<p>请参阅<a href="../storage/index.html">存储章节</a>中的笔记与指导，了解存储需求及其基准测试的种种细节。</p>
+<h3 id="what-happens-when-storage-fails">存储发生故障时怎么办<a class="headerlink" href="#what-happens-when-storage-fails" title="Permanent link">&para;</a></h3>
+<p>对于先进而昂贵的分布式文件系统，故障的可能性相对较小，但对更便宜的存储方案，这个可能性相当大。</p>
+<p>不过，任何系统都仍然可能发生这种情况。</p>
+<p>你需要知道：</p>
+<ul>
+<li>谁负责修复问题？</li>
+<li>恢复需要多长时间？</li>
+<li>停机期间谁来付钱？</li>
+<li>问题存在期间，用户该做什么？</li>
+</ul>
+<p>如果解决问题要花很长时间，通常还需要再增加一个临时的文件系统分区，好让人们能够继续工作。当然，你得为此付钱。</p>
+<h3 id="region-migration">区域迁移<a class="headerlink" href="#region-migration" title="Permanent link">&para;</a></h3>
+<p>如果你所在的区域没有你需要的资源，那么在升级到下一代加速卡或扩容时，集群可能被迫迁移到另一个区域。为了让工作负载跑得快，存储必须与加速卡位于同一区域。</p>
+<p>这种迁移事件会触发一次有时非常痛苦的存储迁移经历。</p>
+<p>以下是一些你必须在迁移开始之前很久就要问清楚的关键问题。</p>
+<ul>
+<li>是你的服务商负责搬运你的数据，还是这是你自己的责任？</li>
+<li>你是否检查过，他们提供的工具足够好，能在几小时内搬完数 TB 的数据，还是会花上好几天？例如，使用存储云服务来迁移通常会把所有文件的元数据丢弃，这可能是一个大问题。如果你有 500 万个小文件，复制起来可能遥遥无期。除非你使用 <code>tar</code>，但创建打包文件可能要好几个小时，而且你有 2 倍的存储来放你数据的两份拷贝吗？</li>
+<li>两个重叠运行的集群，你是不是要同时为它们的存储和计算付费？</li>
+<li>在文件系统迁移期间，正在被编辑和创建的文件怎么办——你要不要在迁移进行时让所有人回家，并把文件系统冻结？</li>
+</ul>
+<h3 id="backup-and-archive">备份与归档<a class="headerlink" href="#backup-and-archive" title="Permanent link">&para;</a></h3>
+<p>许多云服务商只有一档文件存储、一个价格点。然而，组织可能有多档存储的需求。例如，你可能想把旧的模型检查点或微调数据集归档到便宜的冷存储上，比如 HDD 上的 S3 对象存储。</p>
+<p>能够灵活地扩展你的总存储容量，并让"热"（本地 NVMe）、"温"（共享 NVMe）、"冷"（共享 HDD）和"归档"（磁带）各层保持同步，有助于提升系统的韧性、节省资金，并让日后的迁移或扩容更加容易。</p>
+<h2 id="network">网络<a class="headerlink" href="#network" title="Permanent link">&para;</a></h2>
+<p>这一部分主要与打算做训练和微调的人相关。如果你租加速卡只是为了通过大规模微服务部署来做推理，或者只是为了小型的、按需的交互式工作（如 notebook），你可以放心地忽略这些信息。唯一的例外是：你打算推理非常大的模型，其单个副本就需要不止一个节点。</p>
+<p>总的来说，你要确保所提供的<a href="../network/index.html#intra-node-networking">节点内</a>和<a href="../network/index.html#inter-node-networking">节点间</a>网速与承诺以及你的预期相符。测量时，要问清这个平台需要哪些 NCCL 环境变量；一个安全的默认值是 <code>NCCL_NVLS_ENABLE=2</code>（在可用时使用 NVLink SHARP）。</p>
+<h3 id="ask-for-the-actual-performance-numbers">索要实际的性能数据<a class="headerlink" href="#ask-for-the-actual-performance-numbers" title="Permanent link">&para;</a></h3>
+<p>计算的理论值从来都对应不上现实；而且即便各家服务商都使用相同的组件，现实情况也可能因服务商而天差地别，因为这取决于所有相关组件的质量，以及机架设计和组装的水平。</p>
+<p>最容易开的口，是索要一张覆盖 4-8-16-32-64 个节点（如果你的集群超过 64 个节点，那就更多）的 <code>all-reduce</code> 基准测试曲线图。你会预期带宽随着参与节点的增多而逐渐变差，但不会剧烈恶化。有些网络在节点数较多时会变得非常低效。</p>
+<p>更多细节请参阅<a href="../network/index.html#real-network-throughput">真实网络吞吐量</a>。</p>
+<p>理想情况下，你至少想对几种载荷（即集合通信传输的消息大小）跑基准测试——挑那些你特别关心的，因为你清楚自己的工作负载将会使用多大的集合通信载荷。我通常一开始先要一张大约 4-16 GiB 大载荷的曲线图（在最新、最快的节点间网络上，16 GiB 的载荷能拿到最佳带宽），它立刻就能告诉我这个网络好不好。但你很可能也会想知道 256-512 MiB 载荷的情况，所以干脆把更宽的范围一起要过来。</p>
+<p>我用过的最实际的做法，是让云服务商给出他们自己的 <code>nccl-tests</code> <code>all-reduce</code> 数据——单节点的，以及 4-16 个节点的。每家服务商都想把自己最好的一面展示出来，所以拿回来的就是他们的最佳情况，而这正是你想要的：它就变成了你在 SLA 里拿来要求他们的数字。你可以四处打听，这些数字对于那种硬件而言是否合理；以我的经验，通常是合理的。然后，一旦你拿到了节点，就自己再跑一遍同样的基准测试——这些就是你应当能够复现的数字。如果复现不出来，那就说明你的资源分配中有某个方面和他们演示的不一样，而现在你手里有了一件具体的、量化的东西可以用来升级问题，而不是空泛地抱怨网络"感觉很慢"。</p>
+<p>脚注：当然，这件事要在最开始就问他们，而不是等到你谈 SLA 的时候。那时就太晚了，他们也就没有任何动力给你看他们的最佳情况是什么样子了。</p>
+<p>我还没见过哪里的 NVLink 表现不一样（除非是在软件层面配置错了），但仍然要要求看看单节点的基准测试。</p>
+<h3 id="does-the-network-steal-from-the-accelerator-memory">网络会占用加速卡的显存吗？<a class="headerlink" href="#does-the-network-steal-from-the-accelerator-memory" title="Permanent link">&para;</a></h3>
+<p>我在某家云上遇到过一次意外：当我开始使用 GPU 时，我发现每块 GPU 已经有 5 GiB 被网络软件占用了——我们设法把它降到了一个更低的值，但我们买到的仍然是实际显存小于标称容量的 GPU，而在我们签约之前，没有任何人告诉过我们这件事。</p>
+<p>随着加速卡的容量变得大得多，这个问题可能就不再重要了，但当你在 H100 上拿到的是 75 GiB 可用显存而不是 80 GiB 时——每块 GPU 损失的内存都是海量的。</p>
+<h3 id="infiniband-or-ethernet">InfiniBand 还是以太网？<a class="headerlink" href="#infiniband-or-ethernet" title="Permanent link">&para;</a></h3>
+<p>一般来说，云服务商都遵循 NVIDIA 的 <a href="https://docs.nvidia.com/dgx-superpod/reference-architecture-scalable-infrastructure-h100/latest/abstract.html">DGX SuperPOD 参考架构</a>，其中对如何搭建一个轨道优化（rail-optimized）的 InfiniBand 网络给出了大量细节。轨道优化基本上是指：在 8 卡一组的系统中，每块 GPU 各自连接到属于自己的叶交换机（leaf switch，接入层交换机）。其余部分则是标准的胖树（fat-tree）结构。</p>
+<p>然而，如今世界上许多规模最大的 GPU 集群改用的不是 InfiniBand，而是 RoCEv2。Meta 已经<a href="https://engineering.fb.com/2024/08/05/data-center-engineering/roce-network-distributed-ai-training-at-scale/">证明</a>，在 RoCEv2 网络上训练前沿级（frontier-class）的 Llama 模型是可行的。Semianalysis/Fabricated Knowledge 则指出，NVIDIA 随其 GPU 搭售网络设备的搭售率（attach rate）出现了<a href="https://www.fabricatedknowledge.com/p/nvidia-waiting-on-blackwell-and-whats?utm_source=post-banner&amp;utm_medium=web&amp;utm_campaign=posts-open-in-app&amp;triedRedirect=true">大幅下滑</a>。</p>
+<p>由于多节点训练依赖网络集合通信（即 NCCL 或 RCCL），网络的类型可能显著影响性能和用户体验。</p>
+<h2 id="how-to-evaluate-the-cluster">如何评估集群<a class="headerlink" href="#how-to-evaluate-the-cluster" title="Permanent link">&para;</a></h2>
+<p>拿到试用节点后，就把本文接下来要讲的三个子系统测量一遍。在你能在<em>自己的</em>资源分配上复现之前，不要把云服务商演示幻灯片里的数字当作 SLA。这些工具就在这本书里；针对同一个流程，还有一份供智能体使用的运行手册（runbook）：<a href="https://github.com/CodingPracticeGroup/ml-engineering/blob/master/skills/evaluate-cluster/SKILL.md">evaluate-cluster/SKILL.md</a>。</p>
+<p>使用一个<strong>隔离的 venv</strong>（虚拟环境）。不要改动节点上 <code>dev</code> 的 conda/环境。如果那里已经有一个较新的、CUDA 构建与 GPU 相匹配的 <code>torch</code>，就复用它；否则安装当前稳定版的 CUDA wheel，再加上 <code>nvidia-ml-py</code>（MAMF 遥测）、<code>matplotlib</code>（all-reduce 绘图）和 <code>fio</code>。</p>
+<p>在做开销很大的批量测试之前，先在一台节点上运行 <a href="../debug/torch-distributed-gpu-test.py"><code>torch-distributed-gpu-test.py</code></a>，这样出问题的 NCCL/GPU 会在几秒内暴露出来，而不是到一次 16 GiB 的 all-reduce 进行中途才暴露。</p>
+<h3 id="a-network">A. 网络<a class="headerlink" href="#a-network" title="Permanent link">&para;</a></h3>
+<p>节点内：<a href="../network/benchmarks/torch-dist-bench.py"><code>torch-dist-bench.py</code></a>，以 <code>torchrun --nproc_per_node=8</code> 的方式运行（或按该节点实际的 GPU 数量设置）。节点间：在<strong>至少 4 台节点</strong>上运行同一个脚本。脚本开头给出的 <code>pdsh</code> 方案要求这些节点之间配置了免密 SSH；SLURM 的 <code>srun</code> 是另一种受支持的启动方式。参见<a href="../network/benchmarks/index.html">网络基准测试</a>和<a href="../network/index.html#real-network-throughput">真实网络吞吐量</a>。</p>
+<p>要报告的数值是 <strong><code>busbw</code></strong>（单向带宽）。节点内：与标称的 NVLink 带宽（不是双工带宽）做比较；NVLS/SHARP 能让按环（ring）公式算出的数字超过该标称值的 100%，而且它只对 <strong>all-reduce</strong> 有帮助。节点间：报告 <code>busbw</code> 以及 NCCL 实际经过的路径；<strong>不要</strong>拿它去除以标称的 IB/RoCE/EFA GBps——那次集合通信从来都不是只经过网卡的测量。如果你只有一台节点，就跳过节点间测试，并把这一点记录在案；单节点的 NVLink 数字并不能告诉你，到 4 台节点时整个网络结构（fabric）表现如何。</p>
+<h3 id="b-compute">B. 计算<a class="headerlink" href="#b-compute" title="Permanent link">&para;</a></h3>
+<p><strong>MAMF 顺序测试，其余卡保持空闲。</strong> 在该节点的<strong>每一块 GPU</strong> 上逐块运行 <a href="../compute/accelerator/benchmarks/mamf-finder.py"><code>mamf-finder.py</code></a> <code>--search auto</code>（<code>CUDA_VISIBLE_DEVICES=i</code>）。这就是挑出问题卡（lemon，次品）的环节：一块慢 GPU 就会毁掉整台节点。将 MAMF/MSMF 与<a href="../compute/accelerator/index.html#tflops-comparison-table">加速卡对照表</a>中的官方 TFLOPS 做对比。详情见<a href="../compute/accelerator/benchmarks/index.html">基准测试 README</a>。</p>
+<p><strong>DCGM（<code>dcgmi diag -r 2</code>）。</strong> 检查的是硬件健康状况（内存、PCIe/NVLink），不产生 FLOPS 数字（在 8 块 GPU 上耗时≲10.5 分钟）。<code>-r 1</code> 只检查软件，不够；<code>-r 3</code> 是可选的更长的压力测试。需要 <code>nv-hostengine</code>（NVIDIA CUDA 仓库中的软件包 <code>datacenter-gpu-manager-4-cudaN</code>）。如果容器里跑不了它，就把这一点记录在案，继续用 MAMF。</p>
+<p>再跑一轮让 8 块卡<em>同时</em>运行的测试则是另一个问题（共享的供电和散热会把满载时的时钟频率拉低）。这有用，但它不是回答"这些 GPU 是否健康"时的首要依据。</p>
+<h3 id="c-storage">C. 存储<a class="headerlink" href="#c-storage" title="Permanent link">&para;</a></h3>
+<p>在<strong>本地 NVMe</strong> 路径<em>和</em><strong>共享文件系统</strong>路径上运行 <a href="../storage/fio-scan"><code>fio-scan</code></a>，方法见 <a href="../storage/index.html#fio">fio</a> 一节。两者你都需要：NVMe 是性能上限；共享文件系统才是数据加载器和检查点实际读写的对象。默认每个挂载点跑 6 项基准测试 × 3 分钟（每个挂载点约 18 分钟）。小文件（16 KiB）延迟是开发者体验的代理指标；1 GiB 顺序读写是检查点读写性能的代理指标。</p>
+<p>在带日期的报告末尾写一段<strong>结论</strong>：对计算 / 网络 / 存储分别给出一个判断，然后列一份<strong>标记（Flags）</strong>列表（各项缺口，以及任何"能用，但不太好"的情况）。不要让读者为了找你的判断去表格里翻找。</p>
+<h2 id="security">安全<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
+<p>安全问题有时会被当作事后才考虑的环节，而云服务商对安全的做法可能相差很大。仅仅拿到 SOC 2 Type 2 合规认证可能还不够。最好确认一下你将使用的机器是否经过了虚拟化。如果你不在虚拟机里，而云服务商又同时服务其他租户，你可能无法放心他们在你未使用的那些机器上做的事情。最好确认你的云服务商在为你开通（或重新开通）一台服务器之前，会校验 BMC 固件、系统固件和 BIOS 固件都处于经过验证的正确版本（known-good）。</p>
+<h2 id="miscellaneous">杂项<a class="headerlink" href="#miscellaneous" title="Permanent link">&para;</a></h2>
+<h3 id="tier-1-vs-tier-2-clouds">一线（Tier 1）与二线（Tier 2）云服务商<a class="headerlink" href="#tier-1-vs-tier-2-clouds" title="Permanent link">&para;</a></h3>
+<p>对于一线云服务商（AWS、GCP、Azure 等）与新兴的、规模较小的二线云服务商哪个更好，我还没有明确的建议。我的直觉是，二线云服务商更可能提供更周到、更有人情味的支持，因为他们必须更努力地争取客户。</p>
+<p>价格方面，二线云服务商一般来说更便宜，因为否则他们就没办法与一线云服务商竞争。不过显而易见，他们的"利润率"要小得多，因为二线云服务商没有一线云服务商那种靠采购规模换来的议价能力。</p>
+<p>二线云服务商往往更灵活，会有非主流的加速卡（例如 AMD 和 Intel 的），而且很可能更乐意在免费或几乎不收费的情况下帮你把系统调优到位。</p>
+<h3 id="orchestration">编排<a class="headerlink" href="#orchestration" title="Permanent link">&para;</a></h3>
+<p>顺畅的节点编排，对成功使用多节点集群至关重要。</p>
+<p>一定要弄清楚你需要哪一种——通常是 <a href="../orchestration/slurm/index.html">SLURM</a>、Kubernetes，或两者结合——并确认它得到了良好的支持。有些云只支持其中一种，或者对另一种只提供非常有限的支持。如今 SLURM 主要用于训练/微调，Kubernetes 用于推理。此外还有其他<a href="../orchestration/index.html">正在兴起的编排平台</a>。</p>
+<p>和硬件一样，取决于你是否打算自己管理集群，你需要知道出了问题由谁来处理。这是你的技术栈中非常关键的一环，因为编排一旦坏掉，没有人能用这个集群，你会损失时间和金钱。</p>
+<h3 id="up-to-date-softwareos-versions">最新的软件/操作系统版本<a class="headerlink" href="#up-to-date-softwareos-versions" title="Permanent link">&para;</a></h3>
+<p>一定要问清楚，服务商不会强迫你使用旧版本的软件和操作系统。</p>
+<p>我有过这样的经历：我们被迫使用非常旧的 Ubuntu 版本，因为我们不得不使用的服务商软件栈不支持更新的、最新的操作系统。</p>
+<h3 id="system-administration">系统管理<a class="headerlink" href="#system-administration" title="Permanent link">&para;</a></h3>
+<p>如今，要找到一位理解 ML 工作负载特殊需求的优秀系统管理员并不容易，所以最好问一下，能否把其中一部分工作转交给云服务商来做。一线云服务商会把这类工作分包给能够提供不同层次系统管理服务的公司。较小的云服务商更可能直接提供自己的服务。他们通常很了解 ML 工作负载需要什么。</p>
+<p>如果没有有经验的人来照料你的集群，你不可能成功。让你的 ML 工程师兼顾系统管理工作可能非常适得其反，因为这类工作非常耗时，而且会不断打断人。</p>
+<p>要么雇一位系统管理员，要么雇一家服务公司来代劳。</p>
+<h2 id="conclusion">结论<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h2>
+<p>这些笔记基于我的亲身经历，而我显然没有遇到过所有可能出的问题——那些可能把你的集群搅得一团糟、或者让整个团队精疲力竭、愁得掉很多头发的问题。但这些内容应当是一个很好的思考基础。</p>
+<p>请补充你自己的问题：想一想什么对你重要，哪些故障可能阻碍你达成计算目标。</p>
+<p>如果你正在考察某家特定的云服务商，去向社区打听打听他们，特别是要避开那家云的哪些坑。</p>
+<p>本文的核心信息是：选择一家没有剥夺你选择权的云，不要陷在一个让你的开发者讨厌的服务里——那很可能导致人们离开你的公司。</p>
+<p>如果你觉得这些内容太多、让人望而生畏，我偶尔也做咨询，帮忙做尽职调查并参加前期需求沟通电话。你可以通过 <a href="mailto:stas@stason.org?subject=Choosing%20cloud%20consulting">stas@stason.org</a> 联系我。</p>
+<h2 id="additional-reading">延伸阅读<a class="headerlink" href="#additional-reading" title="Permanent link">&para;</a></h2>
+<ul>
+<li>semianalysis.com 创建了 ClusterMax 云服务商（CSP）评级体系，其中对各种评价标准有很好的解释，并计划继续为更多云服务商排名。<a href="https://newsletter.semianalysis.com/p/the-gpu-cloud-clustermax-rating-system-how-to-rent-gpus">2025</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="ai-battlefield.html" class="md-footer__link md-footer__link--prev" aria-label="上一页: AI 战场上的工程实践——你需要了解的事">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                AI 战场上的工程实践——你需要了解的事
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="when-to-upgrade-gpus/index.html" class="md-footer__link md-footer__link--next" aria-label="下一页: 升级 GPU 什么时候才值得？">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                升级 GPU 什么时候才值得？
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>
