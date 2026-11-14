@@ -51,9 +51,14 @@ markdown_extensions:
 
 def main():
     ordered = co.content_list()
+    # only include pages that exist under docs/ (preview-friendly nav)
+    ordered = [p for p in ordered
+               if os.path.exists(os.path.join(co.ROOT, "docs", co.dst_path(p)))]
     # bare path nav entries: mkdocs takes each page title from its H1
     nav = ["- index.md"]
     for title, dsts in co.sections(ordered):
+        if not dsts:
+            continue
         nav.append(f"- {title}:")
         nav.extend(f"    - {d}" for d in dsts)
     with open(os.path.join(co.ROOT, "mkdocs.yml"), "w", encoding="utf-8") as f:

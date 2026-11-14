@@ -29,12 +29,17 @@ def rewrite_file(path):
             return "](" + new + frag + ")"
         # directory links like `(compute)` -> point at that dir's README.md page
         if norm not in ("", ".") and os.path.isdir(os.path.join(DOCS, norm)):
-            if os.path.exists(os.path.join(DOCS, norm, "README.md")):
-                new = target.rstrip("/") + "/README.md"
+            new = (to_upstream(norm + "/README.md")
+                   if not os.path.exists(os.path.join(DOCS, norm, "README.md"))
+                   else target.rstrip("/") + "/README.md")
+            changes.append((target, new))
+            return "](" + new + frag + ")"
+        if not EXCLUDED.search(norm):
+            # .md links to pages not (yet) translated -> upstream English source
+            if norm.endswith(".md") and not os.path.exists(os.path.join(DOCS, norm)):
+                new = to_upstream(norm)
                 changes.append((target, new))
                 return "](" + new + frag + ")"
-            return m.group(0)
-        if not EXCLUDED.search(norm):
             return m.group(0)
         new = to_upstream(norm)
         changes.append((target, new))

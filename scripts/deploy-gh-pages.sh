@@ -1,23 +1,20 @@
 #!/usr/bin/env bash
-# Build the Chinese mkdocs site and publish it to the gh-pages branch.
+# Build the Chinese mkdocs site and publish it to the gh-pages branch
+# (via a throwaway clone — no worktree needed for a fresh branch).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-/home/pig/.venv/mkdocs-zh/bin/mkdocs build -d /tmp/mleng-site-zh
+NO_MKDOCS_2_WARNING=1 /home/pig/.venv/mkdocs-zh/bin/mkdocs build -d /tmp/mleng-site-zh
 
-BR=gh-pages
-WT=/tmp/mleng-ghpages
-git worktree remove --force "$WT" 2>/dev/null || true
-if git show-ref --verify --quiet refs/heads/$BR; then
-  git worktree add -f "$WT" "$BR"
-else
-  git worktree add --orphan -f "$WT" "$BR"
-fi
-find "$WT" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+WT=/tmp/mleng-ghpages-git
+rm -rf "$WT"
+mkdir -p "$WT"
 cp -r /tmp/mleng-site-zh/. "$WT"/
 touch "$WT/.nojekyll"
+git -C "$WT" init -q
 git -C "$WT" add -A
-git -C "$WT" commit -m "site: 简体中文站 $(date -u +%F)" --allow-empty
-git -C "$WT" push origin "$BR"
-git worktree remove --force "$WT"
-echo "deployed to origin/$BR"
+git -C "$WT" -c user.name="translation-bot" -c user.email="noreply@users.noreply.github.com" \
+  commit -q -m "site: 简体中文站 $(date -u +%F)"
+git -C "$WT" remote add origin "$(git -C . remote get-url origin)"
+git -C "$WT" push -f origin HEAD:refs/heads/gh-pages
+echo "deployed to origin/gh-pages ($(git -C "$WT" rev-parse HEAD | cut -c1-8))"
