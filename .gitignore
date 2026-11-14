@@ -139,3 +139,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# zh translation pipeline
+/zh_work/
+/site/
+__pycache__/
