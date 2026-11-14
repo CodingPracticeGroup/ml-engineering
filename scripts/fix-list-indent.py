@@ -100,11 +100,19 @@ def fix_text(text):
             after_fence = False
             after_indented_para = False
             out.append(ln); continue
+        # R7: a paragraph right after a table belongs with the table's block.
+        # Align it to the table's own indent — CommonMark keeps it a plain
+        # paragraph, but at +4 Python-Markdown renders it as indented code.
+        if prev_nonblank and re.match(r"^ *\|", prev_nonblank) and body.strip():
+            t_ind = len(prev_nonblank) - len(prev_nonblank.lstrip())
+            body = " " * t_ind + body.lstrip()
+            out.append(body + "\n"); prev_nonblank = body; continue
         # R2 continuation paragraph under a list item
         if stack:
             indent = len(body) - len(body.lstrip())
             want = stack[-1][0] + 4
-            if 0 < indent < want and not re.match(r"^ *[>|]", body):
+            if (0 < indent < want and not re.match(r"^ *[>|]", body)
+                    and not re.match(r"^ *\|", prev_nonblank)):
                 body = " " * want + body.lstrip()
                 after_indented_para = True
                 out.append(body + "\n"); prev_nonblank = body; continue
