@@ -5,6 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 NO_MKDOCS_2_WARNING=1 /home/pig/.venv/mkdocs-zh/bin/mkdocs build -d /tmp/mleng-site-zh
+python3 scripts/inject-en-links.py /tmp/mleng-site-zh
 
 WT=/tmp/mleng-ghpages-git
 rm -rf "$WT"

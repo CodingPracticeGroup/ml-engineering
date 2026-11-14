@@ -96,3 +96,19 @@
 .md-footer__inner {
   font-size: .64rem;
 }
+
+/* ===== 底栏翻页字号（子元素有独立 rem 声明，需逐个压到 80%） ===== */
+.md-footer__link,
+.md-footer__title,
+.md-footer__direction {
+  font-size: .56rem;
+}
+
+/* ===== 正文顶部“英文原文”链接条 ===== */
+.en-origin-link {
+  text-align: right;
+  margin: 0 0 .8em;
+  font-size: .56rem;
+  opacity: .75;
+}
+.en-origin-link:hover { opacity: 1; }
