@@ -29,3 +29,48 @@
   max-width: 100%;
   height: auto;
 }
+
+/* ===== 左栏导航层级区分 ===== */
+
+/* L1 分组标题：加粗 + 主色文字 + 左侧色条 + 浅色底块 */
+.md-sidebar--primary .md-nav__item--nested > .md-nav__link {
+  font-weight: 700;
+  font-size: .78rem;
+  color: var(--md-primary-fg-color);
+  background: rgba(63, 81, 181, 0.10);
+  border-left: 3px solid var(--md-primary-fg-color);
+  border-radius: 0 2px 2px 0;
+  padding: .32rem .5rem;
+  margin: .5rem .4rem 0 0;
+}
+.md-sidebar--primary .md-nav__item--nested > .md-nav__link:hover {
+  background: rgba(63, 81, 181, 0.18);
+}
+
+/* 首页：与分组标题同级强调（它是一级可点项） */
+.md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item:not(.md-nav__item--nested) > .md-nav__link {
+  font-weight: 700;
+  font-size: .78rem;
+}
+
+/* L2 及更深层：缩进导引线 + 更小的字号，与分组拉开对比 */
+.md-sidebar--primary .md-nav__item .md-nav {
+  border-left: 2px solid var(--md-default-fg-color--lightest);
+  margin-left: .65rem;
+}
+.md-sidebar--primary .md-nav__item .md-nav > .md-nav__list > .md-nav__item > .md-nav__link {
+  font-size: .7rem;
+  color: var(--md-default-fg-color--light);
+}
+.md-sidebar--primary .md-nav__item .md-nav > .md-nav__list > .md-nav__item > .md-nav__link:hover {
+  color: var(--md-text-link-color);
+}
+
+/* L3 当前页页内锚点：虚线导引 + 再弱一档 */
+.md-sidebar--primary .md-nav .md-nav .md-nav {
+  border-left-style: dashed;
+}
+.md-sidebar--primary .md-nav .md-nav > .md-nav__list .md-nav .md-nav > .md-nav__list > .md-nav__item > .md-nav__link {
+  font-size: .66rem;
+  opacity: .85;
+}
