@@ -79,3 +79,20 @@
 .md-sidebar--primary .md-nav__link {
   font-size: .56rem;
 }
+
+/* ===== 全站字号 80% ===== */
+
+/* 正文：主题默认 .8rem → .64rem；标题/代码/表格均为相对单位，随之等比 */
+.md-typeset {
+  font-size: .64rem;
+}
+
+/* 右栏页内目录：与左栏同档 .56rem */
+.md-sidebar--secondary .md-nav__link {
+  font-size: .56rem;
+}
+
+/* 页脚翻页与版权信息同步缩小 */
+.md-footer__inner {
+  font-size: .64rem;
+}
