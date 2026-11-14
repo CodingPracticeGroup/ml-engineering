@@ -5,6 +5,8 @@
 1. 其中一些人通过 PR 做出贡献，因此会自动列在[这里](https://github.com/stas00/ml-engineering/graphs/contributors)
 2. 另一些人是通过其他各种方式做出的贡献，所以我在这里明确列出他们：
 
+<!---->
+
 - [Adam Moody](https://github.com/adammoody)
 - [Alex Rogozhnikov](https://github.com/arogozhnikov)
 - [Bowei Liu](https://github.com/boweiliu)

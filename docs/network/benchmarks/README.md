@@ -463,6 +463,8 @@ srun --cpus-per-task=$SLURM_CPUS_PER_TASK --gres=gpu:8 --nodes=4 --tasks-per-nod
 
 在使用 V100、以 DeepSpeed ZeRO Stage 3 做大规模训练（64+ GPU）时，若想获得合理的 GPU 吞吐量
 
+<!---->
+
 1. 100Gbps 不够
 2. 200-400Gbps 可以
 3. 800-1000Gbps 最理想

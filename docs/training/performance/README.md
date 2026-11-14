@@ -242,6 +242,8 @@ Transformer 架构包含 3 大类运算，下面按计算强度分组列出。
 
 **模型权重：**
 
+<!---->
+
 - fp32 训练：每个参数 4 字节
 - 混合精度训练：每个参数 6 字节（内存中同时维护一份 fp32 模型和一份 fp16/bf16 模型）
 
@@ -265,11 +267,15 @@ Transformer 架构包含 3 大类运算，下面按计算强度分组列出。
 
 以下是每 GPU 激活内存的大致构成：
 
+<!---->
+
 1. 激活工作内存：`dtype_size * num_of_hidden_states_copies * bs * seqlen * hidden_size`
 2. 激活检查点内存：`dtype_size * num_layers * bs * seqlen * hidden_size`
 3. logits 工作内存：`fp32_size * bs * seqlen * vocab_size`
 
 在以下所有计算中：
+
+<!---->
 
 - `dtype_size`：所用 `dtype` 单个元素的大小，例如 fp8 为 `1` 字节，bf16 为 `2`，fp32 为 `4` 等——完整集合参见[张量精度/数据类型](../dtype.md)
 - `fp32_size`：`4` 字节
@@ -469,6 +475,8 @@ torch-dist-mem-usage.py
 2. 全局批次大小（global batch size，GBS）——指所有参与的 GPU 在两次优化器步骤之间消耗的样本总数。
 
 模型副本（model replica）指容纳完整模型所需的 GPU 数量。
+
+<!---->
 
 - 如果模型能装进单个 GPU，一个模型副本只占 1 个 GPU。通常这时可以使用多个 GPU 来做 [数据并行](../../training/model-parallelism/README.md#data-parallelism)
 - 如果模型装不进单个 GPU，通常就需要某种分片技术——可以是 [张量并行](../../training/model-parallelism/README.md#tensor-parallelism)（TP）、[流水线并行](../../training/model-parallelism/README.md#pipeline-parallelism)（PP），或 [ZeRO 数据并行](../../training/model-parallelism/README.md#zero-data-parallelism)（ZeRO-DP）。

@@ -206,6 +206,8 @@
 
 示例：假设你在以 BFLOAT16 精度训练：
 
+<!---->
+
 - 如果单次迭代需要 624 Tera 次浮点运算，跑了 4 秒，那么我们知道实际 TFLOPS 为：`624/4=156`
 - 而 BF16@A100 [标称为 312TFLOPS](https://www.nvidia.com/en-us/data-center/a100/)，于是 `156/312=0.5` 告诉我们 MFU 为 50%。
 
@@ -242,26 +244,26 @@
 
 广泛可得：
 
-  * NVIDIA H200、B200、B300——B300 系统已在出货
-  * AMD MI325X、MI350X 和 MI355X——主要见于新兴云服务商（neoclouds），但大型云服务商（CSP）也开始提供 AMD
-  * Intel Gaudi3——在 Intel 自己的云上，以及通过 OEM 服务器提供
+* NVIDIA H200、B200、B300——B300 系统已在出货
+    * AMD MI325X、MI350X 和 MI355X——主要见于新兴云服务商（neoclouds），但大型云服务商（CSP）也开始提供 AMD
+    * Intel Gaudi3——在 Intel 自己的云上，以及通过 OEM 服务器提供
 
 可获得，但会把你锁定：
 
-  * Google TPU——很快，但会把你锁定在单一供应商和单一云上，而且软件路径是 XLA 而非 CUDA。Google 似乎已开始向某些公司（在其云之外）出售 TPU——此事未经官方证实，但如果属实，会削弱“锁定”这一论点
-  * AWS Trainium2——在 AWS 上，同样是 XLA
-  * Cerebras WaferScale Engine——在 Cerebras 的云上
+* Google TPU——很快，但会把你锁定在单一供应商和单一云上，而且软件路径是 XLA 而非 CUDA。Google 似乎已开始向某些公司（在其云之外）出售 TPU——此事未经官方证实，但如果属实，会削弱“锁定”这一论点
+    * AWS Trainium2——在 AWS 上，同样是 XLA
+    * Cerebras WaferScale Engine——在 Cerebras 的云上
 
 尚不可得：
 
-  * NVIDIA Rubin——已全面投产并向部分企业客户出货（CoreWeave 有限供应，Cognition 正在其上运行生产负载）；截至 2026-10 尚无自助式云租赁或公开定价，首个超大规模云服务商的 GA（正式可用）——Google Cloud A5X——预计 2026-11
-  * AMD MI455X——Helios 的批量部署预计为 2H-2026
-  * SambaNova SN50——“2026 下半年”开始出货；SN40L 是当前的在售型号
-  * Intel GPU D 系列 / D270（Crescent Island）——推理 GPU，于 OCP 2026 发布，客户送样 H2-2026；160GB LPDDR5X（ODM 最高 480GB）@ 1.5TBps，FP8 1.3 PFLOPS（这是唯一公布的算力数字）
+* NVIDIA Rubin——已全面投产并向部分企业客户出货（CoreWeave 有限供应，Cognition 正在其上运行生产负载）；截至 2026-10 尚无自助式云租赁或公开定价，首个超大规模云服务商的 GA（正式可用）——Google Cloud A5X——预计 2026-11
+    * AMD MI455X——Helios 的批量部署预计为 2H-2026
+    * SambaNova SN50——“2026 下半年”开始出货；SN40L 是当前的在售型号
+    * Intel GPU D 系列 / D270（Crescent Island）——推理 GPU，于 OCP 2026 发布，客户送样 H2-2026；160GB LPDDR5X（ODM 最高 480GB）@ 1.5TBps，FP8 1.3 PFLOPS（这是唯一公布的算力数字）
 
 区域性供应：
 
-  * 华为昇腾（Ascend）——实际规模可观，但实际上仅限中国，而且规格只出现在华为的中文页面上
+* 华为昇腾（Ascend）——实际规模可观，但实际上仅限中国，而且规格只出现在华为的中文页面上
 
 要注意“已宣布（announced）”不等于“可获得（available）”——[加速器](../compute/accelerator/README.md#tflops-comparison-table)表格正是基于这个原因一分为二，先是 `Generally available`，后是 `Announced, availability not confirmed`。完整列表和数字见[加速器](../compute/accelerator/README.md)。
 
@@ -346,6 +348,8 @@ ML 负载中有三种不同的存储 IO 需求：
 1. 你需要能快速喂饱 DataLoader——（超快的读取，不在乎快写）——要求持续数小时甚至数天的可持续负载
 2. 你需要能快速写入检查点——（超快的写入，较快的读取，因为你只会恢复几次）——要求突发式的写入——你希望它足够快，以免长时间阻塞训练（除非你用某种 CPU 卸载的方式来快速解除训练阻塞）
 3. 你需要能加载和维护你的代码库——（读写都是中等速度即可）——这还必须要是共享的，因为你希望所有节点看到同一份代码库——它只在启动或恢复时发生，因此频率很低
+
+<!---->
 
 - 大多数时候，你付了 100% 的钱只买到 80% 的东西。如果你想要可靠的 100TB，就得租 125TB，否则你的应用可能在磁盘远未写满时就写入失败。
 

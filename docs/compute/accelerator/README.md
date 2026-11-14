@@ -204,6 +204,8 @@ ML 训练和推理所做的大部分工作都是矩阵乘法。如果你还记�
 
 现在我们来算一下，把上表中的数字代入最后那个基于 FMA 的公式：
 
+<!---->
+
 - `1830*10**6 * 512 * 2 * 528 / 10**12 = 989.430` TFLOPS
 - `1410*10**6 * 256 * 2 * 432 / 10**12 = 311.87` TFLOPS
 
@@ -226,6 +228,8 @@ ML 训练和推理所做的大部分工作都是矩阵乘法。如果你还记�
 2. AMD 公布了 MI355X 和 MI350X（1024）以及 MI300X（1216）的 Matrix Core 数量，但没有公布 MI250X 的，因此这里的 880 是推算出来的：每个 CU 有 4 个 Matrix Core，共 220 个 CU。
 
 我们照旧自己算一遍：
+
+<!---->
 
 - `2400*10**6 * 512 * 2 * 1024 / 10**12 = 2516.6` TFLOPS——按 AMD 自己的取整方式，与其公布的 `2.5 PFLOPS` 一致
 - `2200*10**6 * 512 * 2 * 1024 / 10**12 = 2306.9` TFLOPS——与 AMD 公布的 MI350X 的 `2.3 PFLOPS` 一致，MI350X 与 MI355X 是同一块硅片，只是时钟频率更低
@@ -329,6 +333,8 @@ Intel Gaudi 使用 MME 来执行 BF16 `matmul`
 29. H200 NVL 是 H200 的 PCIe 插卡版本：与 H200 SXM 相同的芯片，同样配备 4.8TBps 的 141GB HBM3e，但功率上限是 600W 而不是 700W，NVIDIA 对其算力的标称值也低约 16%。`tf32`、`fp16`、`bf16`、`fp8` 和 `int8` 列是 NVIDIA 公布的带稀疏性数值 835 / 1671 / 1671 / 3341 / 3341 的一半，并按与 H200 SXM 行相同的方式向下取整。它的 NVLink 只能通过桥接器连接 2 路或 4 路卡，每颗 GPU 为 900GBps，不同桥接组中的 GPU 之间通过 PCIe Gen5 以 128GBps 通信——不像 H200 SXM，那里由 NVSwitch 连接节点的全部 8 颗 GPU。参见 [NVIDIA H200 规格](https://www.nvidia.com/en-us/data-center/h200/)。
 30. Intel GPU D270（代号 Crescent Island）是 Intel 基于 Xe3P 的 GPU D 系列的第一个产品——一款仅用于推理的数据中心加速器（32 个 Xe3P 核、256 个 XMX 矩阵引擎、32MB L2），于 OCP 2026（2026-10-12）宣布，将在 H2-2026 向客户送样。Xe3P XMX 原生支持完整的精度阶梯——FP64、FP32、TF32、FP16、BF16、双格式 FP8（E4M3/E5M2）、FP4、OCP MX 格式（MXFP4/MXFP8）以及 int8/int4——所以这里的 `?` 单元格表示"支持，但速率未公布"，而不是"不支持"。Intel 公开公布的算力数字是 **稠密** FP8 的 `1.3 PFLOPS`（没有结构化稀疏），所以 `fp8` 填 1300。Intel 的产品规格还给出了 **稠密** `mxfp4` = 2622 TFLOPS（FP8 的 2 倍）和向量 `fp32` = 20.5 TFLOPS（向量 FP64 为 10.2，但表中没有对应的列）；这两项是 Intel 的官方数字，但尚未出现在任何公开页面上，所以没有来源链接——它们是厂商规格，不是估计值。其余所有受支持的格式（`tf32`、`fp16`、`bf16`、`int8`）在 Intel 公布官方速率之前一律保持 `?`（表中不收录估计值）。`fp6` 填 `X`（不在 Intel 的格式列表中），`nvfp4` 填 `X`，因为这颗芯片实现的是 OCP 微缩放 fp4（`mxfp4`），而不是 NVIDIA 的 nvfp4。参见 [Intel GPU D 系列](#intel-gpu-d-series-crescent-island)、[Intel 新闻室](https://www.intel.com/content/www/us/en/newsroom/news/artificial-intelligence/intel-accelerates-open-infrastructure-agentic-ai-era.html)、[Tom's Hardware](https://www.tomshardware.com/tech-industry/artificial-intelligence/intels-crescent-island-ai-accelerator-officially-powers-new-gpu-d-series-products-chip-delivers-1-3-peak-pflops-of-fp8-compute-and-1-5-tb-s-of-memory-bandwidth)（均查阅于 2026-10-15）。
 通用注意事项：
+
+<!---->
 
 * int8 以 TeraOperations（万亿次操作）计量，因为它不是浮点运算。
 
@@ -434,6 +440,8 @@ MAMF 是[最大可达 Matmul FLOPS](#maximum-achievable-and-sustainable-matmul-f
 20. NVIDIA B300 SXM，mxfp4：每 32 个元素共用一个 `float8_e8m0fnu` 缩放因子；MAMF ~267–307 W @ 2032 MHz；MSMF 5847 @ 2048x18944x19456，~1065–1076 W @ 1534–1621 MHz，64–74°C。它运行在 torch 自己的 `sm100` 内核上，而不是 cuBLAS 的内核，所以无论 torch 2.14.0+cu130 还是 2.14.1+cu132，都用不到 B300 更快的 `sm_103a` FP4 路径。
 
 通用说明：
+
+<!---->
 
 - 完整的理论值集合见[理论加速器 TFLOPS](#tflops-comparison-table)
 - `MAMF %` / `MSMF %` 就是 `MAMF/Theory*100` 和 `MSMF/Theory*100`
@@ -694,12 +702,16 @@ print(f"{p.name}: {p.memory_clock_rate/1e6:.3f}GHz x {p.memory_bus_width}-bit bu
 
 比较这些规格时：
 
+<!---->
+
 - 先比较作用范围。每 SM 或每 CU 的缓存只归某个本地计算单元私有，而 L2、L3、LLC 或 Infinity Cache 可能由加速器中远为更大的部分共享。
 - 核对语义。硬件管理的缓存、可配置的共享内存和软件管理的 SRAM，容量可能相近，但对编程方式和访存模式的要求可能非常不同。
 - 不要把私有缓存的总和当作一个大的共享缓存。这样的总量描述的是物理容量，而不是任何一次操作实际能访问到的缓存量。
 - 容量只是因素之一。缓存带宽、延迟、相联度、共享域以及工作负载的命中率可能影响更大，所以性能比较要用能代表工作负载的基准测试。
 
 注：
+
+<!---->
 
 1. AMD 提供 L3 缓存 AMD Infinity Cache，它在规格里也被称为最后一级缓存（Last Level Cache，LLC）
 
@@ -771,6 +783,8 @@ print(f"{p.name}: {p.memory_clock_rate/1e6:.3f}GHz x {p.memory_bus_width}-bit bu
 
 
 下面说明如何获取实际的时钟频率（尤其是在你的加速器正处于负载之下时）：
+
+<!---->
 
 - NVIDIA：有 X-server 时用 `nvidia-settings -q GPUCurrentClockFreqs`；无头（headless）环境下用 `nvidia-smi -q -d CLOCK -i 0 | grep -B2 " SM " | head -3`（如果不是在测量 gpu0，请相应调整 `-i 0`，或者删掉它以显示所有可用的 GPU）。去掉 `grep` 可以得到完整输出——`Max Clocks` 显示的是理论时钟。下面是带时间戳的持续记录同一内容的命令：`nvidia-smi --query-gpu=index,timestamp,power.draw,clocks.sm,clocks.mem,clocks.gr --format=csv -l 1 -i 0`
 - AMD：实际频率用 `rocm-smi -g`，理论频率用 `amd-smi metric --clock`

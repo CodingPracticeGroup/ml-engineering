@@ -8,86 +8,86 @@
 
 1. 创建一个 `hostfile`：
 
-```bash
-$ cat hostfile
-worker-0 slots=1
-worker-1 slots=1
-```
+    ```bash
+    $ cat hostfile
+    worker-0 slots=1
+    worker-1 slots=1
+    ```
 
 2. 在你的 ssh 客户端中添加相匹配的配置
 
-```bash
-$ cat ~/.ssh/config
-[...]
+    ```bash
+    $ cat ~/.ssh/config
+    [...]
 
-Host worker-0
+    Host worker-0
     HostName localhost
     Port 22
-Host worker-1
+    Host worker-1
     HostName localhost
     Port 22
-```
+    ```
 
-如果端口不是 22，请改成实际的端口；如果主机名不是 `localhost`，也请照此修改。
+    如果端口不是 22，请改成实际的端口；如果主机名不是 `localhost`，也请照此修改。
 
 
 3. 由于你本地的环境很可能设置了密码保护，请务必把自己的公钥加入 `~/.ssh/authorized_keys`
 
-`deepspeed` 启动器明确使用免密连接，例如在 worker0 上它会运行：`ssh -o PasswordAuthentication=no worker-0 hostname`，所以你可以随时用下面的命令来调试 ssh 的设置：
+    `deepspeed` 启动器明确使用免密连接，例如在 worker0 上它会运行：`ssh -o PasswordAuthentication=no worker-0 hostname`，所以你可以随时用下面的命令来调试 ssh 的设置：
 
-```bash
-$ ssh -vvv -o PasswordAuthentication=no worker-0 hostname
-```
+    ```bash
+    $ ssh -vvv -o PasswordAuthentication=no worker-0 hostname
+    ```
 
 4. 创建一个测试脚本，用来检查两块 GPU 是否都被用上。
 
-```bash
-$ cat test1.py
-import os
-import time
-import torch
-import deepspeed
-import torch.distributed as dist
+    ```bash
+    $ cat test1.py
+    import os
+    import time
+    import torch
+    import deepspeed
+    import torch.distributed as dist
 
-# 关键技巧：使用第 2 块 gpu（否则两个进程都会使用 gpu0）
-if os.environ["RANK"] == "1":
+    # 关键技巧：使用第 2 块 gpu（否则两个进程都会使用 gpu0）
+    if os.environ["RANK"] == "1":
     os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
-dist.init_process_group("nccl")
-local_rank = int(os.environ.get("LOCAL_RANK"))
-print(f'{dist.get_rank()=}, {local_rank=}')
+    dist.init_process_group("nccl")
+    local_rank = int(os.environ.get("LOCAL_RANK"))
+    print(f'{dist.get_rank()=}, {local_rank=}')
 
-x = torch.ones(2**30, device=f"cuda:{local_rank}")
-print(x)
-time.sleep(100)
-```
+    x = torch.ones(2**30, device=f"cuda:{local_rank}")
+    print(x)
+    time.sleep(100)
+    ```
 
-运行：
+    运行：
 
-```bash
-$ deepspeed -H hostfile test1.py
-[2022-09-08 12:02:15,192] [INFO] [runner.py:415:main] Using IP address of 192.168.0.17 for node worker-0
-[2022-09-08 12:02:15,192] [INFO] [multinode_runner.py:65:get_cmd] Running on the following workers: worker-0,worker-1
-[2022-09-08 12:02:15,192] [INFO] [runner.py:504:main] cmd = pdsh -S -f 1024 -w worker-0,worker-1 export PYTHONPATH=/mnt/nvme0/code/huggingface/multi-node-emulate-ds;  cd /mnt/nvme0/code/huggingface/multi-node-emulate-ds; /home/stas/anaconda3/envs/py38-pt112/bin/python -u -m deepspeed.launcher.launch --world_info=eyJ3b3JrZXItMCI6IFswXSwgIndvcmtlci0xIjogWzBdfQ== --node_rank=%n --master_addr=192.168.0.17 --master_port=29500 test1.py
-worker-0: [2022-09-08 12:02:16,517] [INFO] [launch.py:136:main] WORLD INFO DICT: {'worker-0': [0], 'worker-1': [0]}
-worker-0: [2022-09-08 12:02:16,517] [INFO] [launch.py:142:main] nnodes=2, num_local_procs=1, node_rank=0
-worker-0: [2022-09-08 12:02:16,517] [INFO] [launch.py:155:main] global_rank_mapping=defaultdict(<class 'list'>, {'worker-0': [0], 'worker-1': [1]})
-worker-0: [2022-09-08 12:02:16,517] [INFO] [launch.py:156:main] dist_world_size=2
-worker-0: [2022-09-08 12:02:16,517] [INFO] [launch.py:158:main] Setting CUDA_VISIBLE_DEVICES=0
-worker-1: [2022-09-08 12:02:16,518] [INFO] [launch.py:136:main] WORLD INFO DICT: {'worker-0': [0], 'worker-1': [0]}
-worker-1: [2022-09-08 12:02:16,518] [INFO] [launch.py:142:main] nnodes=2, num_local_procs=1, node_rank=1
-worker-1: [2022-09-08 12:02:16,518] [INFO] [launch.py:155:main] global_rank_mapping=defaultdict(<class 'list'>, {'worker-0': [0], 'worker-1': [1]})
-worker-1: [2022-09-08 12:02:16,518] [INFO] [launch.py:156:main] dist_world_size=2
-worker-1: [2022-09-08 12:02:16,518] [INFO] [launch.py:158:main] Setting CUDA_VISIBLE_DEVICES=0
-worker-1: dist.get_rank()=1, local_rank=0
-worker-0: dist.get_rank()=0, local_rank=0
-worker-1: tensor([1., 1., 1.,  ..., 1., 1., 1.], device='cuda:0')
-worker-0: tensor([1., 1., 1.,  ..., 1., 1., 1.], device='cuda:0')
-```
+    ```bash
+    $ deepspeed -H hostfile test1.py
+    [2022-09-08 12:02:15,192] [INFO] [runner.py:415:main] Using IP address of 192.168.0.17 for node worker-0
+    [2022-09-08 12:02:15,192] [INFO] [multinode_runner.py:65:get_cmd] Running on the following workers: worker-0,worker-1
+    [2022-09-08 12:02:15,192] [INFO] [runner.py:504:main] cmd = pdsh -S -f 1024 -w worker-0,worker-1 export PYTHONPATH=/mnt/nvme0/code/huggingface/multi-node-emulate-ds;  cd /mnt/nvme0/code/huggingface/multi-node-emulate-ds; /home/stas/anaconda3/envs/py38-pt112/bin/python -u -m deepspeed.launcher.launch --world_info=eyJ3b3JrZXItMCI6IFswXSwgIndvcmtlci0xIjogWzBdfQ== --node_rank=%n --master_addr=192.168.0.17 --master_port=29500 test1.py
+    worker-0: [2022-09-08 12:02:16,517] [INFO] [launch.py:136:main] WORLD INFO DICT: {'worker-0': [0], 'worker-1': [0]}
+    worker-0: [2022-09-08 12:02:16,517] [INFO] [launch.py:142:main] nnodes=2, num_local_procs=1, node_rank=0
+    worker-0: [2022-09-08 12:02:16,517] [INFO] [launch.py:155:main] global_rank_mapping=defaultdict(<class 'list'>, {'worker-0': [0], 'worker-1': [1]})
+    worker-0: [2022-09-08 12:02:16,517] [INFO] [launch.py:156:main] dist_world_size=2
+    worker-0: [2022-09-08 12:02:16,517] [INFO] [launch.py:158:main] Setting CUDA_VISIBLE_DEVICES=0
+    worker-1: [2022-09-08 12:02:16,518] [INFO] [launch.py:136:main] WORLD INFO DICT: {'worker-0': [0], 'worker-1': [0]}
+    worker-1: [2022-09-08 12:02:16,518] [INFO] [launch.py:142:main] nnodes=2, num_local_procs=1, node_rank=1
+    worker-1: [2022-09-08 12:02:16,518] [INFO] [launch.py:155:main] global_rank_mapping=defaultdict(<class 'list'>, {'worker-0': [0], 'worker-1': [1]})
+    worker-1: [2022-09-08 12:02:16,518] [INFO] [launch.py:156:main] dist_world_size=2
+    worker-1: [2022-09-08 12:02:16,518] [INFO] [launch.py:158:main] Setting CUDA_VISIBLE_DEVICES=0
+    worker-1: dist.get_rank()=1, local_rank=0
+    worker-0: dist.get_rank()=0, local_rank=0
+    worker-1: tensor([1., 1., 1.,  ..., 1., 1., 1.], device='cuda:0')
+    worker-0: tensor([1., 1., 1.,  ..., 1., 1., 1.], device='cuda:0')
+    ```
 
-如果 ssh 设置成功了，你可以并行运行 `nvidia-smi`，并观察到两块 GPU 都因为 `torch.ones` 调用而分配了约 4GiB 显存。
+    如果 ssh 设置成功了，你可以并行运行 `nvidia-smi`，并观察到两块 GPU 都因为 `torch.ones` 调用而分配了约 4GiB 显存。
 
-请注意，脚本里硬塞了一个 `CUDA_VISIBLE_DEVICES`，用来告诉第 2 个进程使用 gpu1，但两种情况下它都会被看作 `local_rank==0`。
+    请注意，脚本里硬塞了一个 `CUDA_VISIBLE_DEVICES`，用来告诉第 2 个进程使用 gpu1，但两种情况下它都会被看作 `local_rank==0`。
 
 5. 最后，让我们测试 NCCL 集合通信（collective）也能正常工作
 

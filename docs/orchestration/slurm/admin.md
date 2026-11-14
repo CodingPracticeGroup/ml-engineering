@@ -4,16 +4,16 @@
 ## 在多个节点上运行命令 {#run-a-command-on-multiple-nodes}
 
 1. 为了避免在你尚未登录过的每个新节点上都被询问：
-```
-Are you sure you want to continue connecting (yes/no/[fingerprint])?
-```
-你可以通过以下做法关闭这个检查：
-```bash
-echo "Host *" >> ~/.ssh/config
-echo "  StrictHostKeyChecking no" >> ~/.ssh/config
-```
+    ```
+    Are you sure you want to continue connecting (yes/no/[fingerprint])?
+    ```
+    你可以通过以下做法关闭这个检查：
+    ```bash
+    echo "Host *" >> ~/.ssh/config
+    echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+    ```
 
-当然，请自行确认这样是否满足你的安全需求。我这里假设你已经在 SLURM 集群内部，并不是通过 ssh 连接到集群之外的机器。你也可以选择不做这个设置，那样你就必须逐个手动批准每一个新节点。
+    当然，请自行确认这样是否满足你的安全需求。我这里假设你已经在 SLURM 集群内部，并不是通过 ssh 连接到集群之外的机器。你也可以选择不做这个设置，那样你就必须逐个手动批准每一个新节点。
 
 2. 安装 `pdsh`
 

@@ -117,6 +117,8 @@ GPU2 拿到输入 x2，发生的也是同样的事。它从 GPU0 和 GPU1 得到
 
 ZeRO-DP 阶段 1+2+3 的实现：
 
+<!---->
+
 - [DeepSpeed](https://www.deepspeed.ai/tutorials/zero/)
 - [PyTorch](https://docs.pytorch.org/docs/stable/fsdp.html)（它最初在 [FairScale](https://github.com/facebookresearch/fairscale/) 中实现，后来被并入 PyTorch 核心代码库）
 - [torchtitan](https://github.com/pytorch/torchtitan)
@@ -183,6 +185,8 @@ DeepSpeed ZeRO 主要资源：
 PyTorch FSDP 在 [shardingStrategy.HYBRID_SHARD](https://docs.pytorch.org/docs/stable/fsdp.html) 中实现了这一特性
 
 论文：
+
+<!---->
 
 - [ZeRO++: Extremely Efficient Collective Communication for Giant Model Training](https://arxiv.org/abs/2306.10209)
 - [PyTorch FSDP: Experiences on Scaling Fully Sharded Data Parallel](https://arxiv.org/abs/2304.11277)
@@ -381,7 +385,7 @@ TP 的缺陷之一，是它的通信很难与计算重叠。PyTorch 提出了 [A
 3. 接下来，本地的 QKV 嵌入通过参与计算的设备之间高度优化的 all-to-all 集合通信，聚合为全局 QKV。
 4. 然后对每个头执行注意力计算：
 
-![math](images/deepspeed-ulysses-math.png)
+    ![math](images/deepspeed-ulysses-math.png)
 
 5. 最后，另一个 all-to-all 集合通信把注意力计算的输出上下文张量变换为序列（N/P）并行的形式，供 Transformer 层块其余模块中的后续算子（MLP 的矩阵乘法、层归一化等）使用。
 
@@ -430,6 +434,8 @@ Megatron-LM 的 SP 与其 TP 紧密集成。Megatron-LM 沿序列维度划分序
 5. 如此继续，直到注意力计算完成。
 
 SP 实现：
+
+<!---->
 
 - [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)
 - [DeepSpeed](https://github.com/deepspeedai/DeepSpeed)
@@ -547,6 +553,8 @@ https://arxiv.org/abs/2201.11990)
 4. Parameter（参数）= 模型并行（不分维度——水平或垂直皆可）
 
 示例：
+
+<!---->
 
 * Sample
 
@@ -676,6 +684,8 @@ IDEFICS-80B 训练所用的取值：
 与计算时间相比这就微不足道了，尤其是其中一部分还能与计算成功重叠的话。
 
 此外，DeepSpeed 团队还在 384 块 V100 GPU（24 台 DGX-2 节点）上实测[对 176B 模型做了基准测试](https://github.com/deepspeedai/DeepSpeed/issues/2928#issuecomment-1463041491)，发现：
+
+<!---->
 
 1. 用 100Gbps 的 IB，我们每块 GPU 只有 <20TFLOPS（糟糕）
 2. 用 200-400Gbps 的 IB，我们达到每块 GPU 约 30-40TFLOPS（可以接受）

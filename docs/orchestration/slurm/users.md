@@ -262,24 +262,24 @@ export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)
 
 1. **完整的提交 shell 环境（默认）：**
 
-```
-#SBATCH --export=ALL
-```
-在标准版 Slurm 上，这与省略 `--export` 相同——单独写这一行在那里没有任何作用。只有在需要撤销站点的默认值 `NONE` 时，或像（4）那样与附加项组合使用时才需要它。
+    ```
+    #SBATCH --export=ALL
+    ```
+    在标准版 Slurm 上，这与省略 `--export` 相同——单独写这一行在那里没有任何作用。只有在需要撤销站点的默认值 `NONE` 时，或像（4）那样与附加项组合使用时才需要它。
 
 2. **最小环境：**
 
-```
-#SBATCH --export=NONE
-```
-丢弃提交 shell 的环境。当你想要一个可复现、不继承登录 shell 中碰巧导出过的任何变量的作业时，这很有用。
+    ```
+    #SBATCH --export=NONE
+    ```
+    丢弃提交 shell 的环境。当你想要一个可复现、不继承登录 shell 中碰巧导出过的任何变量的作业时，这很有用。
 
 3. **只要这些变量（替换列表）：**
 
-```
-#SBATCH --export=KEY1,KEY2=value
-```
-**只**传播列出的变量（这里是：`KEY1` 的当前值，以及设为 `value` 的 `KEY2`）。提交 shell 中的其他内容全部丢弃——这不是在 `ALL` 基础上的追加。
+    ```
+    #SBATCH --export=KEY1,KEY2=value
+    ```
+    **只**传播列出的变量（这里是：`KEY1` 的当前值，以及设为 `value` 的 `KEY2`）。提交 shell 中的其他内容全部丢弃——这不是在 `ALL` 基础上的追加。
 
 4. **完整环境并设置/覆盖：**
 
@@ -974,10 +974,10 @@ ncclSystemError: System call (socket, malloc, munmap, etc) failed.
 下面是调试这个问题的方法：
 
 1. 添加：
-```bash
-export NCCL_DEBUG=INFO
-```
-在 `srun` 命令之前加上它，然后重新运行你的 slurm 脚本。
+    ```bash
+    export NCCL_DEBUG=INFO
+    ```
+    在 `srun` 命令之前加上它，然后重新运行你的 slurm 脚本。
 
 2. 现在仔细研究日志。如果你发现：
 ```

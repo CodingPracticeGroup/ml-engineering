@@ -7,9 +7,9 @@
 ## 安装要求 {#installation-requirements}
 
 1. 安装图书构建过程中用到的 python 包
-```bash
-pip install -r build/requirements.txt
-```
+    ```bash
+    pip install -r build/requirements.txt
+    ```
 
 2. 下载免费版的 [Prince XML](https://www.princexml.com/download/)。它用于构建本书的 PDF 版本。
 

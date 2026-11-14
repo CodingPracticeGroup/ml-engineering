@@ -346,6 +346,8 @@ tokenizer_fast_tiny.save_pretrained(".")
 
 下面是一些例子：
 
+<!---->
+
 - [stas/oscar-en-10k](https://huggingface.co/datasets/stas/oscar-en-10k/blob/main/oscar-en-10k.py)
 - [stas/c4-en-10k](https://huggingface.co/datasets/stas/c4-en-10k/blob/main/c4-en-10k.py)
 - [stas/openwebtext-10k](https://huggingface.co/datasets/stas/openwebtext-10k/blob/main/openwebtext-10k.py)
@@ -1435,9 +1437,10 @@ $ diff -u a b
 没错，3x3 的张量并不需要设置 `set_printoptions(threshold=1e10)`，所以你可以把上面的做法用在 100x100 的张量上。如果你不设置 `set_printoptions(threshold=1e10)`，而那根“针”恰好落在被 `torch` 藏进 `...` 里的部分，你就找不到它。用 `set_printoptions(profile="full")` 也能做到类似的效果，下一段会解释。
 
 为了便利，你还可以通过 `profile` 参数设置若干预设档位——例如，要得到完整的张量就设置：`set_printoptions(profile="full")`。截至 2026-08，预设档位有 3 种：
- - “default”：你通常得到的输出，即张量每条边显示 3 个元素，浮点数保留 4 位小数。
- - “short”：显示 2 个元素，浮点数保留 2 位小数。
- - “full”：用科学计数法打印所有元素。
+
+- “default”：你通常得到的输出，即张量每条边显示 3 个元素，浮点数保留 4 位小数。
+    - “short”：显示 2 个元素，浮点数保留 2 位小数。
+    - “full”：用科学计数法打印所有元素。
 
 我们演示一下 “short” 档位：
 
