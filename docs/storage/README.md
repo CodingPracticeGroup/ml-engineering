@@ -13,10 +13,12 @@
 当然，如果你预算无限，那就买一套读极快、写也极快、还能连续好几天不掉速的存储。但对我们大多数人来说这做不到，所以配置 2 到 3 种不同类型的分区、从而少花钱，是更明智的选择。
 
 对于推理，主要考虑的是启动时间，以便尽快开始提供推理服务：
+
 1. 快速读取检查点
 2. 快速加载代码库
 
 对于批量推理，你还会额外需要：
+
 1. 读取提示词（prompt）
 2. 写出生成的输出
 
@@ -90,11 +92,13 @@
 ### 顺序访问与随机访问 IO {#sequential-vs-random-access-io}
 
 **顺序访问** IO 指一个接一个地按顺序读取数据块（想象播放电影）。下面是一些例子：
+
 - 一次性读取或写入模型的检查点文件
 - 加载一个 python 程序
 - 安装一个软件包
 
 **随机访问** IO 指随机地访问文件的某一部分。下面是一些例子：
+
 - 数据库查询
 - 以随机方式从预处理好的数据集中读取样本
 - 用 `seek` 在文件中来回移动
@@ -153,7 +157,8 @@ find /mountpoint/ -type f -exec cat {} >/dev/null \;
 我亲身经历过的 3 种性能出色的并行文件系统是：
 
 - [GPFS](https://en.wikipedia.org/wiki/GPFS)（IBM），最近更名为 IBM Storage Scale，
-  在此之前它曾叫 IBM Spectrum Scale。
+    在此之前它曾叫 IBM Spectrum Scale。
+
 - [WekaIO](https://www.weka.io/)
 - [Lustre FS](https://www.lustre.org/)（开源）（[Wiki](https://wiki.lustre.org/Main_Page)）
 
@@ -164,6 +169,7 @@ find /mountpoint/ -type f -exec cat {} >/dev/null \;
 NASA 的集群有[一长串关于使用 Lustre 的注意事项](https://www.nas.nasa.gov/hecc/support/kb/lustre-best-practices_226.html)。
 
 GPFS 的一些非常实用的优点：
+
 - 如果你有大量小文件，inode 很容易用完（用 `df -i` 检查）。GPFS 5.x 永远不会用完 inode，它会按需动态创建更多 inode
 - GPFS 没有 Lustre 的那种问题：某个子盘满了又没及时再平衡，整个文件系统就会在 80% 时就报磁盘空间不足——你可以可靠地用满已分配存储的 100%。
 - GPFS 不使用中央元数据服务器（或由它们组成的集群），而中央元数据服务器在处理小文件时常常成为瓶颈。和元数据一样，GPFS 把元数据像数据一样交由存储集群中的每个节点处理。
@@ -268,6 +274,7 @@ Weka 在功能和性能上与 GPFS 相当接近。主要的差别在于你能与
 所以，假设你买了一个 100TB 的分区，已经用掉了 95TB，现在想给它做备份——好吧，做不到——如果只剩下 5TB 的空间，就算能压缩，又能把 95TB 的数据放到哪里呢。
 
 每当我发现更多具有这种反直觉行为的具体方案，我都会补充说明怎样才能看到真实的磁盘用量：
+
 - [GCP FileStore](https://docs.cloud.google.com/filestore/docs/monitoring-instances#free-raw-capacity-percent)（但它对 Basic Tier 不起作用）
 
 
@@ -425,6 +432,7 @@ $target_partition_path/miniconda3/bin/conda init bash
 bash
 ```
 注意：
+
 - 如果你不在 x86 平台上，请调整 `target_partition_path` 和 miniconda 下载链接。
 - 最后我们启动一个新的 `bash` shell，让 conda 的配置生效。如果你不是 `bash` 用户，可能还需要进一步调整——我相信你知道该怎么做。
 

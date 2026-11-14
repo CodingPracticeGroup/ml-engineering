@@ -164,6 +164,7 @@ HFU = 400/989 = 40%
 因此，每当你看到有人公布 MFU 或 HFU 数字时，在你确认对方使用了相同的 FLOPS 计算方法之前，务必不要贸然把这些数字与其他类似数字相比。由于 `HFU=Actual_Achieved_FLOPS/Theoretical_FLOPS`，而 `Theoretical_FLOPS` 是固定的，这里唯一的变量就是 `Actual_Achieved_FLOPS`；而它大多数时候是根据参数形状估算出来的，所以外界存在许多版本的计算方法，有些略不准确，有些则非常不准确。编译器也可能影响有效 FLOPs，因为它会优化掉某些运算。此外，你还不知道迭代时间是如何测量的。
 
 回顾一下 `TFLOPS = FLOS / iteration_duration`。因此，要做公平的比较，两个关键要问的问题是：
+
 1. 所用的浮点运算总数是否以相同的方式计算？
 2. 时间部分是否背靠背地统计了每次迭代，包括 `DataLoader` 和日志记录，还是只统计了 `fwd`+`bwd` 部分。
 
@@ -269,6 +270,7 @@ Transformer 架构包含 3 大类运算，下面按计算强度分组列出。
 3. logits 工作内存：`fp32_size * bs * seqlen * vocab_size`
 
 在以下所有计算中：
+
 - `dtype_size`：所用 `dtype` 单个元素的大小，例如 fp8 为 `1` 字节，bf16 为 `2`，fp32 为 `4` 等——完整集合参见[张量精度/数据类型](../dtype.md)
 - `fp32_size`：`4` 字节
 - `bs`：批次大小
@@ -472,6 +474,7 @@ torch-dist-mem-usage.py
 - 如果模型装不进单个 GPU，通常就需要某种分片技术——可以是 [张量并行](../../training/model-parallelism/README.md#tensor-parallelism)（TP）、[流水线并行](../../training/model-parallelism/README.md#pipeline-parallelism)（PP），或 [ZeRO 数据并行](../../training/model-parallelism/README.md#zero-data-parallelism)（ZeRO-DP）。
 
 你可以拥有与模型副本数量相同的数据流，也就是 DP 的值。
+
 - 所以在模型能装进单个 GPU 的简单情况下，数据流数量等于 GPU 数量，DP=N_GPUS
 - 当模型装不进单个 GPU 时，在 3D 并行的情况下 `DP=N_GPUs/(TP*PP)`，在 ZeRO 并行的情况下 DP=ZeRO-DP。
 
@@ -736,6 +739,7 @@ Results: baseline, followed by near-by best performing d_ff results:
 ### 模型尺寸的最终建议 {#final-recommendations-for-model-sizing}
 
 完整的建议如下：
+
 1. 词表大小能被 64 整除
 2. 微批次大小尽可能大
 3. `b*s`、`h/a` 和 `h/t` 应能被 2 的幂整除
@@ -965,6 +969,7 @@ pin_memory=False, non_blocking=False: average time: 0.646
 更多背景可以阅读 [1](https://docs.pytorch.org/docs/stable/notes/cuda.html#use-pinned-memory-buffers) 和 [2](https://developer.nvidia.com/blog/how-optimize-data-transfers-cuda-cc/)。
 
 注意：
+
 - 锁页内存会被操作系统特殊对待：在总可用内存不足时也不允许被换出，因此它减少了其他程序可用的内存总量。所以要谨慎使用。
 - 我记得有过几次，人们报告使用锁页内存时出了问题——我想多数情况是系统本身的 CPU 内存就很少，或者使用了过多的锁页内存，导致操作系统开始大量换页。
 - 如果你测量了自己的[每次迭代 TFLOPS](#tflops-as-a-performance-metric)，就可以对比有和没有这些改动时的吞吐量，选择效果最好的方案。如果你把 `DataLoader` 的开销与 `forward/backwards`（前向/反向）以及计算后的收尾工作（通常是日志记录，有时会出奇地慢）分开测量，会更容易看清影响。
@@ -1027,6 +1032,7 @@ TORCH_LOGS="graph_breaks,recompiles" python train.py
 编译本身会在第一个步骤上消耗时间（墙钟时间），在任何使缓存失效的改动之后还会再来一次。当模型由同一个模块重复 `n` 次构成时，只编译这个模块而不是整个模型会大幅削减这部分开销，因为编译器只做一次工作，然后在每一层复用。
 
 如果你试了但事情不顺利，你可以：
+
 1. 向 PyTorch 团队报告这个问题，最好附上一个小型的可复现示例
 2. 通读 PyTorch 自己的 [torch.compile 排障指南](https://docs.pytorch.org/docs/stable/user_guide/torch_compiler/torch.compiler_troubleshooting.html)，它与编译器同步维护，上面每一种失败模式都有对应的章节，你可能能让一些问题正常工作，并且可能仍需向 PyTorch 报告一些问题
 

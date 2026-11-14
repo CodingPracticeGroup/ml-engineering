@@ -60,6 +60,7 @@
 - XGS：Spectrum-X 的跨数据中心变体
 
 与速度相关的条目：
+
 - 自适应路由（Adaptive Routing）：改进静态路由（Static routing），允许网络上出现乱序数据包。数据包在每个交换机处做负载均衡，以更好地分摊网络负载。
 - algbw：算法带宽（algorithm bandwidth）——负载大小除以耗时
 - 双向（Bi-directional）、双工（Duplex）：在两点之间沿两个方向 A <-> B 传输，通常是单向（unidirectional）速率的 2 倍
@@ -513,6 +514,7 @@ AMD MI* 加速器的节点内通信由 AMD Infinity Fabric 完成，它也被称
 ![AMD Infinity 平台架构](images/amd-infinity-arch-MI300X.png)
 
 平台规格：
+
 - [MI250X](https://www.amd.com/en/products/accelerators/instinct/mi200/mi250x.html)
 - [MI300x](https://www.amd.com/en/products/accelerators/instinct/mi300/platform.html)
 - [MI325X](https://www.amd.com/en/products/accelerators/instinct/mi300/mi325x.html)
@@ -546,6 +548,7 @@ NeuronLink v3（[规格](https://awsdocs-neuron.readthedocs-hosted.com/en/latest
 除 EFA v3 之外，NeuronLink v3 也可用于节点间。
 
 每个节点的 Trainium2 芯片数量与节点内网络速度：
+
 - Trainium2：16 颗芯片以 128GBps 的点对点单向速度（32 条 PCIe 通道）互连，每颗 Trainium2 连接到其他 3 颗芯片
 - Trainium2 Ultra：64 颗芯片——16 颗一组的分组方式与非 Ultra 相同，此外这 4 个组之间以 64GBps 相互互连。
 
@@ -743,6 +746,7 @@ InfiniBand 提供 [RDMA](https://en.wikipedia.org/wiki/Remote_direct_memory_acce
 [InfiniBand](https://en.wikipedia.org/wiki/InfiniBand) 过去曾有多家制造商，但目前只剩 NVIDIA（收购了 Mellanox）——这使它成为一种单一供应商的互联，在与以太网权衡时是一个锁定的考虑因素。Intel 常被算作第二家供应商，因为它收购了 QLogic 的 InfiniBand 业务，但那支血统变成了 [Omni-Path](#omni-path)——一个独立的网络结构，而不是 InfiniBand——后来 Intel 又把它卖给了 Cornelis Networks。另见 [InfiniBand Trade Association](https://infinibandta.org/)。
 
 实用链接：
+
 - [InfiniBand 工具](https://networking-docs.nvidia.com/mlnxofedswum/24.10-5.1.6.1lts/infiniband-fabric-utilities)（链接带版本号，可能已过时）——在调试 IB 环境时这些很有用。
 
 ### 交换机平台 {#switch-platforms}
@@ -901,6 +905,7 @@ SHARP 硬件是 NVSwitch 或 InfiniBand 交换机的一部分，也在 NVLink 4 
 案例研究：我偶然发现了 SHARP——一次在 H100 上用 [torch-collective-bench](benchmarks/torch-dist-bench.py) 做的节点内 NVLink 4.0 基准测试，在 4GiB 载荷下报告了 480GBps，而理论规格只有 450GBps！我们后来弄清楚，是因为 NCCL 启用了新的 `NVLS` 算法，动用了 NVLink SHARP。我仍然不明白它怎么能测出比物理介质允许的速度还快的数字。我很确定，那里的 `busbw` 计算算法需要从 2N 调整为 N+1，才能得到真实速度。关于这一点，[这里](https://github.com/NVIDIA/nccl-tests/issues/153#issuecomment-1628415956)有一场详细的讨论。结论是：`busbw` 是否给你真实的带宽数字，取决于 NCCL 选用的 `algo`——只有在使用 `Ring` 算法时，`busbw` 才是正确的。
 
 要用好这个出色的特性：
+
 - 集合通信必须用到足够多的 GPU，NCCL 才会真正选择 `NVLS`——见下文的实测；在 H200 上切换发生在 4 张以上，在 B200 上是 5 张以上，所以请在自己的机器上实测，而不是照搬这两个数字中的任何一个。
 - 确保环境变量 `NCCL_NVLS_ENABLE` 未设置，或设置为 `1`。
 
@@ -1109,10 +1114,12 @@ tflop = model_size_in_B * 4 * 2 * seqlen * global_batch_size / (total_gpus * 1e3
 ```
 
 假设我们有：
+
 - `seqlen=2048`（序列长度）
 - `global_batch_size=16`
 
 而我们已经定义了：
+
 - `total_gpus=8`
 - `model_size_in_B=2`
 
@@ -1344,6 +1351,7 @@ Unidirectional P2P=Enabled Bandwidth (P2P Writes) Matrix (GB/s)
 所以 376GBps 除以 450GBps 只有 83%（不太理想）。
 
 底线——在这个特定配置下：
+
 1. 如果你的负载很大，你大约能用上标称 300GBps 的 80%
 2. 如果每次通信的负载偏小，实际数字可能远远低于此。
 
@@ -1498,13 +1506,13 @@ Unidirectional P2P=Enabled Bandwidth (P2P Writes) Matrix (GB/s)
 
 3. 分层模型——在每个节点内归约，在节点之间交换分片，再在节点内广播回去。每个阶段搬运的量，等于该阶段自身那个集合通信的修正因子乘以该阶段所操作的负载：
 
-   - 节点内 reduce-scatter：每张加速卡经 NVLink 搬运 `(g-1)/g * P` = `(8-1)/8 * 4GiB` = 3.5GiB
-   - 对得到的 `P/g` = 0.5GiB 分片，在 `k` 个节点之间做节点间 all-reduce：每张加速卡经 EFA 搬运 `2*(k-1)/k * P/g` = `2*(4-1)/4 * 0.5GiB` = 0.75GiB
-   - 节点内 all-gather：每张加速卡经 NVLink 搬运 `(g-1)/g * P` = `(8-1)/8 * 4GiB` = 3.5GiB
+    - 节点内 reduce-scatter：每张加速卡经 NVLink 搬运 `(g-1)/g * P` = `(8-1)/8 * 4GiB` = 3.5GiB
+    - 对得到的 `P/g` = 0.5GiB 分片，在 `k` 个节点之间做节点间 all-reduce：每张加速卡经 EFA 搬运 `2*(k-1)/k * P/g` = `2*(4-1)/4 * 0.5GiB` = 0.75GiB
+    - 节点内 all-gather：每张加速卡经 NVLink 搬运 `(g-1)/g * P` = `(8-1)/8 * 4GiB` = 3.5GiB
 
-    就每张加速卡而言，经 NVLink 的是 `2*(g-1)/g * P` = 7GiB，而经 EFA 的只有 `2*(k-1)/k * P/g` = 0.75GiB，所以只有 `0.75/(7+0.75)` = 9.7% 的流量离开节点。而且由于每张加速卡都在驱动自己的 NIC，`g` 张 NIC 同时都在传输，节点因此拥有 `g * 50GBps` = 400GBps 的节点间带宽，而不是单条链路的 50GBps。
+        就每张加速卡而言，经 NVLink 的是 `2*(g-1)/g * P` = 7GiB，而经 EFA 的只有 `2*(k-1)/k * P/g` = 0.75GiB，所以只有 `0.75/(7+0.75)` = 9.7% 的流量离开节点。而且由于每张加速卡都在驱动自己的 NIC，`g` 张 NIC 同时都在传输，节点因此拥有 `g * 50GBps` = 400GBps 的节点间带宽，而不是单条链路的 50GBps。
 
-    按线路速率，这个分片本应 `0.75GiB / 50GBps` = 16.1ms 就能传完，而实测是 22.21ms——也就是说这次交换实际只能以约 73% 的线路速率运行，NIC 效率以及任何没有重叠掉的节点内时间都折算进了这个数字。两者不能简单相加：`16.1 + 10.03` = 26.1ms 会超过实测时间，所以节点内的各个阶段必须与交换大幅重叠，而不是排在它后面。因此这个模型为实测值框出了一个区间——完全重叠时 16.1ms，完全串行时 26.1ms，而实测的 22.21ms 介于两者之间。
+        按线路速率，这个分片本应 `0.75GiB / 50GBps` = 16.1ms 就能传完，而实测是 22.21ms——也就是说这次交换实际只能以约 73% 的线路速率运行，NIC 效率以及任何没有重叠掉的节点内时间都折算进了这个数字。两者不能简单相加：`16.1 + 10.03` = 26.1ms 会超过实测时间，所以节点内的各个阶段必须与交换大幅重叠，而不是排在它后面。因此这个模型为实测值框出了一个区间——完全重叠时 16.1ms，完全串行时 26.1ms，而实测的 22.21ms 介于两者之间。
 
 模型 2 和模型 3 都与测量结果吻合：模型 2 对应 NIC 跑到线路速率的 94%，模型 3 对应 73%，所以单凭算术判断不出实际运行的是哪一个——只能确定朴素的模型 1 错得离谱。究竟是这两者中的哪一个，取决于 NCCL 选择的算法，而这是可以直接读出来的：`NCCL_DEBUG=INFO NCCL_DEBUG_SUBSYS=INIT,TUNING` 会报告它；强制设置 `NCCL_ALGO=allreduce:<algo>` 再与默认情况对比可以进一步确认。在这些节点上，4GiB 时选中的是 `Ring`：强制设置 `NCCL_ALGO=allreduce:ring` 复现了默认选择，误差在 0.1% 以内——375.22 对 375.42GBps——而 `NCCL_ALGO=allreduce:nvlstree`（一种分层算法）慢了 18%，只有 308.15GBps。所以实际运行的是模型 2，每张 NIC 都稳定保持在其线路速率的 94%。算法是按负载大小逐个选择的，表格的算法一列就展示了这一点：16MiB 及以下用 `Tree`，32-64MiB 用 `Ring`，128-256MiB 用 `NVLSTree`，从 512MiB 向上又回到 `Ring`。在这个集群上，做选择的是 AWS 的 `NCCL_TUNER_PLUGIN=ofi`，而不是 NCCL 自己的调优器，它自己那行日志——`base Tuner is chosen for platform: p6-b200.48xlarge`——表明它是按实例类型来查表的。不同的实例对应不同的调优表，所以要想知道你自己的运行会选什么，唯一的办法就是把它读出来。
 

@@ -441,6 +441,7 @@ python -u -m torch.distributed.run \
 ```
 
 注意：
+
 - 如果不是在能自动推导出它的 SLURM 环境里，请手动把 `MASTER_ADDR` 改成 rank 0 的主机名。
 
 下面是在 SLURM 环境中用 4 个节点启动它的方式：
@@ -450,6 +451,7 @@ srun --cpus-per-task=$SLURM_CPUS_PER_TASK --gres=gpu:8 --nodes=4 --tasks-per-nod
 ```
 
 注意：
+
 - 那里你可能需要修改 `--cpus-per-task` 和 `--partition` 参数。
 - `salloc` 只需执行一次，之后可以在同一份资源分配上多次重复执行 `srun`。
 

@@ -48,7 +48,7 @@ LLM/VLM（视觉语言模型）的训练日志、训练纪事和技术报告，�
 [3](https://github.com/stas00/bigscience-backup/tree/master/train/tr11-176B-ml))
 
 - Meta OPT-175B（2022）：
- [训练日志](https://github.com/facebookresearch/metaseq/tree/main/projects/OPT/chronicles) | [视频](https://www.youtube.com/watch?v=p9IxoSkvZ-M)（备份：[1](https://github.com/stas00/metaseq-backup/tree/main/projects/OPT/chronicles)）
+    [训练日志](https://github.com/facebookresearch/metaseq/tree/main/projects/OPT/chronicles) | [视频](https://www.youtube.com/watch?v=p9IxoSkvZ-M)（备份：[1](https://github.com/stas00/metaseq-backup/tree/main/projects/OPT/chronicles)）
 
 - THUDM GLM-130B（2022）：[英文训练日志](https://github.com/zai-org/GLM-130B/blob/main/logs/main-log-en.md) | [中文版](https://github.com/zai-org/GLM-130B/blob/main/logs/main-log.md)（备份： [1](https://github.com/stas00/GLM-130B-backup/blob/main/logs/main-log-en.md) | [2](https://github.com/stas00/GLM-130B-backup/blob/main/logs/main-log.md)）
 

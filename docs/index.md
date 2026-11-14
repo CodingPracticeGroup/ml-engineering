@@ -70,6 +70,7 @@
 ## 本书的电子书版本 {#ebook-versions-of-the-book}
 
 你可以下载本书的多种电子书格式：
+
 * [PDF](https://huggingface.co/stas/ml-engineering-book/resolve/main/Stas%20Bekman%20-%20Machine%20Learning%20Engineering.pdf?download=true)
 * [EPUB](https://huggingface.co/stas/ml-engineering-book/resolve/main/Stas%20Bekman%20-%20Machine%20Learning%20Engineering.epub?download=true)
 

@@ -89,6 +89,7 @@ KV 缓存的大小与输入序列长度和批次大小成正比。过去的查�
 1 个词元的 KV 缓存需要 `dtype_bytes * 2 * num_hidden_layers * hidden_size * num_key_value_heads / num_attention_heads` bytes
 
 说明：
+
 - `dtype_bytes` 是每种 dtype 的字节数：fp32 为 4 bytes，bf16/fp16 为 2 bytes，等等。
 - `2` 代表 keys + values，一共有 2 项。
 - `num_key_value_heads / num_attention_heads` 是一个因子，取决于使用的是多查询注意力（MQA）、分组查询注意力（GQA）还是多头注意力（MHA）。对 MHA 它是 1；对 MQA 它是 `1/num_attention_heads`；对 GQA 它取决于每个分组使用多少个查询，即 `num_key_value_heads / num_attention_heads`，这也是涵盖 MHA 和 MQA 的通用表达式。
@@ -248,10 +249,12 @@ softmax 运算把 logit 之间的差值转化为概率之比——当我们除�
 这是一种非常巧妙的技术。我们不必事后再去修复生成的输出——那并不总能匹配期望的格式——而是让模型从一开始就生成正确的输出。
 
 这种技术有若干代价：
+
 - 它会拖慢生成速度——需要遵守的模式（schema）越复杂，生成词元就越慢。从实测的生成速度来看，我发现有些结构化文本生成库比其他库快得多。
 - 它可能加剧模型幻觉。
 
 这一技术有多种实现。截至 2026-08，vLLM 支持其中四种作为[结构化输出后端](https://docs.vllm.ai/en/latest/features/structured_outputs/)，除非你手动覆盖，否则它会自动选用其中一个：
+
 - https://github.com/mlc-ai/xgrammar
 - https://github.com/guidance-ai/llguidance
 - https://github.com/dottxt-ai/outlines
@@ -311,6 +314,7 @@ softmax 运算把 logit 之间的差值转化为概率之比——当我们除�
 ```
 
 接下来可能出现多种结果：
+
 - 如果全部匹配——我们用了 3 个短步骤加 1 个长步骤就生成了最终结果，而不是用 3 个长步骤。
 - 如果只有 `another lemon` 匹配——只要节省了时间，结果可能仍然更好。
 - 如果几乎没什么匹配，我们就浪费了一点时间。
@@ -412,6 +416,7 @@ softmax 运算把 logit 之间的差值转化为概率之比——当我们除�
 **延迟是指从发出请求起、到收到完整回复为止所经过的时间**。
 
 它包括以下各环节的时间：
+
 1. 接收请求
 2. 对提示词做预处理（预填充阶段）
 3. 生成回复的新词元（解码阶段）
@@ -491,6 +496,7 @@ print("tokens per word: ", len(enc.encode(text)) / len(re.findall(r"\S+", text))
 当然，总会有用户宁愿等到生成完全结束后再开始阅读回复。这种情况下，越快越好。
 
 根据生成内容的类型，下面这些情况很可能是适用的：
+
 1. 图像——一次性给出全部
 2. 文本——不慢于用户的阅读速度；或者，如果用户不希望开始阅读前就有内容在滚动，则一次性给出全部
 3. 音频——不慢于用户的收听速度
@@ -565,7 +571,7 @@ http_req_sending...: avg=133.8µs  min=20.47µs med=75.39µs  max=598.04µs p(90
 例如：
 
 - vLLM 支持 `--load-format` 参数，可以选择像 `npcache`（numpy 格式缓存）或 `tensorizer` 这样的选项，后者使用 CoreWeave 的 [Tensorizer](https://github.com/coreweave/tensorizer)。 （[用法示例](https://docs.vllm.ai/en/stable/examples/features/tensorize_vllm_model/)，当然，如果你使用 TP>1，你会希望[把权重预先分片一次](https://docs.vllm.ai/en/stable/examples/features/sharded_state/)。
- - TensorRT-LLM 要求用户针对每个具体用例构建一个模型引擎，并在运行时加载预先做好的分片（除非你使用简化版 API，它会在每次服务器启动时即时构建模型引擎）。
+    - TensorRT-LLM 要求用户针对每个具体用例构建一个模型引擎，并在运行时加载预先做好的分片（除非你使用简化版 API，它会在每次服务器启动时即时构建模型引擎）。
 
 
 

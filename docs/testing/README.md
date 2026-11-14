@@ -551,21 +551,21 @@ pytest test_this2.py::test_floor[negative--1.5--2.0] test_this2.py::test_floor[i
 
 - `pathlib` 对象（全部是完全解析后的路径）：
 
-  - `test_file_path` - 当前测试文件的路径，即 `__file__`
-  - `test_file_dir` - 包含当前测试文件的目录
-  - `tests_dir` - `tests` 测试套件的目录
-  - `examples_dir` - `examples` 测试套件的目录
-  - `repo_root_dir` - 仓库的目录
-  - `src_dir` - `src` 的目录（即 `transformers` 子目录所在的目录）
+    - `test_file_path` - 当前测试文件的路径，即 `__file__`
+    - `test_file_dir` - 包含当前测试文件的目录
+    - `tests_dir` - `tests` 测试套件的目录
+    - `examples_dir` - `examples` 测试套件的目录
+    - `repo_root_dir` - 仓库的目录
+    - `src_dir` - `src` 的目录（即 `transformers` 子目录所在的目录）
 
 - 字符串化路径——与上面相同，但这些以字符串而不是 `pathlib` 对象的形式返回路径：
 
-  - `test_file_path_str`
-  - `test_file_dir_str`
-  - `tests_dir_str`
-  - `examples_dir_str`
-  - `repo_root_dir_str`
-  - `src_dir_str`
+    - `test_file_path_str`
+    - `test_file_dir_str`
+    - `tests_dir_str`
+    - `examples_dir_str`
+    - `repo_root_dir_str`
+    - `src_dir_str`
 
 要开始使用这些，你只需要确保测试位于 `testing_utils.TestCasePlus` 的子类中。例如：
 
@@ -630,10 +630,10 @@ def test_whatever(self):
 
 - 你可以通过直接覆盖 `before` 和 `after` 参数来改变默认行为，从而得到以下某种行为：
 
-  - `before=True`：临时目录总会在测试开始时被清空。
-  - `before=False`：如果临时目录已经存在，其中已有的文件会保留在那里。
-  - `after=True`：临时目录总会在测试结束时被删除。
-  - `after=False`：临时目录在测试结束时总会保持原样。
+    - `before=True`：临时目录总会在测试开始时被清空。
+    - `before=False`：如果临时目录已经存在，其中已有的文件会保留在那里。
+    - `after=True`：临时目录总会在测试结束时被删除。
+    - `after=False`：临时目录在测试结束时总会保持原样。
 
 
 脚注：为了安全地执行与 `rm -r` 等价的操作，如果使用了显式的 `tmp_dir`，只允许是项目仓库检出目录的子目录，这样就不会误把 `/tmp` 或文件系统中其他重要部分"核平"掉。也就是说，请始终传入以 `./` 开头的路径。

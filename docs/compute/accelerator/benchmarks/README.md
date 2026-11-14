@@ -39,6 +39,7 @@
 这个基准测试会扫描各种尺寸很大的矩阵乘形状，同时报告最高的*可达* TFLOPS（MAMF——boost 短突发下的值）和最高的*可持续* TFLOPS（MSMF——满载下能稳定维持的值）。由于机器学习负载以大型矩阵乘运算为主，MSMF 是对持续训练吞吐量的现实标杆，而 MAMF 是短时突发的上限。这样一来，就不必再使用此前那个以根本达不到的数值为基准的 MFU，而可以改用模型可达矩阵乘 FLOPS 利用率（Model Achievable Matmul FLOPS Utilization，MAMFU）或模型可持续矩阵乘 FLOPS 利用率（Model Sustainable Matmul FLOPS Utilization，MSMFU），真正把负载优化到接近 100%，尤其是对 MSMF 而言——因为“可达”毕竟还不等于“可持续”。这一点非常重要，因为只有这样才能知道何时应该停止优化。
 
 支持的加速器：
+
 - NVIDIA：Volta、Ampere、Hopper、Blackwell、Rubin
 - AMD：MI250 及更高型号
 - Intel Gaudi2/3
@@ -48,6 +49,7 @@
 `--search auto`（默认）根据 GPU 的计算单元布局推导测试形状，而 `mamf-finder.py` 只为 NVIDIA 和 AMD 建立了该布局的模型；在其他设备上，请用 `--search grid` 指定一段范围。功率/时钟遥测（其中的 SM 时钟用于证明某次 MAMF 迭代确实运行在 boost 频率下）在 NVIDIA、AMD 和 Gaudi 上都可用（见下文的遥测说明）。[`mamf-finder-all-gpus.py`](mamf-finder-all-gpus.py) 只能在 NVIDIA 和 AMD 上运行。
 
 重要说明：
+
 - 如果你能找到更好、更高效的方法，把每台新加速器都当作黑盒来探测其最佳矩阵乘 TFLOPS，请把改进连同生成的日志文件一起发 PR 提交给我们。
 - 另外，如果你知道这个基准测试需要在某些特殊条件下才能跑出最佳结果，比如某些内核设置之类，请提交 PR 补充这些特殊说明。例如，有人告诉我，在 AMD MI300X 上关闭 numa_balancing 应该会有帮助。
 - 由于很大一部分开销来自 HBM IO，如果你使用的是包含两个或更多矩阵乘的融合内核，并且其结果不离开加速器的寄存器，那么性能一定会比本基准测试报告的更快。
@@ -92,6 +94,7 @@ export PYTORCH_TUNABLEOP_ENABLED=1
 在 ROCm 上，`--search auto` 会打印一条说明：它只在一块 MI300X 上、只在 BF16 下对照过穷举网格检验，结果与 16,000 个形状的网格相差在 0.1% 以内。较新的软件栈可能改变的是胜出的形状而非峰值本身：`10240x15360x8192` 从 663.6（ROCm 6.3，torch 2.5.1）降到 625.5（ROCm 10，torch 2.12），而 `12288x9728x8192` 在两套栈上都稳定在约 660，所以升级软件栈之后应当重新搜索，而不是重新计时旧的胜者。选 GPU 请用 `--cuda_device N`，不要用 `HIP_VISIBLE_DEVICES` / `ROCR_VISIBLE_DEVICES`：在某些虚拟化的 MI300X 主机上，把 GPU0 隐藏之后，torch 就找不到可用的设备了。
 
 **Intel dGPU（A770、A750、B580 等）**
+
 - 按照 Intel Extension for PyTorch 的[安装步骤](https://pytorch-extension.intel.com/installation?platform=gpu)操作。
 
 **NVIDIA、AMD 和 Gaudi 上的遥测：**SM 时钟用于证明某次 MAMF 迭代确实运行在 boost 频率下，功率用于给初步试探的形状排名，两者都打印在每个数字旁边。MSMF 则只凭吞吐量判定。如果缺少遥测软件包（对应地是 `nvidia-ml-py`、`amdsmi`、`habana-pyhlml`），或读不到功率/时钟，`mamf-finder.py` 会拒绝启动。`--telemetry off` 可以照常运行，但此时 MAMF 没有经过 boost 校验。`amdsmi` 的读数已在 MI300X 上确认，而截至本书写作之时，`pyhlml` 的读数尚未在真实硬件上验证过。在 MI300X 上，一个 BF16 内核之内这张卡就会撞上 750 W 上限，空闲启动之后的突发*更慢*而不是更快，所以就这块具体的 GPU 而言，MAMF 不如 MSMF 可靠。

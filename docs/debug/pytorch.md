@@ -353,6 +353,7 @@ tokenizer_fast_tiny.save_pretrained(".")
 在以上所有例子中，我都是拿原始的 tar 包，抓取前 10k 条记录，重新打成 tar 包，然后用这个更小的 tar 包，就这么简单。构建器脚本的其余部分基本保持原样。
 
 下面是一些合成数据集的例子。在这些例子里，我没有仅仅缩减原始 tar 包，而是把它解开，手动挑选有代表性的示例，然后写了一个脚本，基于那几个有代表性的样本来构建任意大小的所需数据集：
+
 - [stas/general-pmd-synthetic-testing](https://huggingface.co/datasets/stas/general-pmd-synthetic-testing/blob/main/general-pmd-synthetic-testing.py) 和它的[解包器](https://huggingface.co/datasets/stas/general-pmd-synthetic-testing/blob/main/general-pmd-ds-unpack.py)
 - [stas/cm4-synthetic-testing](https://huggingface.co/datasets/stas/cm4-synthetic-testing/blob/main/cm4-synthetic-testing.py) - 以及它的[解包器](https://huggingface.co/datasets/stas/cm4-synthetic-testing/blob/main/m4-ds-unpack.py)
 
@@ -987,9 +988,11 @@ torch.cuda.memory._dump_snapshot(f"/tmp/mem-{rank}.pickle")
 这说明，即使你并不怀疑自己的代码中有内存泄漏，把它放到内存分析器里跑一遍仍然是个好主意：你可能会获得如何减少内存用量的思路，或者至少能更清楚地了解你的代码对 GPU 显存做了什么。
 
 其他重要注意事项：
+
 - 尽量把分析器的转储限制在少数几个迭代内，否则当你尝试在浏览器中渲染结果时很可能会崩溃。你至少需要 2 个迭代，因为第一个迭代永远是异常值。我通常做 3 个迭代。
 
 其他资源：
+
 - [Understanding GPU Memory 1: Visualizing All Allocations over Time](https://pytorch.org/blog/understanding-gpu-memory-1/)
 - HF 团队做了一个[改进版的渲染工具](https://huggingface.co/spaces/Leiyre/memory-viz)。
 
@@ -2348,6 +2351,7 @@ CUDA_LAUNCH_BLOCKING=1 python my-pytorch-program.py
 上一节中的 `CUDA_VISIBLE_DEVICES=""` 和 `CUDA_LAUNCH_BLOCKING=1` 能给你一个带上下文的 Python 堆栈跟踪，指出是*哪个*算子失败了——但它们看不到 CUDA 内核的*内部*。当缺陷是一次错误的内存访问、一个竞态，或者使用了未初始化的设备内存时，NVIDIA 的 `compute-sanitizer`（随 CUDA 工具包一起发布；它取代了旧的 `cuda-memcheck`）会对内核进行插桩，并报告出问题的访问。
 
 它有四个子工具，用 `--tool` 来选择：
+
 - `memcheck`（默认）——越界和对齐错误的设备内存访问；加上 `--leak-check full` 时，还会报告从未被释放的设备内存。
 - `racecheck`——同一个 block 内各线程之间的共享内存数据竞争。
 - `initcheck`——对未初始化的设备全局内存的读取。
@@ -2934,6 +2938,7 @@ srun --jobid=2180718 --gres=gpu:0 --nodes=40 --tasks-per-node=1 --output=trace-%
 ```
 
 注意：
+
 - 监视用的 `srun` 必须使用 `--gres=gpu:0`，否则它会一直阻塞，直到主 `srun`（运行训练的那个）退出。
 - 每个节点都会生成自己专属的日志文件，名为 `trace-nodename.out`——这会帮助你确定哪个（些）节点有问题。如果你想把所有内容都转储到 stdout，可以去掉 `--output=trace-%N.out`
 - 在某些 SLURM 版本中，你可能还需要加上 `--overlap`
@@ -3052,6 +3057,7 @@ ds_ssh -f hostfile "source ~/.pdshrc; ps aux | grep python | grep -v grep | grep
 ```
 
 注意：
+
 - 把你可能需要运行的任何初始化代码放进 `~/.pdshrc`。如果一样都不需要，可以把命令行中的 `source ~/.pdshrc;` 去掉。
 - 如果你还没有它，`ds_ssh` 会在你执行 `pip install deepspeed` 时一并安装好。
 - 如果你遇到 `rcmd: socket: Permission denied` 错误，可能需要 `export PDSH_RCMD_TYPE=ssh`
@@ -3623,6 +3629,7 @@ $ mpirun --hostfile hostfile -np 16 -map-by ppr:8:node python my-program.py
 注意，我这里用的是 `my-program.py`，因为 [torch-distributed-gpu-test.py](./torch-distributed-gpu-test.py) 是为 `torch.distributed.run`（也就是 `torchrun`）编写的。使用 `mpirun` 时，你需要查看你具体的实现用的是哪个环境变量来传递程序的 rank，并用它替换 `LOCAL_RANK`，其余部分基本相同。
 
 注意事项：
+
 - 你可能必须显式告诉它使用哪个接口，例如在我们的示例中加上 `--mca btl_tcp_if_include 10.0.0.0/24`。如果你有很多网络接口，它可能选了一个没有开放的、或干脆错误的接口。
 - 你也可以反其道而行之，排除一些接口。例如说你有 `docker0` 和 `lo` 接口——要排除它们，加上 `--mca btl_tcp_if_exclude docker0,lo` 即可。
 
@@ -3838,6 +3845,7 @@ $ python -m pdb -p 2916
 ### 测量时长 {#measuring-durations}
 
 我们在 ML 软件中最关心的事情之一就是它的速度。这是因为当程序运行得更快时：
+
 - 我们在硬件上花的钱就更少（即使硬件是你自己拥有的，你仍然要支付运行它的电费）。
 - 程序能更快跑完——你听说过 AI 竞赛吗？你可能有一个关于新模型的最佳点子，但如果竞争对手的框架训练模型比你的更快，那么等你的软件完成训练时，你的点子可能已经无关紧要了。
 
@@ -3864,6 +3872,7 @@ user    0m8.222s
 sys     0m0.209s
 ```
 这里：
+
 - `real` 表示挂钟时间（wall clock time）——也就是如果你拿一块秒表，从启动程序到它运行结束，这中间经过的时间
 - `user` 是程序执行用户态调用所花的时间——也就是你的程序
 - `sys` 是执行系统调用（操作系统/内核层面）所花的时间——比如 IO、网络、内存之类的事情
@@ -3979,10 +3988,12 @@ torch.cuda.synchronize()
 - Apple MPS 有不同的 API，但我们可以模拟出相同的 API，如 [mamf-finder.py](https://github.com/stas00/ml-engineering/blob/0099885db36a8f06556efe1faf552518852cb1e0/compute/accelerator/benchmarks/mamf-finder.py#L159) 中所示。
 
 下面是一些借助设备事件来测量时间长度的优秀实用示例：
+
 - [mamf-finder](../compute/accelerator/benchmarks/mamf-finder.py)
 - [torch-dist-bench](../network/benchmarks/torch-dist-bench.py)
 
 下面是一些更深入讲解并给出示例的优秀文章：
+
 - [如何准确测量 PyTorch 中 CUDA 内核的耗时](https://www.speechmatics.com/company/articles-and-news/timing-operations-in-pytorch)
 
 ### 剖析器 {#profilers}

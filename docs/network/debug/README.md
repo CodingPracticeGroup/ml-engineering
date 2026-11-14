@@ -281,6 +281,7 @@ csplit main_log.txt '/iteration: /' "{*}"
 这是调试网络问题时最常用的环境变量。
 
 取值：
+
 - `VERSION` - 在程序开始时打印 NCCL 版本。
 - `WARN` - 每当任何一次 NCCL 调用出错时，打印一条明确的错误信息。
 - `INFO` - 打印调试信息

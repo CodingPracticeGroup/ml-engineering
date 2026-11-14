@@ -13,12 +13,15 @@ ML 主要有两类工作负载——训练和推理（inference）。此外还�
 ## 子章节 {#subsections}
 
 通用：
+
 - [基准测试](benchmarks/README.md)
 
 NVIDIA：
+
 - [排查 NVIDIA GPU 的问题](nvidia/debug.md)
 
 AMD：
+
 - [排查 AMD GPU 的问题](amd/debug.md)
 - [AMD GPU 性能](amd/performance.md)
 
@@ -27,19 +30,23 @@ AMD：
 尽管这种情况未来可能会改变，但与消费级 GPU 市场不同，截至 2026-08，高端加速器并没有那么多；如果你在云上租用算力，大多数云服务商能提供的加速器大致就是同样的那几款。
 
 GPU：
+
 - 截至目前，ML 云/HPC 平台已经配备了 B200/B300，GB200/GB300 NVL72 机架也已开始出货。Rubin 预计将于 H2-2026 出现。
 - AMD 的 MI325X 现在在二线云服务商（Tier 2）上已经广泛可用。MI355X 开始现身。MI455X 希望能在 2026 年推出。新变化：大型云服务商（CSP）也开始提供 AMD GPU
 - Intel 的 GPU D 系列（D270，代号 Crescent Island）是一款面向推理的 Xe3P 数据中心 GPU，在 OCP 2026 上发布，客户送样在 H2-2026。Intel 只公布了它的 FP8 峰值（1.3 PFLOPS）。参见 [Intel GPU D-series](#intel-gpu-d-series-crescent-island)
 
 HPU：
+
 - Intel 的 Gaudi2 和 Gaudi3 已在 Intel 云上可用。
 - Falcon Shores 原定于 2025 年取代 Gaudi——更新：该项目已被取消
 
 TPU：
+
 - Google 的 TPU 当然也可以用，但它们并不是最理想的选择，因为你只能租用它们，而且软件在 GPU 与 TPU 之间并不能很方便地互相转换，所以许多（也许是大多数？）开发者仍然留在 GPU 阵营，因为他们不想被锁定在 Google 一家垄断的硬件上。
 - Amazon 的 Trainium2 与 TPU 架构非常相似，可在 AWS 上租用
 
 关于 Pod 与机架：
+
 - Cerebras 的 WaferScale Engine（WSE）
 - SambaNova 的 SambaRack（目前是 SN40L，SN50 从 H2-2026 起）
 - 数十种不同的 Pod 与机架配置，它们用超高速互联把前述 GPU 组合起来。
@@ -104,6 +111,7 @@ TPU：
 我会在本书中多次重复下面这句话：仅仅购买/租用最昂贵的加速器并期待获得高投资回报率（ROI）是不够的。
 
 衡量 ML 训练高 ROI 的两个指标是：
+
 1. 训练完成的速度，因为如果训练比计划多花 2-3 倍的时间，你的模型可能还没发布就已经无关紧要了——在当今竞争极其激烈的 ML 市场中，时间就是一切。
 2. 训练模型所花的钱（$$），因为如果训练比计划多花 2-3 倍的时间，最终你会多花 2-3 倍的钱。
 
@@ -165,6 +173,7 @@ ML 训练和推理所做的大部分工作都是矩阵乘法。如果你还记�
 `Theoretical FLOPS = compute_unit_clock_speed * FLOPs_per_clock_cycle_per_compute_unit * num_compute_units`
 
 其中：
+
 - `compute_unit_clock_speed`——计算单元的时钟每秒振荡的次数，单位为 Hz
 - `flops_per_clock_cycle_per_compute_unit`——计算单元每个时钟周期能执行的浮点运算次数。
 - `num_compute_units`——设备中有多少个这样的单元
@@ -882,6 +891,7 @@ print(f"{p.name}: {p.memory_clock_rate/1e6:.3f}GHz x {p.memory_bus_width}-bit bu
 最常见的、既可以在算力云上租用也可以购买的加速器：
 
 NVIDIA：
+
 - [Vera Rubin NVL72](https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/)——以 NVLink 速率互联的 72 GPU 超节点，采用 Grace Rubin 方案——36 个「2x Rubin GPU + Vera CPU」模块
 - [GB300 NVL72](https://www.nvidia.com/en-us/data-center/gb300-nvl72/)——以 NVLink 速率互联的 72 GPU 超节点，内含 B300（Grace Blackwell——36 个「2x B300 + Grace CPU」模块）
 - [GB200 NVL72](https://www.nvidia.com/en-us/data-center/gb200-nvl72/)——以 NVLink 速率互联的 72 GPU 超节点，内含 B200。（Grace Blackwell——36 个「2x B200 + Grace CPU」模块）
@@ -894,6 +904,7 @@ NVIDIA：
 - [A100](https://www.nvidia.com/en-us/data-center/a100/#specifications)——供货量巨大，但已经开始过时。不过由于成本远低于 H100，这仍然是很划算的 GPU。
 
 AMD：
+
 - [MI455X](https://www.amd.com/en/products/accelerators/instinct/mi400/mi455x.html) ≈ Rubin，按公布的数字还略高于它——但那些出自 AMD Performance Labs 的预测，附有「产品在市场发布后结果可能变化」的声明，而且截至 2026-07-31 还买不到。见 [TFLOPS](#tflops) 和[显存](#accelerator-memory-size-and-speed)表，它位于 `Announced, availability not confirmed` 那一半
 - [MI355X](https://www.amd.com/en/products/accelerators/instinct/mi350/mi355x.html) ≈ B200——刚开始出现，主要见于 Tier-2（二线）云
 - [MI350X](https://www.amd.com/en/products/accelerators/instinct/mi350/mi350x.html) ≈ B200——与 MI355X 相同的芯片，风冷，1000W、2200MHz；截至 2026-10-07 可在二线云上按需租用
@@ -903,21 +914,25 @@ AMD：
 
 
 Intel：
+
 - Falcon Shores——已取消
 - [Gaudi3](https://habana.ai/products/gaudi3/)，按理论 TFLOPS 略低于 B200——已在 Intel 云上提供——[规格](https://www.intel.com/content/www/us/en/content-details/817486/intel-gaudi-3-ai-accelerator-white-paper.html)
 - GPU D 系列 / D270（Crescent Island）——推理 GPU，于 OCP 2026 发布，H2-2026 送样；160GB LPDDR5X（ODM 方案最高 480GB）@ 1.5TBps / 350W，FP8 1.3 PFLOPS（唯一公布的算力数字）——参见 [Intel GPU D 系列](#intel-gpu-d-series-crescent-island)
 - [Gaudi2](https://habana.ai/products/gaudi2/)，按理论 TFLOPS 介于 A100 和 H100 之间 [规格](https://docs.habana.ai/en/latest/Gaudi_Overview/Gaudi_Architecture.html)——可在 Intel 云上租用。AWS 通过 [DL1 实例](https://aws.amazon.com/ec2/instance-types/dl1/)提供较旧的 Gaudi1。它也有经由 Supermicro 和 WiWynn 提供的本地部署方案。
 
 Amazon：
+
 - [Trainium2](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/about-neuron/arch/neuron-hardware/trainium2.html) < H100——可在 AWS 上使用（经由 PyTorch XLA 工作）
 
 
 Google：
+
 - [TPU7x](https://docs.cloud.google.com/tpu/docs/tpu7x)（Ironwood）——每芯片 2307TFLOPS bf16 和 192GB HBM，以 4 芯片虚拟机提供，最大可扩展到 9216 芯片的 pod。与每一代 TPU 一样，只能在 GCP 上租用
 - [TPU v6e](https://docs.cloud.google.com/tpu/docs/v6e)（Trillium）和 [TPU v5p](https://docs.cloud.google.com/tpu/docs/v5p)——前两代产品，目前都仍在提供
 
 
 SambaNova：
+
 - [SN40L](https://sambanova.ai/products/rdu-ai-chips)——第四代 RDU，每台 SambaRack 16 颗；面向推理，而不是训练用产品
 - [SN50](https://sambanova.ai/blog/introducing-the-sn50-rdu-purpose-built-for-agentic-inference)——第五代，2026 年 2 月发布，「将于 2026 年下半年开始向客户发货」
 
@@ -935,11 +950,13 @@ SambaNova：
 Google 的 [TPU](https://cloud.google.com/tpu)、[规格](https://docs.cloud.google.com/tpu/docs/system-architecture-tpu-vm)——厂商锁定，无法像 NVIDIA -> AMD 那样切换到另一家供应商
 
 近期架构的规格：
+
 - [v7x](https://docs.cloud.google.com/tpu/docs/tpu7x)
 - [v6e](https://docs.cloud.google.com/tpu/docs/v6e)
 - [v5p](https://docs.cloud.google.com/tpu/docs/v5p)
 
 Cerebras：
+
 - [云服务](https://www.cerebras.ai/cloud)
 
 
@@ -979,6 +996,7 @@ Cerebras：
 - CUDA：Compute Unified Device Architecture（NVIDIA 专有）
 
 NVIDIA 特有的 GPU 关键特性：
+
 - CUDA 核心（CUDA Cores）——类似 CPU 核心，但与通常只有 10-100 个强大核心的 CPU 不同，CUDA 核心单个较弱、数量数以千计，可以进行大规模通用计算（并行化）。与 CPU 核心一样，每个 CUDA 核心在每个时钟周期执行一次操作。
 - Tensor 核心（Tensor Cores）——专门设计的计算单元，用于快速执行乘法和加法运算，例如矩阵乘法。它们在每个时钟周期执行多次操作。它们能以极快的速度在低精度或混合精度数据类型上进行计算，伴随一定损失（fp16、bf16、tf32、fp8 等）。这些核心是专为 ML 工作负载设计的。
 - 流式多处理器（Streaming Multiprocessors，SM）——由 CUDA 核心、Tensor 核心及其他组件组成的簇。
@@ -999,10 +1017,12 @@ H100 拥有：
 ### AMD {#amd}
 
 AMD 特有的 GPU 关键特性：
+
 - 流处理器（Stream Processors）——功能上与 CUDA 核心类似，也就是并行计算单元。但二者并不相同，所以不能拿 CUDA 核心数和流处理器数直接比较 2 张 GPU。
 - 计算单元（Compute Units）——由流处理器及其他组件组成的簇
 
 例如，AMD MI250 拥有：
+
 - 13,312 个流处理器
 - 208 个计算单元
 
@@ -1037,6 +1057,7 @@ Xe3P 的 XMX 引擎原生支持完整的精度阶梯——FP64、FP32、TF32、F
 ### AWS Trainium {#aws-trainium}
 
 AWS 特有的词汇：
+
 - NeuronCore——计算单元。一颗 Trainium2 芯片包含「八个 NeuronCore-V3 核心」
 - NeuronLink——芯片间互联。Trainium2 使用「NeuronLink-v3 芯片间互联，每颗芯片提供 1.28 TB/sec 带宽」
 - CC-Cores——专用的集合通信引擎；「16 个 CC-Cores 负责编排实例内与实例之间的 Trainium2 芯片间的集合通信」
@@ -1050,6 +1071,7 @@ AWS 特有的词汇：
 ### Google TPU {#google-tpu}
 
 TPU 特有的词汇：
+
 - TensorCore 和 SparseCore——计算单元。一颗 TPU7x 芯片有「2 个 TensorCore 和 4 个 SparseCore」，分布在两个 chiplet 上，由 die-to-die 接口连接
 - ICI（inter-chip interconnect，芯片间互联）——纵向扩展（scale-up）网络，一个三维环面（torus），每颗芯片「与 3 个维度上紧邻的芯片直接相连」
 - slice、cube、pod——资源分配的单位；slice 是「全部位于同一个 TPU Pod 内、由高速芯片间互联（ICI）连接的一组芯片」
@@ -1065,6 +1087,7 @@ TPU7x（Ironwood）每颗芯片：192GB HBM，带宽「约 7.37 TB/s」，2307TF
 这里是大多数读者买不到的一家厂商，也是文档最难获取的一家——但它出货规模很大，所以哪怕只作背景了解也应该收录。
 
 华为特有的词汇：
+
 - Ascend——加速器产品线；Atlas——基于它们构建的服务器和机柜级 SuperPoD
 - UB Link（UnifiedBus）——纵向扩展互联，华为对 [NVLink](../../network/README.md#nvlink) 和 [UALink](../../network/README.md#ultra-accelerator-link-ualink) 的回应
 - HiF8——华为自有的 8-bit 浮点格式，与 OCP 的 `mxFP8` 标准并列引用，而不是替代它
@@ -1093,6 +1116,7 @@ TPU7x（Ironwood）每颗芯片：192GB HBM，带宽「约 7.37 TB/s」，2307TF
 推理优先，而且这一点是被明确宣示的——无论是术语体系还是产品线，都是围绕模型服务（serving）而非训练来组织的。
 
 SambaNova 特有的术语：
+
 - RDU（Reconfigurable Dataflow Unit，可重构数据流单元）——即其加速器。“第四代 RDU SN40”和“第五代 SN50”是当前在售的型号
 - 数据流架构（Dataflow architecture）——其执行模型：围绕模型的计算图来重新配置芯片，而不是调度内核（kernel）
 - SambaRack——其机架；“16 个 SN40L RDU 组合成一个单一的高性能机架”
@@ -1122,6 +1146,7 @@ AMD GPU 运行在 [ROCm](https://www.amd.com/en/products/software/rocm.html) 之
 其 API 通过 [Habana SynapseAI® SDK](https://habana.ai/intel-gaudi-software/) 提供，该 SDK 支持 PyTorch 和 TensorFlow。
 
 有用的集成：
+
 - [HF Optimum Habana](https://github.com/huggingface/optimum-habana)，其中还包含 - [DeepSpeed](https://github.com/deepspeedai/DeepSpeed) 集成。
 
 
@@ -1136,4 +1161,4 @@ AMD GPU 运行在 [ROCm](https://www.amd.com/en/products/software/rocm.html) 之
 
 - [经由 MLCommons 发布的 MLPerf](https://mlcommons.org/) 会发布测量训练、推理、存储及其他任务性能的各种硬件基准测试。这些轮次的数据每年更新几次，所以请直接去基准套件的页面，而不是某个固定版本——[训练](https://mlcommons.org/benchmarks/training/)和[推理：数据中心](https://mlcommons.org/benchmarks/inference-datacenter/)页面各自展示最新的结果。
 
-   但我完全不知道该如何利用它——几乎不可能看懂这个视图，也没法控制它。在我看来，这是一个很棒的初衷，却迷失在过度工程之中，也没有考虑用户能从中获得什么好处。例如，我并不关心 CV 数据，我只想快速看到 LLM 那几行，却做不到。而且这些对比本身也仍然不是同基准的，那到底怎么可能判断出哪种硬件更好，我不知道。
+    但我完全不知道该如何利用它——几乎不可能看懂这个视图，也没法控制它。在我看来，这是一个很棒的初衷，却迷失在过度工程之中，也没有考虑用户能从中获得什么好处。例如，我并不关心 CV 数据，我只想快速看到 LLM 那几行，却做不到。而且这些对比本身也仍然不是同基准的，那到底怎么可能判断出哪种硬件更好，我不知道。

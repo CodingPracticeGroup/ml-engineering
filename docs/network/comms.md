@@ -220,6 +220,7 @@ PyTorch API 示例：
 | 每跳延迟       | ~1µs              | ~2µs                           | ~6µs              |
 
 来源：
+
 1. [Demystifying NCCL: An In-depth Analysis of GPU Communication Protocols and Algorithms](https://arxiv.org/abs/2507.04786)（2025），Table I。
 
 `Simple` 发送大块数据，并用内存栅栏保证接收方看到的是一个完整的块。这能达到接近峰值的带宽，但栅栏的开销会主导任何小消息的成本。`LL` 去掉了栅栏：它把 4 字节数据与一个 4 字节标志配对，并把这 8 个字节作为一次原子写入，因此标志一到达，接收方就可以继续。代价是暂存缓冲区必须位于主机内存中，CPU 才能轮询那个标志，这就排除了 GPUDirect RDMA，并把 `LL` 限制在峰值的 25-50%——在只在乎延迟时这还可以接受，其他场合就很浪费。

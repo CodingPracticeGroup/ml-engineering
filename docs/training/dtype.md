@@ -3,6 +3,7 @@
 以下是截至 2026-08 在 ML 中常用的数据类型（通常被称为 `dtype`）：
 
 浮点格式：
+
 - fp32 - 32 位
 - tf32 - 19 位（NVIDIA Ampere 及更新架构）
 - fp16 - 16 位
@@ -23,6 +24,7 @@
 
 
 新硬件正在采用的新格式如下：
+
 - fp4：`float4_e2m1fn`
 - fp6：`float6_e2m3fn` 和 `float6_e3m2fn`
 - fp8：`float8_e3m4`、`float8_e4m3`、`float8_e4m3b11fnuz`、`float8_e4m3fn`、`float8_e4m3fnuz`、`float8_e5m2`、`float8_e5m2fnuz`、`float8_e8m0fnu`
@@ -32,11 +34,13 @@
 `float8_e8m0fnu` 在上述列表里是个异类——它不是一种元素格式，而是块缩放（block-scaled）格式为一组元素附加的共享缩放因子（shared scale），这就是它没有尾数的原因。把它与 4 位、6 位或 8 位的元素编码搭配使用，就得到了加速器规格中被引用的 `MXFP4`/`MXFP6`/`MXFP8` 这些名称：每 32 个值组成的一个块配一个 `E8M0` 缩放因子，其每个参数所占的字节开销在[模型权重](../inference/README.md#model-weights)中有推算。NVIDIA 的 [`NVFP4`](https://developer.nvidia.com/blog/introducing-nvfp4-for-efficient-and-accurate-low-precision-inference/) 是同一个由两部分构成的思路，只是调校不同——使用同样的 `E2M1` 元素，但块大小为 16，配一个 `E4M3` 缩放因子，再为整个张量附加单个 fp32 缩放因子，这比只能取 2 的幂的 `E8M0` 缩放因子能更贴近局部的动态范围。
 
 对于后面跟着数字的字母：
+
 - `e` 表示指数（exponent）的位数
 - `m` 表示尾数（mantissa）的位数
 - `b` 表示偏置（bias）
 
 对于出现在数字后面的字母：
+
 - `f` 表示只包含有限值（没有无穷大）。
 - `n` 表示包含 NaN，但只出现在取值范围的最外围。
 - `u` 表示无符号格式。
@@ -107,6 +111,7 @@ int8 的单位是 TOPS 而不是 TFLOPS，因为那些是整数运算。
 精度才是两者的分野。更小的块意味着一个异常值扭曲的是 15 个邻近元素的缩放因子，而不是 31 个；而且 `E4M3` 缩放因子可以取在两个 2 的幂之间，而 `E8M0` 只能舍入到某个 2 的幂。在 NVIDIA 的[80 亿参数、1 万亿词元预训练对比](https://developer.nvidia.com/blog/train-models-faster-with-jax-and-maxtext-using-nvfp4-on-nvidia-blackwell/)中，MXFP4 需要多消耗约 36% 的词元才能达到 NVFP4 的最终损失；推理方面的情况另见 [Introducing NVFP4](https://developer.nvidia.com/blog/introducing-nvfp4-for-efficient-and-accurate-low-precision-inference/)。这两个说法都出自 NVIDIA 一方。
 
 因此：
+
 - 在 NVIDIA Blackwell 及更新的硬件上，使用 nvfp4：同样的算力、更好的精度，代价只是每元素多 0.25 位。
 - 在没有 nvfp4 的地方使用 mxfp4——比如实现 OCP MX 的 AMD MI355X 等非 NVIDIA 加速器——或者当同一个检查点（checkpoint）必须运行在多家厂商的硬件上时。
 - 当某个模型以其中一种格式发布时——例如 OpenAI 的 gpt-oss 就以 MXFP4 提供其 MoE 权重——直接以该格式运行它，可以省去重新量化。

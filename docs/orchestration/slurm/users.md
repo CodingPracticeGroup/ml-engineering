@@ -1044,6 +1044,7 @@ $ mkdir -p $WORK/cron/cron.hourly
 ```
 
 现在把这两个 slurm 脚本复制到 `$WORK/cron/scheduler` 中：
+
 - [cron-daily.slurm](cron-daily.slurm)
 - [cron-hourly.slurm](cron-hourly.slurm)
 

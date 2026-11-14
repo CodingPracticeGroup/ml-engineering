@@ -44,15 +44,15 @@ def enforce_reproducibility(use_seed=None):
 
 - `CUBLAS_WORKSPACE_CONFIG` 补上了 `use_deterministic_algorithms(True)` 单靠自身无法覆盖的一个缺口：cuBLAS——`torch.mm`/`mv`/`bmm` 及其他基于 `matmul` 的算子背后的库——在 CUDA >= 10.2 上可能是非确定性的，因为它会在同一句柄上，为在并行 CUDA 流中运行的例程动态挑选内部工作区（workspace）内存，因此即便种子相同，结果也可能在不同次运行之间不同。若不设置这个环境变量，`use_deterministic_algorithms(True)` 一碰到 `matmul` 算子就会抛出 `RuntimeError`——这就是需要设置它的信号。它**必须在创建 CUDA 上下文之前设置**，也就是在第一次 CUDA 调用之前；如果进程中别处已经初始化了 CUDA 之后再设置，它会被静默忽略，这就是为什么它在上面 `enforce_reproducibility()` 的最开头、先于 `torch.cuda.*` 调用被设置。
 
-  由于被静默忽略的环境变量很容易被漏掉，上面的代码用 [`torch.cuda.is_initialized()`](https://docs.pytorch.org/docs/stable/generated/torch.cuda.is_initialized.html) 来做检查：如果到 `enforce_reproducibility()` 运行时，`CUBLAS_WORKSPACE_CONFIG` 尚未设置，而 CUDA 已经被之前的某次调用惰性初始化了（例如某个 `.cuda()` 张量、`torch.cuda.set_device()`，或另一个库先接触了 CUDA），就改为 `raise` 抛出异常。注意，这只能捕获经由 PyTorch 自身的惰性初始化路径完成的初始化——如果某个非 PyTorch 的库先创建了原始 CUDA 上下文，`is_initialized()` 是察觉不到的。因此，尽量在程序中尽可能早地运行 `enforce_reproducibility()`。
+    由于被静默忽略的环境变量很容易被漏掉，上面的代码用 [`torch.cuda.is_initialized()`](https://docs.pytorch.org/docs/stable/generated/torch.cuda.is_initialized.html) 来做检查：如果到 `enforce_reproducibility()` 运行时，`CUBLAS_WORKSPACE_CONFIG` 尚未设置，而 CUDA 已经被之前的某次调用惰性初始化了（例如某个 `.cuda()` 张量、`torch.cuda.set_device()`，或另一个库先接触了 CUDA），就改为 `raise` 抛出异常。注意，这只能捕获经由 PyTorch 自身的惰性初始化路径完成的初始化——如果某个非 PyTorch 的库先创建了原始 CUDA 上下文，`is_initialized()` 是察觉不到的。因此，尽量在程序中尽可能早地运行 `enforce_reproducibility()`。
 
-  NVIDIA 的 cuBLAS 文档只认可两个可保证确定性的取值，而两者都涉及内存与性能之间的权衡——较小的工作区留给 cuBLAS 的算法选择更少，可能限制性能；较大的工作区则让它有更多余地挑选更快的算法，代价是额外的 GPU 显存：
-  - `:16:8` - 确定性的，额外内存最少，但较小的工作区可能限制性能
-  - `:4096:8` - 确定性的，代价是约 24MiB 的额外 GPU 显存，但保留更多性能余量（两者中更常用的那个，也是上面使用的取值）
+    NVIDIA 的 cuBLAS 文档只认可两个可保证确定性的取值，而两者都涉及内存与性能之间的权衡——较小的工作区留给 cuBLAS 的算法选择更少，可能限制性能；较大的工作区则让它有更多余地挑选更快的算法，代价是额外的 GPU 显存：
+    - `:16:8` - 确定性的，额外内存最少，但较小的工作区可能限制性能
+    - `:4096:8` - 确定性的，代价是约 24MiB 的额外 GPU 显存，但保留更多性能余量（两者中更常用的那个，也是上面使用的取值）
 
-  不存在第三种没有代价的选项——确定性在结构上就与让 cuBLAS 在并发流之间自由挑选最快的算法/工作区布局相冲突，所以把它固定下来总会放弃其中一部分自由。`:4096:8` 的性能损失通常是两者中较小的那个（工作区空间越多，被排除的算法就越少），但“较小”不等于“零”——实际损失取决于工作负载和 `matmul` 的形状，可能从可以忽略到相当显著（有报告称在某些特定工作负载上吞吐量几乎减半）。
+        不存在第三种没有代价的选项——确定性在结构上就与让 cuBLAS 在并发流之间自由挑选最快的算法/工作区布局相冲突，所以把它固定下来总会放弃其中一部分自由。`:4096:8` 的性能损失通常是两者中较小的那个（工作区空间越多，被排除的算法就越少），但“较小”不等于“零”——实际损失取决于工作负载和 `matmul` 的形状，可能从可以忽略到相当显著（有报告称在某些特定工作负载上吞吐量几乎减半）。
 
-  通用格式是 `:[SIZE]:[COUNT]`，你会看到它被串接成多个 `SIZE:COUNT` 对（例如未设置时的默认行为等价于 `CUBLAS_WORKSPACE_CONFIG=:4096:2:16:8`）。这种串接形式来自 cuBLAS 内部的工作区内存池配置，其中每一对最初描述一个独立的桶大小/数量，使内存池能高效地服务大小不同的工作区请求。但 PyTorch 只是把它找到的每个 `SIZE * COUNT` 对加总成一个单一的总字节数，然后把这一块固定大小的缓冲区交给 cuBLAS——所以 `:4096:2:16:8` 仅仅意味着总共 `2*4096 + 8*16` KiB，串接更多对只改变*你加总的 KiB 数量*，并不改变确定性行为。实际上你不需要自己串接任何东西：从上面 NVIDIA 认可的两个单对取值中选一个即可，或者设置 `:0:0` 强制 cuBLAS 完全不使用任何工作区（不推荐——这是限制最严、速度最慢的选项）。
+        通用格式是 `:[SIZE]:[COUNT]`，你会看到它被串接成多个 `SIZE:COUNT` 对（例如未设置时的默认行为等价于 `CUBLAS_WORKSPACE_CONFIG=:4096:2:16:8`）。这种串接形式来自 cuBLAS 内部的工作区内存池配置，其中每一对最初描述一个独立的桶大小/数量，使内存池能高效地服务大小不同的工作区请求。但 PyTorch 只是把它找到的每个 `SIZE * COUNT` 对加总成一个单一的总字节数，然后把这一块固定大小的缓冲区交给 cuBLAS——所以 `:4096:2:16:8` 仅仅意味着总共 `2*4096 + 8*16` KiB，串接更多对只改变*你加总的 KiB 数量*，并不改变确定性行为。实际上你不需要自己串接任何东西：从上面 NVIDIA 认可的两个单对取值中选一个即可，或者设置 `:0:0` 强制 cuBLAS 完全不使用任何工作区（不推荐——这是限制最严、速度最慢的选项）。
 
 - `torch.use_deterministic_algorithms(True)` 使 cuDNN 卷积具有确定性，并且它还额外覆盖 PyTorch 中的数百个其他算子（`index_add_`、`scatter_`、插值等）。它不会只是默默地尽力而为，而是一碰到没有确定性实现的算子就抛出 `RuntimeError`，因此非确定性无法悄无声息地混进来。
 
@@ -67,6 +67,7 @@ def enforce_reproducibility(use_seed=None):
 > ```
 
 资源：
+
 - [NVIDIA cuBLAS 文档 - 可复现性](https://docs.nvidia.com/cuda/cublas/index.html#cublasApi_reproducibility) - 关于 cuBLAS 非确定性以及被认可的 `CUBLAS_WORKSPACE_CONFIG` 取值的权威说明
 - [`torch.use_deterministic_algorithms`](https://docs.pytorch.org/docs/stable/generated/torch.use_deterministic_algorithms.html) - 受影响算子的完整列表以及 `warn_only` 的工作方式
 - [PyTorch CUDA 环境变量参考](https://docs.pytorch.org/docs/stable/cuda_environment_variables.html) - `CUBLAS_WORKSPACE_CONFIG` 的确切 `:[SIZE]:[COUNT]` 格式规范

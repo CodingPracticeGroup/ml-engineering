@@ -20,6 +20,6 @@
 - [调试工具](./tools.md)
 
 - [torch-distributed-gpu-test.py](./torch-distributed-gpu-test.py) - 这是一个 `torch.distributed`
-  诊断脚本，用于检查集群（一个或多个节点）中的所有 GPU 能否相互通信并分配显存。
+    诊断脚本，用于检查集群（一个或多个节点）中的所有 GPU 能否相互通信并分配显存。
 
 - [NicerTrace](./NicerTrace.py) - 这是一个改进版的 `trace` python 模块，为其构造函数添加了多个额外的标志（flag），并提供了更有用的输出。

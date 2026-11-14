@@ -6,8 +6,8 @@
 在现代机器学习中，各种并行方法被用于：
 
 1. 突破 GPU 显存限制。示例：
-   - 装下非常大的模型——例如 t5-11b 光是模型参数就有 45GB
-   - 装下非常长的序列——例如 Llama 3.1 模型 128K 的上下文长度
+    - 装下非常大的模型——例如 t5-11b 光是模型参数就有 45GB
+    - 装下非常长的序列——例如 Llama 3.1 模型 128K 的上下文长度
 2. 显著加速训练——把本来要训练一年的任务在几小时内完成
 
 我们先深入讨论各种 1D 并行技术及其优缺点，然后再看如何把它们组合成 2D 和 3D 并行，以实现更快的训练并支持更大的模型。之后还会介绍其他若干种同样强大的替代方案。
@@ -15,6 +15,7 @@
 虽然这些主要概念多半同样适用于其他框架，但本文聚焦于基于 PyTorch 的实现。
 
 要让模型超出加速卡的显存仍能被训练和推理，主要有两种途径：
+
 1. 3D 并行——对网络非常高效，但会对建模代码侵入很深，需要额外做大量工作才能让它正确运行
 2. ZeRO 并行——对网络并不高效，但对建模代码几乎没有改动要求，非常容易让它跑起来。
 
@@ -115,17 +116,20 @@ GPU2 拿到输入 x2，发生的也是同样的事。它从 GPU0 和 GPU1 得到
 如果你仔细观察 ZeRO 切分模型权重的方式——它看起来与后文将要讨论的张量并行非常相似。这是因为它切分/分片的是每一层的权重，而与接下来要讨论的纵向模型并行不同。
 
 ZeRO-DP 阶段 1+2+3 的实现：
+
 - [DeepSpeed](https://www.deepspeed.ai/tutorials/zero/)
 - [PyTorch](https://docs.pytorch.org/docs/stable/fsdp.html)（它最初在 [FairScale](https://github.com/facebookresearch/fairscale/) 中实现，后来被并入 PyTorch 核心代码库）
 - [torchtitan](https://github.com/pytorch/torchtitan)
 
 DeepSpeed ZeRO 集成：
+
 - [HF Trainer 集成](https://huggingface.co/docs/transformers/main_classes/deepspeed)
 - [Accelerate](https://huggingface.co/docs/accelerate/usage_guides/deepspeed)
 - [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/advanced/model_parallel/deepspeed.html)
 - [Determined.AI](https://github.com/determined-ai/determined/tree/main/docs/model-dev-guide/api-guides/apis-howto/deepspeed)
 
 FSDP 集成：
+
 - [HF Trainer 集成](https://huggingface.co/docs/transformers/main/en/fsdp)
 - [Accelerate](https://huggingface.co/docs/accelerate/main/en/usage_guides/fsdp)
 - [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/advanced/model_parallel/fsdp.html)
@@ -134,6 +138,7 @@ FSDP 集成：
 重要论文：
 
 关于 DeepSpeed 与 ZeRO 的一般性论文：
+
 - [ZeRO: Memory Optimizations Toward Training Trillion Parameter Models](https://arxiv.org/abs/1910.02054)
 - [ZeRO-Offload: Democratizing Billion-Scale Model Training](https://arxiv.org/abs/2101.06840)
 - [ZeRO-Infinity: Breaking the GPU Memory Wall for Extreme Scale Deep Learning](https://arxiv.org/abs/2104.07857)
@@ -142,9 +147,11 @@ FSDP 集成：
 - [AMSP: Reducing Communication Overhead of ZeRO for Efficient LLM Training](https://arxiv.org/abs/2311.00257)
 
 PyTorch：
+
 - [PyTorch FSDP: Experiences on Scaling Fully Sharded Data Parallel](https://arxiv.org/abs/2304.11277)
 
 DeepSpeed ZeRO 主要资源：
+
 - [项目的 GitHub](https://github.com/deepspeedai/DeepSpeed)
 - [使用文档](https://www.deepspeed.ai/getting-started/)
 - [API 文档](https://deepspeed.readthedocs.io/en/latest/index.html)
@@ -211,6 +218,7 @@ PyTorch FSDP 在 [shardingStrategy.HYBRID_SHARD](https://docs.pytorch.org/docs/s
 接下来第 4、5、6、7 层与普通模型并无二致。当第 7 层完成后，我们通常要把数据送回第 0 层——标签在那里（或者也可以把标签发送到最后一层）。这样就能计算损失，优化器也能开始工作了。
 
 问题：
+
 - 主要缺陷——也是它被称为“朴素”MP 的原因——在于任何给定时刻，除一块 GPU 外其余全部空闲。因此，如果使用 4 块 GPU，效果几乎等同于把单块 GPU 的显存扩大到四倍，而无视其余的硬件。此外还有在设备之间拷贝数据的开销。所以，4 块 6GB 的卡为被切分的层状态提供的总容量大致相当于 1 块 24GB 的卡，但单卡会更快完成训练，因为它避免了设备间传输。朴素 MP 主要是一种解决容量的技术：当某个工作负载与层关联的训练状态超出一块 GPU 的显存时，只要每个分区及其激活值能放进所分配的 GPU，它就能让这个负载运行起来。
 - 共享的嵌入可能需要在 GPU 之间来回拷贝。
 
@@ -317,9 +325,11 @@ DeepSpeed、SageMaker 等都使用了它（仅举几例）。
 TP 可以与其他并行方法组合使用。
 
 其他名称：
+
 - DeepSpeed 称之为[tensor slicing（张量切分）](https://www.deepspeed.ai/tutorials/large-models-w-deepspeed/)
 
 实现：
+
 - [Megatron-LM](https://github.com/NVIDIA/Megatron-LM) 有一个内部实现，因为它与模型高度绑定
 - [PyTorch](https://docs.pytorch.org/docs/stable/distributed.tensor.parallel.html)
 - [SageMaker](https://arxiv.org/abs/2111.05972)——这是一个只能在 AWS 上使用的专有方案。
@@ -354,6 +364,7 @@ TP 的缺陷之一，是它的通信很难与计算重叠。PyTorch 提出了 [A
 论文：[DeepSpeed Ulysses: System Optimizations for Enabling Training of Extreme Long Sequence Transformer Models](https://arxiv.org/abs/2309.14509)
 
 在这种实现中，有 2 类东西会被分片：
+
 1. 多头注意力的权重被切分到参与的各块 GPU 上，使每块 GPU 只持有少数几个子头（sub-head）。这发生在模型被创建/加载的时候。这在某种程度上与[张量并行](#tensor-parallelism)类似。
 2. 在训练过程中，每个输入序列被划分成若干块，每一块被发送到其中一块 GPU 上，这让人想起 ZeRO-3 的分片，只不过被分片的不是权重而是输入。
 
@@ -364,6 +375,7 @@ TP 的缺陷之一，是它的通信很难与计算重叠。PyTorch 提出了 [A
 [来源](https://github.com/deepspeedai/DeepSpeed/tree/master/blogs/deepspeed-ulysses)
 
 图中：
+
 1. 输入序列 N 被划分到 P 个可用设备上。
 2. 输入序列在本地的每个 N/P 分区都被投影为查询（queries，Q）、键（keys，K）和值（values，V）嵌入。
 3. 接下来，本地的 QKV 嵌入通过参与计算的设备之间高度优化的 all-to-all 集合通信，聚合为全局 QKV。
@@ -418,6 +430,7 @@ Megatron-LM 的 SP 与其 TP 紧密集成。Megatron-LM 沿序列维度划分序
 5. 如此继续，直到注意力计算完成。
 
 SP 实现：
+
 - [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)
 - [DeepSpeed](https://github.com/deepspeedai/DeepSpeed)
 - [Colossal-AI](https://colossalai.org/)
@@ -452,6 +465,7 @@ PyTorch 也在开发这项功能，并将其称为上下文并行（Context Para
 由于每个维度都至少需要 2 块 GPU，这里你至少需要 4 块 GPU。
 
 实现：
+
 - [DeepSpeed](https://github.com/deepspeedai/DeepSpeed)
 - [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)
 - [SageMaker](https://arxiv.org/abs/2111.05972)
@@ -472,6 +486,7 @@ PyTorch 也在开发这项功能，并将其称为上下文并行（Context Para
 由于每个维度都至少需要 2 块 GPU，这里你至少需要 8 块 GPU。
 
 实现：
+
 - [DeepSpeed](https://github.com/deepspeedai/DeepSpeed) - DeepSpeed 还包含一种更高效的 DP，他们称之为 ZeRO-DP。
 - [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)
 - [SageMaker](https://arxiv.org/abs/2111.05972)
@@ -495,6 +510,7 @@ DeepSpeed 的主要特性之一是 ZeRO，它是 DP 的一个极具扩展性的�
 而且既然我们用上了 ZeRO，另一个好处就是 ZeRO-Offload。由于这是阶段 1，优化器状态可以被卸载到 CPU。
 
 实现：
+
 - [Megatron-DeepSpeed](https://github.com/deepspeedai/Megatron-DeepSpeed) 以及 [来自 BigScience 的 Megatron-DeepSpeed](https://github.com/bigscience-workshop/Megatron-DeepSpeed)，后者是前者的一个分支。
 - [OSLO](https://github.com/eleutherAI/Oslo)
 - [torchtitan](https://github.com/pytorch/torchtitan)
@@ -511,6 +527,7 @@ https://arxiv.org/abs/2201.11990)
 当使用混合专家（Mixture-Of-Experts，MoE）时（尤其是在推理期间），可以给每个专家分配自己的一块加速器（如果一块不够，就多分几块），这就是所谓专家并行（Expert Parallelism，EP）。这又增加了一个并行维度，对于很可能命中所有专家的大批次来说，可以显著提速。EP 通信的不是模型权重，而是词元。EP 还能带来更高效的计算，因为矩阵乘法处理的输入变大了。
 
 想详细了解，请参见：
+
 - [DeepSpeed-MoE: Advancing Mixture-of-Experts Inference and Training to Power Next-Generation AI Scale](https://arxiv.org/abs/2201.05596)
 - [Mixture of Experts Explained](https://huggingface.co/blog/moe#parallelism)
 
@@ -530,6 +547,7 @@ https://arxiv.org/abs/2201.11990)
 4. Parameter（参数）= 模型并行（不分维度——水平或垂直皆可）
 
 示例：
+
 * Sample
 
 取 10 个批次，序列长度为 512。如果按 sample 维度把它们并行到 2 块设备上，10 x 512 就变成了 5 x 2 x 512。
@@ -572,8 +590,8 @@ https://arxiv.org/abs/2201.11990)
 - TP：2 次 all-gather 和 2 次 reduce-scatter
 - PP：2 次 send + 2 次 recv——在稳定阶段与计算重叠
 - SP：取决于实现：设隐藏层维度为 h，序列长度为 N，并行度为 P
-  * Megatron-LM：2 次 all-gather 和 2 次 reduce-scatter，每个 transformer 层的通信量为 `4*N*h` [论文 3.2 节](https://arxiv.org/abs/2309.14509)
-  * DeepSpeed Ulysses：2 次 all-to-all，每个 transformer 层的通信量为 `4*N*h/P` [论文 3.2 节](https://arxiv.org/abs/2309.14509)
+    * Megatron-LM：2 次 all-gather 和 2 次 reduce-scatter，每个 transformer 层的通信量为 `4*N*h` [论文 3.2 节](https://arxiv.org/abs/2309.14509)
+    * DeepSpeed Ulysses：2 次 all-to-all，每个 transformer 层的通信量为 `4*N*h/P` [论文 3.2 节](https://arxiv.org/abs/2309.14509)
 
 你可能会发现不同的实现使用不同的通信模式。
 
@@ -604,6 +622,7 @@ ZeRO-1 只分片优化器状态，和 DDP 一样，也需要传输 40GB 的数�
 我们曾用 340Gbps 的 EFA 训练 IDEFICS-80B，在 A100 上用 DeepSpeed ZeRO-3 只能得到 90TFLOPS，而用 Megatron 的 TP+PP+DP 可以得到 150+TFLOPS。而且模型有很大一块是冻结的，因为我们是在一个语言模型和一个视觉模型的基础上构建新模型。所以我们的乘数其实小于 3。另一方面，为了节省显存我们使用了激活重计算，这就多了一次所有模型权重的传输；更雪上加霜的是，当时 nccl 还不支持真正的半精度归约，所以我们用 fp32 做梯度归约，这样我们的乘数实际上不是 3 而是接近 4.5。
 
 IDEFICS-80B 训练所用的取值：
+
 - `model_size_in_B` = `80`
 - `n_bytes` = `2`，因为 bf16 是 2 字节
 - `comms_multiplier` = ZeRO-3/FSDP 情况下为 `3`（1 次 reduce_scatter + 2 次 all_gather（前向 + 反向）），ZeRO-1 情况下为 2（1 次 reduce_scatter + 1 次 all_gather），
@@ -706,9 +725,9 @@ IDEFICS-80B 训练所用的取值：
     2. ZeRO
     3. TP
 
-    在有 NVLINK 或 NVSwitch 这种极快的节点内互联时，三者应该大体不相上下；没有它们时，PP 会比 TP 或 ZeRO 更快。TP 的并行度也可能带来差别。最好在你的具体环境上多做实验，找出胜者。
+        在有 NVLINK 或 NVSwitch 这种极快的节点内互联时，三者应该大体不相上下；没有它们时，PP 会比 TP 或 ZeRO 更快。TP 的并行度也可能带来差别。最好在你的具体环境上多做实验，找出胜者。
 
-    TP 几乎总是用在单个节点内，也就是 TP size <= 每节点 GPU 数。
+        TP 几乎总是用在单个节点内，也就是 TP size <= 每节点 GPU 数。
 
 * 最大的单层放不进单张 GPU：
 
